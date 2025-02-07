@@ -285,28 +285,7 @@ const CheckoutPage = () => {
                     </CardContent>
                   </Card>
 
-                  <Card
-                    className={`p-4 cursor-pointer transition-all ${paymentMethod === "card" ? "border-primary border-2" : ""
-                      }`}
-                    onClick={() => setPaymentMethod("card")}
-                  >
-                    <CardContent className="flex items-center space-x-4 p-2">
-                      <input
-                        type="radio"
-                        name="paymentMethod"
-                        value="card"
-                        checked={paymentMethod === "card"}
-                        onChange={() => setPaymentMethod("card")}
-                        className="h-4 w-4"
-                      />
-                      <div>
-                        <h3 className="font-semibold">Credit/Debit Card</h3>
-                        <p className="text-sm text-muted-foreground">
-                          Pay with your card
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  
                   <Card
                     className={`p-4 cursor-pointer transition-all ${paymentMethod === "cash-on-delivery" ? "border-primary border-2" : ""
                       }`}
