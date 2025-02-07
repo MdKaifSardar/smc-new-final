@@ -302,7 +302,11 @@ const ShirtCustomizer = () => {
     sections.forEach((section) => {
       if (section === "cuffStyle" || section === "cuffLinks") return;
       if (section === "placket") return;
-      if (section === "back") return;
+      if (section === "back") {
+        // const defaultItem = data[section as keyof ProductData]![0];
+        // assignItemToSection(section as keyof Shirt, defaultItem);
+        return;
+      }
 
       if (data && data[section as keyof ProductData]?.length) {
         const defaultItem = data[section as keyof ProductData]![0];
