@@ -42,6 +42,7 @@ export async function getMeasurementById(id: string) {
     try {
         await connectToDatabase();
         const measurement = await MeasurementModel.findById(id);
+        console.log(measurement);
         if (!measurement) {
             throw new Error("Measurement not found");
         }
