@@ -52,40 +52,62 @@ export const downloadPDF = async (order: Order) => {
 
   const doc = new jsPDF();
 
-  // Title and header section remains the same
-  doc.setFontSize(22);
+  // Add a border/header design
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.5);
+  doc.rect(10, 10, 190, 277); // Border around the page
+
+  // Add company logo/header area
+  doc.setFillColor(240, 240, 240);
+  doc.rect(10, 10, 190, 25, 'F');
+
+  // Title with better styling
+  doc.setFontSize(24);
   doc.setFont("helvetica", "bold");
-  doc.text("Clouth My Shirt", 105, 20, { align: "center" });
+  doc.setTextColor(44, 62, 80);
+  doc.text("Clouth My Shirt", 105, 25, { align: "center" });
 
-  doc.setFontSize(18);
-  doc.setFont("helvetica", "normal");
-  doc.text("Order Details", 105, 30, { align: "center" });
+  // Subtitle
+  doc.setFontSize(14);
+  doc.setFont("helvetica", "italic");
+  doc.text("Order Receipt", 105, 35, { align: "center" });
 
-  // Order details
+  // Order details section
   doc.setFontSize(12);
-  let yPosition = 40;
+  let yPosition = 45;
 
-  // Basic order information
+  // Format currency properly
+  const formatCurrency = (amount: number) => `$${amount.toFixed(2)}`;
+
+  // Basic order information with better formatting
   const orderInfo = [
     [`Order ID: ${order._id}`],
-    [`Order Status: ${order.orderConfirmation ? "Confirmed" : "Not Confirmed"}`],
+    [`Order Status: ${order.orderConfirmation ? "✓ Confirmed" : "⧖ Pending"}`],
     [`Delivery Status: ${order.deliveryStatus}`],
-    [`Total Amount: ₹${order.price}`],
-    [`Delivery Cost: ₹${order.deliveryCost}`],
+    [`Total Amount: ${formatCurrency(order.price)}`],
+    [`Delivery Cost: ${formatCurrency(order.deliveryCost)}`],
     [`Payment Method: ${order.paymentMethod}`],
     [`Payment Time: ${new Date(order.paymentTime).toLocaleString()}`],
   ];
 
+  // Add a section box for order details
+  doc.setFillColor(249, 249, 249);
+  doc.rect(15, 40, 180, orderInfo.length * 10 + 10, 'F');
+
   orderInfo.forEach((info) => {
+    doc.setFont("helvetica", "bold");
     doc.text(info[0], 20, yPosition);
-    yPosition += 10;
+    yPosition += 8;
   });
 
-  // Shipping address
+  // Shipping address with better formatting
   if (order.orderAddress) {
-    yPosition += 5;
+    yPosition += 10;
+    doc.setFillColor(249, 249, 249);
+    doc.rect(15, yPosition - 5, 180, 50, 'F');
+
     doc.setFont("helvetica", "bold");
-    doc.text("Shipping Address:", 20, yPosition);
+    doc.text(" Shipping Address", 20, yPosition);
     yPosition += 10;
     doc.setFont("helvetica", "normal");
     const address = [
@@ -102,15 +124,22 @@ export const downloadPDF = async (order: Order) => {
     });
   }
 
-  // Product details
+  // Product details with improved layout
   detailedProducts.forEach((product, index) => {
     doc.addPage();
     yPosition = 20;
 
+    // Add product page border
+    doc.rect(10, 10, 190, 277);
+
+    // Product header
+    doc.setFillColor(240, 240, 240);
+    doc.rect(10, 10, 190, 25, 'F');
+
     doc.setFontSize(16);
     doc.setFont("helvetica", "bold");
-    doc.text(`Product ${index + 1} Details`, 20, yPosition);
-    yPosition += 15;
+    doc.text(`Product ${index + 1} Details`, 105, 25, { align: "center" });
+    yPosition = 40;
 
     console.log(product);
 
@@ -121,7 +150,7 @@ export const downloadPDF = async (order: Order) => {
 
     if (shirtDetails) {
       const shirtInfo = [
-        ["Base Price", `₹${product.price}`],
+        ["Base Price", formatCurrency(Number(product.price))],
         ["Quantity", product.qty],
         ["Collar Style", shirtDetails.collarStyle?.name],
         ["Collar Height", shirtDetails.collarHeight?.name],
@@ -132,7 +161,7 @@ export const downloadPDF = async (order: Order) => {
         ["Sleeve Style", shirtDetails.sleeves?.name],
         ["Fit Type", shirtDetails.fit?.name],
         ["Watch Compatible", shirtDetails.watchCompatible ? "Yes" : "No"],
-        ["Total Price", `₹${Number(product.price) * Number(product.qty)}`],
+        ["Total Price", formatCurrency(Number(product.price) * Number(product.qty))],
       ].filter(([_, value]) => value !== undefined);
 
       shirtInfo.forEach(([label, value]) => {
@@ -162,22 +191,28 @@ export const downloadPDF = async (order: Order) => {
       ].filter(([_, price]) => price !== undefined);
 
       priceDetails.forEach(([component, price]) => {
-        doc.text(`${component}: ₹${price}`, 20, yPosition);
+        doc.text(`${component}: $${price}`, 20, yPosition);
         yPosition += 7;
       });
     }
   });
 
-  // Footer
+  // Footer with better design
   doc.addPage();
-  yPosition = 20;
+  doc.rect(10, 10, 190, 277);
+  doc.setFillColor(240, 240, 240);
+  doc.rect(10, 277 - 40, 190, 40, 'F');
+
+  yPosition = 277 - 30;
   doc.setFontSize(14);
   doc.setFont("helvetica", "bold");
   doc.text("Thank you for shopping with us!", 105, yPosition, { align: "center" });
   yPosition += 10;
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
-  doc.text("For any queries, please contact our customer support.", 105, yPosition, { align: "center" });
+  doc.text("For any queries, please contact our customer support", 105, yPosition, { align: "center" });
+  yPosition += 5;
+  doc.text(" support@clouthmyshirt.com |  1-800-SHIRT", 105, yPosition, { align: "center" });
 
   // Save the PDF
   doc.save(`order-${order._id}.pdf`);
