@@ -301,23 +301,22 @@ const ShirtCustomizer = () => {
     // Set default selections without localStorage
     sections.forEach((section) => {
       if (section === "cuffStyle" || section === "cuffLinks") return;
-      if (section === "placket") return;
-      if (section === "back") {
-        // const defaultItem = data[section as keyof ProductData]![0];
-        // assignItemToSection(section as keyof Shirt, defaultItem);
-        return;
-      }
 
       if (data && data[section as keyof ProductData]?.length) {
         const defaultItem = data[section as keyof ProductData]![0];
         assignItemToSection(section as keyof Shirt, defaultItem); // Assign to the shirt object
+        if(section == "placket" && defaultItem.name.toLowerCase().includes("pleat")){
+          setIsPleatSelected(true);
+        }
 
-        setSelectedItems((prev) => {
-          const updatedItems = { ...prev, [section]: defaultItem };
-          const newTotalPrice = calculateTotalPrice(updatedItems);
-          setTotalPrice(newTotalPrice);
-          return updatedItems;
-        });
+        if (section !== "back") {
+          setSelectedItems((prev) => {
+            const updatedItems = { ...prev, [section]: defaultItem };
+            const newTotalPrice = calculateTotalPrice(updatedItems);
+            setTotalPrice(newTotalPrice);
+            return updatedItems;
+          });
+        }
       }
     });
   }, [data]);
