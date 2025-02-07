@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import jsPDF from "jspdf";
 import { getShirtById } from "@/lib/database/actions/admin/ShirtArea/Shirt/shirt.actions";
+import { getMonogramById } from "@/lib/database/actions/admin/ShirtArea/MonogramUser/monogramuser.actions";
 
 interface OrderAddress {
   address1: string;
@@ -43,9 +44,18 @@ export const downloadPDF = async (order: Order) => {
   const detailedProducts = await Promise.all(
     order.products.map(async (product) => {
       const shirtDetails = await getShirtById(product.product?.toString() ?? '');
+      
+      // Get monogram details if shirtDetails exists
+      let monogramDetails = null;
+      // if (shirtDetails.success) {
+        const monogramResult = await getMonogramById((product.product as any).monogramId);
+        monogramDetails = monogramResult.success ? monogramResult.monogram : null;
+      // }
+      // console.log("asujgdfaseuwgaw : \n" ,getMonogramById(product.product.monogramId))
       return {
         ...product,
         shirtDetails: shirtDetails.success ? shirtDetails.shirt : null,
+        monogramDetails
       };
     })
   );
@@ -82,6 +92,8 @@ export const downloadPDF = async (order: Order) => {
   // Basic order information with better formatting
   const orderInfo = [
     [`Order ID: ${order._id}`],
+    [`Order Status: ${order.orderConfirmation ? "✓ Confirmed" : "⧖ Pending"}`],
+    [`Delivery Status: ${order.deliveryStatus}`],
     [`Order Status: ${order.orderConfirmation ? "✓ Confirmed" : "⧖ Pending"}`],
     [`Delivery Status: ${order.deliveryStatus}`],
     [`Total Amount: ${formatCurrency(order.price)}`],
@@ -141,7 +153,6 @@ export const downloadPDF = async (order: Order) => {
     doc.text(`Product ${index + 1} Details`, 105, 25, { align: "center" });
     yPosition = 40;
 
-    console.log(product);
 
     doc.setFontSize(12);
     doc.setFont("helvetica", "normal");
@@ -171,6 +182,33 @@ export const downloadPDF = async (order: Order) => {
         doc.text(`${value}`, 80, yPosition);
         yPosition += 10;
       });
+
+      // Add monogram details if available
+      if (product.monogramDetails) {
+        yPosition += 15;
+        doc.setFont("helvetica", "bold");
+        doc.text("Monogram Details:", 20, yPosition);
+        yPosition += 10;
+        doc.setFont("helvetica", "normal");
+
+        const monogramInfo = [
+          ["Style", `${product.monogramDetails.style.name} ($${product.monogramDetails.style.price})`],
+          ["Position", `${product.monogramDetails.position.name} ($${product.monogramDetails.position.price})`],
+          ["Text", product.monogramDetails.text],
+          ["Color", product.monogramDetails.color],
+          ["Total Monogram Price", `$${product.monogramDetails.price}`]
+        ];
+
+        monogramInfo.forEach(([label, value]) => {
+          if (value) {
+            doc.setFont("helvetica", "bold");
+            doc.text(`${label}:`, 20, yPosition);
+            doc.setFont("helvetica", "normal");
+            doc.text(`${value}`, 80, yPosition);
+            yPosition += 7;
+          }
+        });
+      }
 
       // Add price breakdown
       yPosition += 10;

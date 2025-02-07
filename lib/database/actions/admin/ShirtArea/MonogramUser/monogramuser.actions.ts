@@ -50,3 +50,31 @@ export const createMonogram = async (
     };
   }
 };
+
+// Add this new function
+export const getMonogramById = async (monogramId: string) => {
+  try {
+    await connectToDatabase();
+
+    const monogram = await MonogramUserModel.findById(monogramId);
+
+    if (!monogram) {
+      return {
+        message: "Monogram not found",
+        success: false,
+      };
+    }
+
+    return {
+      message: "Monogram found successfully",
+      success: true,
+      monogram: monogram.toObject(),
+    };
+  } catch (error: any) {
+    console.log(error);
+    return {
+      message: "Error fetching monogram",
+      success: false,
+    };
+  }
+};
