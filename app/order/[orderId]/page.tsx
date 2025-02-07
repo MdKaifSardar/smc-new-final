@@ -2,12 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/app/components/ui/button";
-import { FaArrowLeft } from "react-icons/fa";
+import { FaArrowLeft, FaSpinner } from "react-icons/fa";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { getOrderDetailsById } from "@/lib/database/actions/order.actions";
 import { format } from "date-fns";
-import { Loader2 } from "lucide-react";
 // Import downloadPDF from the checkout folder
 import { downloadPDF } from "../../checkout/down";
 
@@ -18,6 +17,18 @@ const formatDate = (dateString: string | number | Date) => {
       return 'Date unavailable';
     }
     return format(date, 'MMM d, yyyy');
+  } catch (error) {
+    return 'Date unavailable';
+  }
+};
+
+const formatDateTime = (dateString: string | number | Date) => {
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+      return 'Date unavailable';
+    }
+    return format(date, 'MMM d, yyyy, h:mm a');
   } catch (error) {
     return 'Date unavailable';
   }
@@ -53,7 +64,7 @@ const OrderPage = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
+        <FaSpinner className="h-8 w-8 animate-spin" />
       </div>
     );
   }
@@ -78,7 +89,7 @@ const OrderPage = () => {
             </Link>
             <div className="text-center mb-6">
               <h1 className="text-2xl font-bold">
-                THANK YOU {order.orderAddress?.name}
+                THANK YOU {order.orderAddress?.firstName} {order.orderAddress?.lastName}
               </h1>
               <p className="text-gray-600">Order ID: {order._id}</p>
             </div>
@@ -87,11 +98,6 @@ const OrderPage = () => {
                 <div className="w-full sm:w-1/2 md:w-1/5 p-4 border-b sm:border-b-0 sm:border-r">
                   <div className="font-semibold text-sm mb-1">ORDER NUMBER:</div>
                   <div>{order._id}</div>
-                </div>
-
-                <div className="w-full sm:w-1/2 md:w-1/4 p-4 border-b md:border-b-0 md:border-r">
-                  <div className="font-semibold text-sm mb-1">DATE:</div>
-                  <div>{formatDate(order.createdAt)}</div>
                 </div>
 
                 <div className="w-full sm:w-1/2 md:w-1/4 p-4 border-b md:border-b-0 md:border-r">
@@ -105,7 +111,59 @@ const OrderPage = () => {
                 </div>
               </div>
             </div>
-            {/* Download Receipt Button */}
+            <div className="mb-6 border rounded-lg overflow-hidden">
+              <div className="p-4">
+                <h2 className="font-semibold text-lg mb-2">Shipping Address</h2>
+                <p>{order.orderAddress?.firstName} {order.orderAddress?.lastName}</p>
+                <p>{order.orderAddress?.address1}</p>
+                <p>{order.orderAddress?.address2}</p>
+                <p>{order.orderAddress?.city}, {order.orderAddress?.state} {order.orderAddress?.zipCode}</p>
+                <p>{order.orderAddress?.country}</p>
+                <p>Phone: {order.orderAddress?.phoneNumber}</p>
+              </div>
+            </div>
+            <div className="mb-6 border rounded-lg overflow-hidden">
+              <div className="p-4">
+                <h2 className="font-semibold text-lg mb-2">Products</h2>
+                {order.products.map((product: any, index: number) => (
+                  <div key={index} className="mb-4 flex items-start space-x-4">
+                    {product.product?.fabricId ? (
+                      // Custom shirt display
+                      <>
+                        <div className="flex-shrink-0">
+                          <img
+                            src={product.product.fabric?.image?.url}
+                            alt={product.product.fabric?.fabricName || "Fabric"}
+                            className="w-20 h-20 object-cover rounded-md"
+                          />
+                        </div>
+                        <div className="flex-grow">
+                          <p><strong>Custom Shirt</strong></p>
+                          <p><strong>Fabric:</strong> {product.product.fabric?.fabricName || "N/A"}</p>
+                          <p><strong>Quantity:</strong> {product.qty}</p>
+                          <p><strong>Price:</strong> ₹{product.price}</p>
+                        </div>
+                      </>
+                    ) : (
+                      // Regular product display
+                      <div className="w-full">
+                        <p><strong>Name:</strong> {product.product?.fabrics.fabricName || "N/A"}</p>
+                        <p><strong>Quantity:</strong> {product.qty}</p>
+                        <p><strong>Price:</strong> ₹{product.price}</p>
+                        <p><strong>Size:</strong> {product.size}</p>
+                        <p><strong>Color:</strong> {product.color?.color}</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="mb-6 border rounded-lg overflow-hidden">
+              <div className="p-4">
+                <h2 className="font-semibold text-lg mb-2">Payment Time</h2>
+                <p>{formatDateTime(order.paymentTime)}</p>
+              </div>
+            </div>
             <Button
               onClick={() => downloadPDF(order)}
               className="w-full mt-3 mb-3"

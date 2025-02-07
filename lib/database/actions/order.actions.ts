@@ -31,6 +31,7 @@ export async function createOrder(
     state: string;
     zipCode: string;
     country: string;
+    name: string;
   },
   paymentMethod: "paypal" | "cash_on_delivery",
   total: number,
@@ -61,7 +62,7 @@ export async function createOrder(
     const newOrder = await new OrderModel({
       userid : user.clerkId,
       products: products.map((product) => ({
-        product: product._id,
+        product: product.product,
         qty: product.qty.toString(),
         price: product.price,
       })),
@@ -117,7 +118,16 @@ export const getOrderDetailsById = unstable_cache(
       await connectToDatabase();
       
       const order = await Order.findById(orderId)
-        .populate("products.product");
+        .populate({
+          path: "products.product",
+          model: ShirtModel,
+          populate: [
+            { path: 'colorId' },
+            { path: 'fabricId' },
+            { path: 'measurementId' }
+          ]
+        })
+        .lean(); // Convert Mongoose document to a plain object
 
       if (!order) {
         return {

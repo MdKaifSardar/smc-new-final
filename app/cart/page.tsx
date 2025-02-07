@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { Card, CardContent } from "@/app/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, Minus, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { 
@@ -16,6 +15,8 @@ import { getFabricById } from "@/lib/database/actions/admin/ShirtArea/Fabric/fab
 import { getColorById } from "@/lib/database/actions/admin/ShirtArea/Color/color.actions";
 import { getMeasurementById } from "@/lib/database/actions/measurement.actions";
 import Image from "next/image";
+import { FaMinus, FaPlus, FaTrashAlt } from "react-icons/fa";
+import { AiOutlineLoading3Quarters } from "react-icons/ai";
 
 interface ShirtDetails {
   _id: string;
@@ -99,6 +100,12 @@ const ShirtFeatures = ({ details }: { details: ShirtDetails }) => {
   );
 };
 
+const handleButtonClick = (callback: (event: React.MouseEvent) => void) => (event: React.MouseEvent) => {
+  event.preventDefault();
+  event.stopPropagation();
+  callback(event);
+};
+
 const CartItem = ({ 
   item, 
   onUpdateQuantity, 
@@ -106,8 +113,8 @@ const CartItem = ({
   isUpdating 
 }: {
   item: CartItem;
-  onUpdateQuantity: (id: string, qty: number) => Promise<void>;
-  onDelete: (id: string) => Promise<void>;
+  onUpdateQuantity: (id: string, qty: number, event: React.MouseEvent) => Promise<void>;
+  onDelete: (id: string, event: React.MouseEvent) => Promise<void>;
   isUpdating: boolean;
 }) => {
   const [details, setDetails] = useState<ShirtDetails>(item.product);
@@ -126,8 +133,10 @@ const CartItem = ({
           ...details,
           fabricDetails: fabricRes?.fabric,
           colorDetails: colorRes?.color,
-          measurementDetails: measurementRes
+          measurementDetails: measurementRes || undefined
         });
+
+        console.log(details);
       } catch (error) {
         console.error("Error fetching details:", error);
       } finally {
@@ -139,7 +148,7 @@ const CartItem = ({
 
   if (isLoading) {
     return <Card className="w-full p-6 flex justify-center">
-      <Loader2 className="h-6 w-6 animate-spin" />
+      <AiOutlineLoading3Quarters className="h-6 w-6 animate-spin" />
     </Card>;
   }
 
@@ -205,30 +214,30 @@ const CartItem = ({
             <Button
               size="icon"
               variant="outline"
-              onClick={() => onUpdateQuantity(item.product._id, parseInt(item.qty) - 1)}
+              onClick={handleButtonClick((event) => onUpdateQuantity(item.product._id, parseInt(item.qty) - 1, event))}
               disabled={isUpdating || parseInt(item.qty) <= 1}
             >
-              <Minus className="h-4 w-4" />
+              <FaMinus className="h-4 w-4" />
             </Button>
             <span className="w-8 text-center">
-              {isUpdating ? <Loader2 className="h-4 w-4 animate-spin" /> : item.qty}
+              {isUpdating ? <AiOutlineLoading3Quarters className="h-4 w-4 animate-spin" /> : item.qty}
             </span>
             <Button
               size="icon"
               variant="outline"
-              onClick={() => onUpdateQuantity(item.product._id, parseInt(item.qty) + 1)}
+              onClick={handleButtonClick((event) => onUpdateQuantity(item.product._id, parseInt(item.qty) + 1, event))}
               disabled={isUpdating}
             >
-              <Plus className="h-4 w-4" />
+              <FaPlus className="h-4 w-4" />
             </Button>
           </div>
           <Button
             size="icon"
             variant="destructive"
-            onClick={() => onDelete(item.product._id)}
+            onClick={handleButtonClick((event) => onDelete(item.product._id, event))}
             disabled={isUpdating}
           >
-            <Trash2 className="h-4 w-4" />
+            <FaTrashAlt className="h-4 w-4" />
           </Button>
         </div>
       </CardContent>
@@ -238,7 +247,7 @@ const CartItem = ({
 
 export default function CartPage() {
   const { user } = useUser();
-  const [cart, setCart] = useState<CartData['cart']>(null);
+  const [cart, setCart] = useState<CartData['cart']>(undefined);
   const [loading, setLoading] = useState(true);
   const [updatingItem, setUpdatingItem] = useState<string | null>(null);
 
@@ -265,14 +274,26 @@ export default function CartPage() {
     }
   };
 
-  const updateQuantity = async (productId: string, newQty: number) => {
+  const handleButtonClick = (callback: (event: React.MouseEvent) => void) => (event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    callback(event);
+  };
+
+  const updateQuantity = async (productId: string, newQty: number, event: React.MouseEvent) => {
     if (!user?.id) return;
-    
+
     setUpdatingItem(productId);
     try {
       const response = await updateCartItemQuantity(user.id, productId, newQty);
       if (response.success && response.cart) {
-        setCart(response.cart);
+        setCart((prevCart) => {
+          if (!prevCart) return prevCart;
+          const updatedProducts = prevCart.products.map((item) =>
+            item.product._id === productId ? { ...item, qty: newQty.toString() } : item
+          );
+          return { ...prevCart, products: updatedProducts, cartTotal: response.cart.cartTotal };
+        });
       }
     } catch (error) {
       console.error("Error updating quantity:", error);
@@ -282,7 +303,7 @@ export default function CartPage() {
     }
   };
 
-  const handleDelete = async (productId: string) => {
+  const handleDelete = async (productId: string, event: React.MouseEvent) => {
     if (!user?.id) return;
 
     setUpdatingItem(productId);
@@ -290,7 +311,13 @@ export default function CartPage() {
       const response = await deleteShirtFromCart(user.id, productId);
       if (response.success) {
         toast.success("Item removed from cart");
-        setCart(response.cart);
+        setCart((prevCart) => {
+          if (!prevCart) return prevCart;
+          const updatedProducts = prevCart.products.filter(
+            (item) => item.product._id !== productId
+          );
+          return { ...prevCart, products: updatedProducts, cartTotal: response.cart.cartTotal };
+        });
       }
     } catch (error) {
       console.error("Error removing item:", error);
@@ -303,7 +330,7 @@ export default function CartPage() {
   if (loading) {
     return (
       <div className="min-h-screen pt-16 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
+        <AiOutlineLoading3Quarters className="h-8 w-8 animate-spin" />
       </div>
     );
   }

@@ -1,5 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import jsPDF from "jspdf";
+import { getShirtById } from "@/lib/database/actions/admin/ShirtArea/Shirt/shirt.actions";
+import { getMonogramById } from "@/lib/database/actions/admin/ShirtArea/MonogramUser/monogramuser.actions";
 
 interface OrderAddress {
   address1: string;
@@ -20,7 +22,7 @@ interface OrderProduct {
 }
 
 interface Order {
-  orderId: string;
+  _id: string; // Ensure order ID is included
   orderConfirmation: boolean;
   deliveryStatus: string;
   price: number;
@@ -34,219 +36,222 @@ interface Order {
 
 // Dummy productDetails lookup; replace with your actual data source
 const productDetails: Record<string, any> = {
-    
+  // ...existing product details...
 };
 
-export const downloadPDF = (order: Order) => {
+export const downloadPDF = async (order: Order) => {
+  // Get detailed shirt information for each product
+  const detailedProducts = await Promise.all(
+    order.products.map(async (product) => {
+      const shirtDetails = await getShirtById(product.product?.toString() ?? '');
+      
+      // Get monogram details if shirtDetails exists
+      let monogramDetails = null;
+      // if (shirtDetails.success) {
+        const monogramResult = await getMonogramById((product.product as any).monogramId);
+        monogramDetails = monogramResult.success ? monogramResult.monogram : null;
+      // }
+      // console.log("asujgdfaseuwgaw : \n" ,getMonogramById(product.product.monogramId))
+      return {
+        ...product,
+        shirtDetails: shirtDetails.success ? shirtDetails.shirt : null,
+        monogramDetails
+      };
+    })
+  );
+
   const doc = new jsPDF();
 
-  // Title
-  doc.setFontSize(18);
-  doc.text("Order Details", 20, 20);
+  // Add a border/header design
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.5);
+  doc.rect(10, 10, 190, 277); // Border around the page
 
-  // Order details
+  // Add company logo/header area
+  doc.setFillColor(240, 240, 240);
+  doc.rect(10, 10, 190, 25, 'F');
+
+  // Title with better styling
+  doc.setFontSize(24);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(44, 62, 80);
+  doc.text("Clouth My Shirt", 105, 25, { align: "center" });
+
+  // Subtitle
+  doc.setFontSize(14);
+  doc.setFont("helvetica", "italic");
+  doc.text("Order Receipt", 105, 35, { align: "center" });
+
+  // Order details section
   doc.setFontSize(12);
-  let yPosition = 30;
-  doc.text(`Order ID: ${order.orderId}`, 20, yPosition);
-  yPosition += 10;
-  doc.text(
-    `Order Confirmation: ${order.orderConfirmation ? "Confirmed" : "Not Confirmed"}`,
-    20,
-    yPosition
-  );
-  yPosition += 10;
-  doc.text(`Delivery Status: ${order.deliveryStatus}`, 20, yPosition);
-  yPosition += 10;
-  doc.text(`Total: $${order.price}`, 20, yPosition);
-  yPosition += 10;
-  doc.text(`Delivery Cost: $${order.deliveryCost}`, 20, yPosition);
-  yPosition += 10;
-  doc.text(`Payment Method: ${order.paymentMethod}`, 20, yPosition);
-  yPosition += 10;
-  doc.text(`Payment Time: ${new Date(order.paymentTime).toLocaleString()}`, 20, yPosition);
-  yPosition += 10;
-  doc.text(`Receipt: ${order.receipt}`, 20, yPosition);
-  yPosition += 10;
+  let yPosition = 45;
+
+  // Format currency properly
+  const formatCurrency = (amount: number) => `$${amount.toFixed(2)}`;
+
+  // Basic order information with better formatting
+  const orderInfo = [
+    [`Order ID: ${order._id}`],
+    // [`Order Status: ${order.orderConfirmation ? "✓ Confirmed" : "⧖ Pending"}`],
+    [`Delivery Status: ${order.deliveryStatus}`],
+    [`Order Status: ${order.orderConfirmation ? " Confirmed" : " Pending"}`],
+    [`Delivery Status: ${order.deliveryStatus}`],
+    [`Total Amount: ${formatCurrency(order.price)}`],
+    [`Delivery Cost: ${formatCurrency(order.deliveryCost)}`],
+    [`Payment Method: ${order.paymentMethod}`],
+    [`Payment Time: ${new Date(order.paymentTime).toLocaleString()}`],
+  ];
+
+  // Add a section box for order details
+  doc.setFillColor(249, 249, 249);
+  doc.rect(15, 40, 180, orderInfo.length * 10 + 10, 'F');
+
+  orderInfo.forEach((info) => {
+    doc.setFont("helvetica", "bold");
+    doc.text(info[0], 20, yPosition);
+    yPosition += 8;
+  });
+
+  // Shipping address with better formatting
   if (order.orderAddress) {
-    doc.text("Address:", 20, yPosition);
     yPosition += 10;
-    doc.text(
-      `${order.orderAddress.address1}, ${order.orderAddress.city}, ${order.orderAddress.state}, ${order.orderAddress.zipCode}, ${order.orderAddress.country}`,
-      20,
-      yPosition
-    );
+    doc.setFillColor(249, 249, 249);
+    doc.rect(15, yPosition - 5, 180, 50, 'F');
+
+    doc.setFont("helvetica", "bold");
+    doc.text(" Shipping Address", 20, yPosition);
     yPosition += 10;
+    doc.setFont("helvetica", "normal");
+    const address = [
+      order.orderAddress.address1,
+      order.orderAddress.address2,
+      `${order.orderAddress.city}, ${order.orderAddress.state}`,
+      `${order.orderAddress.zipCode}, ${order.orderAddress.country}`,
+      `Phone: ${order.orderAddress.phoneNumber}`,
+    ].filter(Boolean);
+
+    address.forEach(line => {
+      doc.text(line, 20, yPosition);
+      yPosition += 7;
+    });
   }
 
-  // Loop through products and render detailed info
-  order.products.forEach((product, index) => {
-    // Start each product on a new page except the first if desired
-    if (index > 0) {
-      doc.addPage();
-      yPosition = 20;
-    }
-
-    // Product heading
-    doc.setFontSize(16);
-    doc.setFont("helvetica", "bold");
-    doc.text(`Product ${index + 1}:`, 20, yPosition);
-    yPosition += 10;
-
-    // Product Details Section (clear label formatting)
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "normal");
-
-    // Ensure parameter labels are in block letters
-    const labelStyle = { font: "helvetica", size: 12, fontStyle: "bold" };
-    doc.setFont(labelStyle.font, labelStyle.fontStyle);
-
-    // Product info
-    doc.text("PRODUCT DETAILS:", 20, yPosition);
-    yPosition += 10;
-    doc.text("Product ID:", 20, yPosition);
-    doc.setFont("helvetica", "normal");
-    doc.text(`${product.productId}`, 60, yPosition);
-    yPosition += 10;
-    doc.setFont(labelStyle.font, labelStyle.fontStyle);
-    doc.text("Quantity:", 20, yPosition);
-    doc.setFont("helvetica", "normal");
-    doc.text(`${product.qty}`, 60, yPosition);
-    yPosition += 10;
-    doc.setFont(labelStyle.font, labelStyle.fontStyle);
-    doc.text("Price:", 20, yPosition);
-    doc.setFont("helvetica", "normal");
-    doc.text(`$${product.price}`, 60, yPosition);
-    yPosition += 15;
-
-    // Get product specific details; fall back to empty object if none
-    const details = productDetails[product.productId || ""] || {};
-
-    // Divide details into two columns for the monogram section.
-    const xOffset = 110; // X-coordinate for second column
-
-    // Shirt Details Section
-    doc.setFont(labelStyle.font, labelStyle.fontStyle);
-    doc.text("Shirt details:", 20, yPosition);
-    yPosition += 10;
-    doc.setFont("helvetica", "normal");
-    doc.text("Collar Style:", 20, yPosition);
-    doc.text(`${details?.collarStyle || "N/A"}`, xOffset, yPosition);
-    yPosition += 10;
-    doc.text("Collar Button:", 20, yPosition);
-    doc.text(`${details?.collarButton || "N/A"}`, xOffset, yPosition);
-    yPosition += 10;
-    doc.text("Collar Height:", 20, yPosition);
-    doc.text(`${details?.collarHeight || "N/A"}`, xOffset, yPosition);
-    yPosition += 10;
-    doc.text("Cuff Style:", 20, yPosition);
-    doc.text(`${details?.cuffStyle || "N/A"}`, xOffset, yPosition);
-    yPosition += 10;
-    doc.text("Cuff Links:", 20, yPosition);
-    doc.text(`${details?.cuffLinks || "N/A"}`, xOffset, yPosition);
-    yPosition += 10;
-    doc.text("Fit:", 20, yPosition);
-    doc.text(`${details?.fit || "N/A"}`, xOffset, yPosition);
-    yPosition += 10;
-    doc.text("Back:", 20, yPosition);
-    doc.text(`${details?.back || "N/A"}`, xOffset, yPosition);
-    yPosition += 10;
-    doc.text("Bottom:", 20, yPosition);
-    doc.text(`${details?.bottom || "N/A"}`, xOffset, yPosition);
-    yPosition += 10;
-    doc.text("Placket:", 20, yPosition);
-    doc.text(`${details?.placket || "N/A"}`, xOffset, yPosition);
-    yPosition += 10;
-    doc.text("Pocket:", 20, yPosition);
-    doc.text(`${details?.pocket || "N/A"}`, xOffset, yPosition);
-    yPosition += 10;
-    doc.text("Sleeves:", 20, yPosition);
-    doc.text(`${details?.sleeves || "N/A"}`, xOffset, yPosition);
-    yPosition += 10;
-    doc.text("Fabric:", 20, yPosition);
-    doc.text(`${details?.fabric?.fabricName || "N/A"}`, xOffset, yPosition);
-    yPosition += 10;
-    doc.text("Color:", 20, yPosition);
-    doc.text(`${details?.color?.name || "N/A"}`, xOffset, yPosition);
-    yPosition += 10;
-
-    // Monogram Section
-    doc.setFont(labelStyle.font, labelStyle.fontStyle);
-    doc.text("MONOGRAM DETAILS:", 20, yPosition);
-    yPosition += 10;
-    doc.setFont("helvetica", "normal");
-    doc.text("Monogram Text:", 20, yPosition);
-    doc.text(`${details?.monogram?.text || "N/A"}`, xOffset, yPosition);
-    yPosition += 10;
-    doc.text("Monogram Color:", 20, yPosition);
-    doc.text(`${details?.monogram?.color || "N/A"}`, xOffset, yPosition);
-    yPosition += 10;
-    doc.text("Monogram Style:", 20, yPosition);
-    doc.text(`${details?.monogram?.style?.name || "N/A"}`, xOffset, yPosition);
-    yPosition += 10;
-    doc.text("Monogram Position:", 20, yPosition);
-    doc.text(`${details?.monogram?.position?.name || "N/A"}`, xOffset, yPosition);
-    yPosition += 15;
-
-    // Add a new page for measurement details
+  // Product details with improved layout
+  detailedProducts.forEach((product, index) => {
     doc.addPage();
     yPosition = 20;
 
-    // Measurement Section (split in two columns)
-    doc.setFont(labelStyle.font, labelStyle.fontStyle);
-    doc.text("MEASUREMENT DETAILS:", 20, yPosition);
-    yPosition += 10;
+    // Add product page border
+    doc.rect(10, 10, 190, 277);
 
-    // Left column measurements
+    // Product header
+    doc.setFillColor(240, 240, 240);
+    doc.rect(10, 10, 190, 25, 'F');
+
+    doc.setFontSize(16);
+    doc.setFont("helvetica", "bold");
+    doc.text(`Product ${index + 1} Details`, 105, 25, { align: "center" });
+    yPosition = 40;
+
+
+    doc.setFontSize(12);
     doc.setFont("helvetica", "normal");
-    doc.text("Collar:", 20, yPosition);
-    doc.text(`${details?.measurement?.collar || "N/A"}`, xOffset, yPosition);
-    yPosition += 10;
-    doc.text("Neck:", 20, yPosition);
-    doc.text(`${details?.measurement?.neck || "N/A"}`, xOffset, yPosition);
-    yPosition += 10;
-    doc.text("Chest:", 20, yPosition);
-    doc.text(`${details?.measurement?.chest || "N/A"}`, xOffset, yPosition);
-    yPosition += 10;
-    doc.text("Half Chest:", 20, yPosition);
-    doc.text(`${details?.measurement?.halfChest || "N/A"}`, xOffset, yPosition);
-    yPosition += 10;
-    doc.text("Waist:", 20, yPosition);
-    doc.text(`${details?.measurement?.waist || "N/A"}`, xOffset, yPosition);
-    yPosition += 10;
-    doc.text("Half Waist:", 20, yPosition);
-    doc.text(`${details?.measurement?.halfWaist || "N/A"}`, xOffset, yPosition);
-    yPosition += 10;
 
-    // Right column measurements
-    doc.text("Hips:", 20, yPosition);
-    doc.text(`${details?.measurement?.hips || "N/A"}`, xOffset, yPosition);
-    yPosition += 10;
-    doc.text("Half Hips:", 20, yPosition);
-    doc.text(`${details?.measurement?.halfHips || "N/A"}`, xOffset, yPosition);
-    yPosition += 10;
-    doc.text("Shoulder:", 20, yPosition);
-    doc.text(`${details?.measurement?.shoulder || "N/A"}`, xOffset, yPosition);
-    yPosition += 10;
-    doc.text("Sleeves Length:", 20, yPosition);
-    doc.text(`${details?.measurement?.sleevesLength || "N/A"}`, xOffset, yPosition);
-    yPosition += 10;
-    doc.text("Upper Arm:", 20, yPosition);
-    doc.text(`${details?.measurement?.upperArm || "N/A"}`, xOffset, yPosition);
-    yPosition += 10;
-    doc.text("Elbow:", 20, yPosition);
-    doc.text(`${details?.measurement?.elbow || "N/A"}`, xOffset, yPosition);
-    yPosition += 10;
-    doc.text("Elbow Width:", 20, yPosition);
-    doc.text(`${details?.measurement?.elbowWidth || "N/A"}`, xOffset, yPosition);
-    yPosition += 10;
-    doc.text("Forearm:", 20, yPosition);
-    doc.text(`${details?.measurement?.forearm || "N/A"}`, xOffset, yPosition);
-    yPosition += 10;
-    doc.text("Cuff:", 20, yPosition);
-    doc.text(`${details?.measurement?.cuff || "N/A"}`, xOffset, yPosition);
-    yPosition += 15;
+    const shirtDetails = product.product;
+
+    if (shirtDetails) {
+      const shirtInfo = [
+        ["Base Price", formatCurrency(Number(product.price))],
+        ["Quantity", product.qty],
+        ["Collar Style", shirtDetails.collarStyle?.name],
+        ["Collar Height", shirtDetails.collarHeight?.name],
+        ["Collar Button", shirtDetails.collarButton?.name],
+        ["Bottom Style", shirtDetails.bottom?.name],
+        ["Back Style", shirtDetails.back?.name],
+        ["Pocket Style", shirtDetails.pocket?.name],
+        ["Sleeve Style", shirtDetails.sleeves?.name],
+        ["Fit Type", shirtDetails.fit?.name],
+        ["Watch Compatible", shirtDetails.watchCompatible ? "Yes" : "No"],
+        ["Total Price", formatCurrency(Number(product.price) * Number(product.qty))],
+      ].filter(([_, value]) => value !== undefined);
+
+      shirtInfo.forEach(([label, value]) => {
+        doc.setFont("helvetica", "bold");
+        doc.text(`${label}:`, 20, yPosition);
+        doc.setFont("helvetica", "normal");
+        doc.text(`${value}`, 80, yPosition);
+        yPosition += 10;
+      });
+
+      // Add monogram details if available
+      if (product.monogramDetails) {
+        yPosition += 15;
+        doc.setFont("helvetica", "bold");
+        doc.text("Monogram Details:", 20, yPosition);
+        yPosition += 10;
+        doc.setFont("helvetica", "normal");
+
+        const monogramInfo = [
+          ["Style", `${product.monogramDetails.style.name} ($${product.monogramDetails.style.price})`],
+          ["Position", `${product.monogramDetails.position.name} ($${product.monogramDetails.position.price})`],
+          ["Text", product.monogramDetails.text],
+          ["Color", product.monogramDetails.color],
+          ["Total Monogram Price", `$${product.monogramDetails.price}`]
+        ];
+
+        monogramInfo.forEach(([label, value]) => {
+          if (value) {
+            doc.setFont("helvetica", "bold");
+            doc.text(`${label}:`, 20, yPosition);
+            doc.setFont("helvetica", "normal");
+            doc.text(`${value}`, 80, yPosition);
+            yPosition += 7;
+          }
+        });
+      }
+
+      // Add price breakdown
+      yPosition += 10;
+      doc.setFont("helvetica", "bold");
+      doc.text("Price Breakdown:", 20, yPosition);
+      yPosition += 10;
+      doc.setFont("helvetica", "normal");
+
+      const priceDetails = [
+        ["Collar Style", shirtDetails.collarStyle?.price],
+        ["Collar Height", shirtDetails.collarHeight?.price],
+        ["Collar Button", shirtDetails.collarButton?.price],
+        ["Bottom Style", shirtDetails.bottom?.price],
+        ["Back Style", shirtDetails.back?.price],
+        ["Pocket", shirtDetails.pocket?.price],
+        ["Sleeves", shirtDetails.sleeves?.price],
+        ["Fit", shirtDetails.fit?.price],
+      ].filter(([_, price]) => price !== undefined);
+
+      priceDetails.forEach(([component, price]) => {
+        doc.text(`${component}: $${price}`, 20, yPosition);
+        yPosition += 7;
+      });
+    }
   });
 
-  // Save the PDF with an appropriate name
-  doc.save(`${order.orderId}-details.pdf`);
+  // Footer with better design
+  doc.addPage();
+  doc.rect(10, 10, 190, 277);
+  doc.setFillColor(240, 240, 240);
+  doc.rect(10, 277 - 40, 190, 40, 'F');
+
+  yPosition = 277 - 30;
+  doc.setFontSize(14);
+  doc.setFont("helvetica", "bold");
+  doc.text("Thank you for shopping with us!", 105, yPosition, { align: "center" });
+  yPosition += 10;
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  doc.text("For any queries, please contact our customer support", 105, yPosition, { align: "center" });
+  yPosition += 5;
+  doc.text(" support@clouthmyshirt.com |  1-800-SHIRT", 105, yPosition, { align: "center" });
+
+  // Save the PDF
+  doc.save(`order-${order._id}.pdf`);
 };

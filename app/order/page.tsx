@@ -4,12 +4,11 @@ import { useEffect, useState } from "react";
 import { Button } from "@/app/components/ui/button";
 import { FaArrowLeft, FaMapPin, FaCreditCard } from "react-icons/fa";
 import { GiTicket } from "react-icons/gi";
-import { MdCheckCircle } from "react-icons/md";
+import { MdCheckCircle, MdAutorenew } from "react-icons/md"; // Updated import
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { getOrderDetailsById } from "@/lib/database/actions/order.actions";
 import { format } from "date-fns";
-import { Loader2 } from "lucide-react";
 
 const formatDate = (dateString: string | number | Date) => {
   try {
@@ -53,7 +52,7 @@ const OrderPage = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
+        <MdAutorenew className="h-8 w-8 animate-spin" /> {/* Updated component */}
       </div>
     );
   }
@@ -105,7 +104,30 @@ const OrderPage = () => {
                 </div>
               </div>
             </div>
-            {/* Further rendering */}
+            <div className="mb-6 border rounded-lg overflow-hidden">
+              <div className="p-4">
+                <h2 className="font-semibold text-lg mb-2">Shipping Address</h2>
+                <p>{order.orderAddress?.address1}</p>
+                <p>{order.orderAddress?.address2}</p>
+                <p>{order.orderAddress?.city}, {order.orderAddress?.state} {order.orderAddress?.zipCode}</p>
+                <p>{order.orderAddress?.country}</p>
+                <p>Phone: {order.orderAddress?.phoneNumber}</p>
+              </div>
+            </div>
+            <div className="mb-6 border rounded-lg overflow-hidden">
+              <div className="p-4">
+                <h2 className="font-semibold text-lg mb-2">Products</h2>
+                {order.products.map((product: any, index: number) => (
+                  <div key={index} className="mb-4">
+                    <p><strong>Name:</strong> {product.product.name}</p>
+                    <p><strong>Quantity:</strong> {product.qty}</p>
+                    <p><strong>Price:</strong> ₹{product.price}</p>
+                    <p><strong>Size:</strong> {product.size}</p>
+                    <p><strong>Color:</strong> {product.color.color}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
             <Link href={"/"}>
               <Button className="w-full mt-3">CONTINUE SHOPPING</Button>
             </Link>

@@ -6,6 +6,7 @@ import MeasurementModel from "../models/ProductShirtModel/measurementshirt.model
 export async function createMeasurement(measurements: any) {
     try {
         await connectToDatabase();
+        console.log("measurements : \n" , measurements);
         console.log(measurements);
         
         const measurement = new MeasurementModel({
@@ -42,6 +43,7 @@ export async function getMeasurementById(id: string) {
     try {
         await connectToDatabase();
         const measurement = await MeasurementModel.findById(id);
+        console.log(measurement);
         if (!measurement) {
             throw new Error("Measurement not found");
         }
