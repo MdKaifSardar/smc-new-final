@@ -32,15 +32,15 @@ const CheckoutPage = () => {
       return savedAddress
         ? JSON.parse(savedAddress)
         : {
-            name: "",
-            phoneNumber: "",
-            address1: "",
-            address2: "",
-            city: "",
-            state: "",
-            country: "",
-            zipCode: "",
-          };
+          name: "",
+          phoneNumber: "",
+          address1: "",
+          address2: "",
+          city: "",
+          state: "",
+          country: "",
+          zipCode: "",
+        };
     }
     return {
       name: "",
@@ -91,9 +91,9 @@ const CheckoutPage = () => {
   const subtotal =
     cart && cart.products
       ? cart.products.reduce(
-          (sum: number, item: any) => sum + item.price * Number(item.qty),
-          0
-        )
+        (sum: number, item: any) => sum + item.price * Number(item.qty),
+        0
+      )
       : 0;
   const discount = 0; // You can update this logic if needed
   const total = subtotal - discount;
@@ -125,24 +125,28 @@ const CheckoutPage = () => {
     if (paymentMethod === "paypal") {
       router.push("/checkout/paypal");
     } else if (paymentMethod === "cash-on-delivery") {
-      // Call the createOrder API and pass the required parameters for a cash-on-delivery order.
-      // Replace the placeholder values with actual data from your state.
+      // Create the order
       const orderResponse = await createOrder(
         cart?.products || [],
         deliveryAddress,
         "cash_on_delivery",
         total,
-        total, // totalBeforeDiscount (update if needed)
+        total, // totalBeforeDiscount
         couponCode,
         user.id,
         0 // totalSaved (update if needed)
       );
 
       if (orderResponse.success) {
+        // Clear the cart after successful order creation
+        await fetch(`/api/cart?clerkId=${user.id}`, {
+          method: "DELETE",
+        });
+
         router.push(`/order/${orderResponse.orderId}`);
       } else {
         console.error(orderResponse.message);
-        // Optionally implement error UI here
+        // Optionally, implement error UI here
       }
     }
   };

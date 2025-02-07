@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSavedCartForUser, updateCartItemQuantity } from "@/lib/database/actions/cart.actions";
+import { getSavedCartForUser, updateCartItemQuantity, deleteAllCart } from "@/lib/database/actions/cart.actions";
 
 export async function POST(request: Request) {
   try {
@@ -23,6 +23,20 @@ export async function GET(request: Request) {
       return NextResponse.json({ success: false, message: "Missing clerkId" });
     }
     const result = await getSavedCartForUser(clerkId);
+    return NextResponse.json(result);
+  } catch (error: any) {
+    return NextResponse.json({ success: false, message: error.message || "Internal server error" });
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const clerkId = searchParams.get("clerkId");
+    if (!clerkId) {
+      return NextResponse.json({ success: false, message: "Missing clerkId" });
+    }
+    const result = await deleteAllCart(clerkId);
     return NextResponse.json(result);
   } catch (error: any) {
     return NextResponse.json({ success: false, message: error.message || "Internal server error" });
