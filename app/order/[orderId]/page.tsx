@@ -126,12 +126,34 @@ const OrderPage = () => {
               <div className="p-4">
                 <h2 className="font-semibold text-lg mb-2">Products</h2>
                 {order.products.map((product: any, index: number) => (
-                  <div key={index} className="mb-4">
-                    <p><strong>Name:</strong> {product.product?.name || "N/A"}</p>
-                    <p><strong>Quantity:</strong> {product.qty}</p>
-                    <p><strong>Price:</strong> ₹{product.price}</p>
-                    <p><strong>Size:</strong> {product.size}</p>
-                    <p><strong>Color:</strong> {product.color?.color}</p>
+                  <div key={index} className="mb-4 flex items-start space-x-4">
+                    {product.product?.fabricId ? (
+                      // Custom shirt display
+                      <>
+                        <div className="flex-shrink-0">
+                          <img
+                            src={product.product.fabric?.image?.url}
+                            alt={product.product.fabric?.fabricName || "Fabric"}
+                            className="w-20 h-20 object-cover rounded-md"
+                          />
+                        </div>
+                        <div className="flex-grow">
+                          <p><strong>Custom Shirt</strong></p>
+                          <p><strong>Fabric:</strong> {product.product.fabric?.fabricName || "N/A"}</p>
+                          <p><strong>Quantity:</strong> {product.qty}</p>
+                          <p><strong>Price:</strong> ₹{product.price}</p>
+                        </div>
+                      </>
+                    ) : (
+                      // Regular product display
+                      <div className="w-full">
+                        <p><strong>Name:</strong> {product.product?.fabrics.fabricName || "N/A"}</p>
+                        <p><strong>Quantity:</strong> {product.qty}</p>
+                        <p><strong>Price:</strong> ₹{product.price}</p>
+                        <p><strong>Size:</strong> {product.size}</p>
+                        <p><strong>Color:</strong> {product.color?.color}</p>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

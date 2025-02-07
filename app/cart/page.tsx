@@ -135,6 +135,8 @@ const CartItem = ({
           colorDetails: colorRes?.color,
           measurementDetails: measurementRes || undefined
         });
+
+        console.log(details);
       } catch (error) {
         console.error("Error fetching details:", error);
       } finally {
@@ -177,7 +179,7 @@ const CartItem = ({
                 <h4 className="font-medium mb-2">Material</h4>
                 {details.fabricDetails && (
                   <p className="text-sm">
-                    Fabric: {details.fabricDetails.name} 
+                    Fabric: {details.fabricDetails.fabricName} 
                     {details.fabricDetails.type && ` (${details.fabricDetails.type})`}
                   </p>
                 )}

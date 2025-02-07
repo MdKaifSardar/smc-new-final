@@ -34,8 +34,8 @@ const Page = () => {
     setBodyMeasurements(measurements);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Removed the event parameter since submission is now triggered only on button click.
+  const handleSubmit = async () => {
     if (isSubmitting || !user) return;
     setIsSubmitting(true);
 
@@ -92,7 +92,7 @@ const Page = () => {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="pt-28 px-4 py-2 font-play">
+    <div className="pt-28 px-4 py-2 font-play">
       <div>
         <ShirtMeasurementsForm onChange={handleShirtMeasurementsChange} />
       </div>
@@ -103,14 +103,15 @@ const Page = () => {
 
       <div className="flex items-center justify-center">
         <button
-          type="submit"
+          type="button"
+          onClick={handleSubmit}
           className="bg-[#c40600] px-4 py-2 text-white rounded-lg font-semibold"
           disabled={isSubmitting}
         >
           {isSubmitting ? "Saving..." : "Save Measurements"}
         </button>
       </div>
-    </form>
+    </div>
   );
 };
 
