@@ -5,6 +5,8 @@ import { getMonogramById } from "@/lib/database/actions/admin/ShirtArea/Monogram
 
 interface OrderAddress {
   address1: string;
+  address2: string;
+  phoneNumber: string;
   city: string;
   state: string;
   zipCode: string;
@@ -14,7 +16,17 @@ interface OrderAddress {
 interface OrderProduct {
   _id?: string;
   productId?: string;
-  product?: string;
+  product?: string | {
+    collarStyle?: { name: string; price: number };
+    collarHeight?: { name: string; price: number };
+    collarButton?: { name: string; price: number };
+    bottom?: { name: string; price: number };
+    back?: { name: string; price: number };
+    pocket?: { name: string; price: number };
+    sleeves?: { name: string; price: number };
+    fit?: { name: string; price: number };
+    watchCompatible?: boolean;
+  };
   name?: string;
   qty: string;
   price: string | number;
@@ -163,15 +175,15 @@ export const downloadPDF = async (order: Order) => {
       const shirtInfo = [
         ["Base Price", formatCurrency(Number(product.price))],
         ["Quantity", product.qty],
-        ["Collar Style", shirtDetails.collarStyle?.name],
-        ["Collar Height", shirtDetails.collarHeight?.name],
-        ["Collar Button", shirtDetails.collarButton?.name],
-        ["Bottom Style", shirtDetails.bottom?.name],
-        ["Back Style", shirtDetails.back?.name],
-        ["Pocket Style", shirtDetails.pocket?.name],
-        ["Sleeve Style", shirtDetails.sleeves?.name],
-        ["Fit Type", shirtDetails.fit?.name],
-        ["Watch Compatible", shirtDetails.watchCompatible ? "Yes" : "No"],
+        ["Collar Style", (shirtDetails as any).collarStyle.name],
+        ["Collar Height", (shirtDetails as any).collarHeight?.name],
+        ["Collar Button", (shirtDetails as any).collarButton?.name],
+        ["Bottom Style", (shirtDetails as any).bottom?.name],
+        ["Back Style", (shirtDetails as any).back?.name],
+        ["Pocket Style", (shirtDetails as any).pocket?.name],
+        ["Sleeve Style", (shirtDetails as any).sleeves?.name],
+        ["Fit Type", (shirtDetails as any).fit?.name],
+        ["Watch Compatible", (shirtDetails as any).watchCompatible ? "Yes" : "No"],
         ["Total Price", formatCurrency(Number(product.price) * Number(product.qty))],
       ].filter(([_, value]) => value !== undefined);
 
@@ -218,14 +230,14 @@ export const downloadPDF = async (order: Order) => {
       doc.setFont("helvetica", "normal");
 
       const priceDetails = [
-        ["Collar Style", shirtDetails.collarStyle?.price],
-        ["Collar Height", shirtDetails.collarHeight?.price],
-        ["Collar Button", shirtDetails.collarButton?.price],
-        ["Bottom Style", shirtDetails.bottom?.price],
-        ["Back Style", shirtDetails.back?.price],
-        ["Pocket", shirtDetails.pocket?.price],
-        ["Sleeves", shirtDetails.sleeves?.price],
-        ["Fit", shirtDetails.fit?.price],
+        ["Collar Style", (shirtDetails as any).collarStyle?.price],
+        ["Collar Height", (shirtDetails as any).collarHeight?.price],
+        ["Collar Button", (shirtDetails as any).collarButton?.price],
+        ["Bottom Style", (shirtDetails as any).bottom?.price],
+        ["Back Style", (shirtDetails as any).back?.price],
+        ["Pocket", (shirtDetails as any).pocket?.price],
+        ["Sleeves", (shirtDetails as any).sleeves?.price],
+        ["Fit", (shirtDetails as any).fit?.price],
       ].filter(([_, price]) => price !== undefined);
 
       priceDetails.forEach(([component, price]) => {

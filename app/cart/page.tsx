@@ -37,7 +37,7 @@ interface ShirtDetails {
   colorId?: string;
   measurementId?: string;
   fabricDetails?: {
-    name: string;
+    fabricName: string;
     type: string;
     image?: string;
   };
