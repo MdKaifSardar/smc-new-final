@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import jsPDF from "jspdf";
+import { getShirtById } from "@/lib/database/actions/admin/ShirtArea/Shirt/shirt.actions";
 
 interface OrderAddress {
   address1: string;
@@ -37,15 +38,25 @@ const productDetails: Record<string, any> = {
   // ...existing product details...
 };
 
-export const downloadPDF = (order: Order) => {
+export const downloadPDF = async (order: Order) => {
+  // Get detailed shirt information for each product
+  const detailedProducts = await Promise.all(
+    order.products.map(async (product) => {
+      const shirtDetails = await getShirtById(product.product?.toString() ?? '');
+      return {
+        ...product,
+        shirtDetails: shirtDetails.success ? shirtDetails.shirt : null,
+      };
+    })
+  );
+
   const doc = new jsPDF();
 
-  // Title
+  // Title and header section remains the same
   doc.setFontSize(22);
   doc.setFont("helvetica", "bold");
   doc.text("Clouth My Shirt", 105, 20, { align: "center" });
 
-  // Subtitle
   doc.setFontSize(18);
   doc.setFont("helvetica", "normal");
   doc.text("Order Details", 105, 30, { align: "center" });
@@ -53,84 +64,121 @@ export const downloadPDF = (order: Order) => {
   // Order details
   doc.setFontSize(12);
   let yPosition = 40;
-  doc.text(`Order ID: ${order._id}`, 20, yPosition); // Use order._id
-  yPosition += 10;
-  doc.text(
-    `Order Confirmation: ${order.orderConfirmation ? "Confirmed" : "Not Confirmed"}`,
-    20,
-    yPosition
-  );
-  yPosition += 10;
-  doc.text(`Delivery Status: ${order.deliveryStatus}`, 20, yPosition);
-  yPosition += 10;
-  doc.text(`Total: ₹${order.price}`, 20, yPosition);
-  yPosition += 10;
-  doc.text(`Delivery Cost: ₹${order.deliveryCost}`, 20, yPosition);
-  yPosition += 10;
-  doc.text(`Payment Method: ${order.paymentMethod}`, 20, yPosition);
-  yPosition += 10;
-  doc.text(`Payment Time: ${new Date(order.paymentTime).toLocaleString()}`, 20, yPosition);
-  yPosition += 10;
-  doc.text(`Receipt: ${order.receipt}`, 20, yPosition);
-  yPosition += 10;
+
+  // Basic order information
+  const orderInfo = [
+    [`Order ID: ${order._id}`],
+    [`Order Status: ${order.orderConfirmation ? "Confirmed" : "Not Confirmed"}`],
+    [`Delivery Status: ${order.deliveryStatus}`],
+    [`Total Amount: ₹${order.price}`],
+    [`Delivery Cost: ₹${order.deliveryCost}`],
+    [`Payment Method: ${order.paymentMethod}`],
+    [`Payment Time: ${new Date(order.paymentTime).toLocaleString()}`],
+  ];
+
+  orderInfo.forEach((info) => {
+    doc.text(info[0], 20, yPosition);
+    yPosition += 10;
+  });
+
+  // Shipping address
   if (order.orderAddress) {
-    doc.text("Address:", 20, yPosition);
+    yPosition += 5;
+    doc.setFont("helvetica", "bold");
+    doc.text("Shipping Address:", 20, yPosition);
     yPosition += 10;
-    doc.text(
-      `${order.orderAddress.address1}, ${order.orderAddress.city}, ${order.orderAddress.state}, ${order.orderAddress.zipCode}, ${order.orderAddress.country}`,
-      20,
-      yPosition
-    );
-    yPosition += 10;
+    doc.setFont("helvetica", "normal");
+    const address = [
+      order.orderAddress.address1,
+      order.orderAddress.address2,
+      `${order.orderAddress.city}, ${order.orderAddress.state}`,
+      `${order.orderAddress.zipCode}, ${order.orderAddress.country}`,
+      `Phone: ${order.orderAddress.phoneNumber}`,
+    ].filter(Boolean);
+
+    address.forEach(line => {
+      doc.text(line, 20, yPosition);
+      yPosition += 7;
+    });
   }
 
-  // Loop through products and render detailed info
-  order.products.forEach((product, index) => {
-    // Start each product on a new page except the first if desired
-    if (index > 0) {
-      doc.addPage();
-      yPosition = 20;
-    }
+  // Product details
+  detailedProducts.forEach((product, index) => {
+    doc.addPage();
+    yPosition = 20;
 
-    // Product heading
     doc.setFontSize(16);
     doc.setFont("helvetica", "bold");
-    doc.text(`Product ${index + 1}:`, 20, yPosition);
-    yPosition += 10;
+    doc.text(`Product ${index + 1} Details`, 20, yPosition);
+    yPosition += 15;
 
-    // Product Details Section (clear label formatting)
+    console.log(product);
+
     doc.setFontSize(12);
     doc.setFont("helvetica", "normal");
 
-    // Ensure parameter labels are in block letters
-    const labelStyle = { font: "helvetica", size: 12, fontStyle: "bold" };
-    doc.setFont(labelStyle.font, labelStyle.fontStyle);
+    const shirtDetails = product.product;
 
-    // Product info
-    doc.text("PRODUCT DETAILS:", 20, yPosition);
-    yPosition += 10;
-    doc.text("Product ID:", 20, yPosition);
-    doc.setFont("helvetica", "normal");
-    doc.text(`${product._id}`, 60, yPosition);
-    yPosition += 10;
-    doc.setFont(labelStyle.font, labelStyle.fontStyle);
-    doc.text("Quantity:", 20, yPosition);
-    doc.setFont("helvetica", "normal");
-    doc.text(`${product.qty}`, 60, yPosition);
-    yPosition += 10;
-    doc.setFont(labelStyle.font, labelStyle.fontStyle);
-    doc.text("Price:", 20, yPosition);
-    doc.setFont("helvetica", "normal");
-    doc.text(`₹${product.price}`, 60, yPosition);
-    yPosition += 15;
+    if (shirtDetails) {
+      const shirtInfo = [
+        ["Base Price", `₹${product.price}`],
+        ["Quantity", product.qty],
+        ["Collar Style", shirtDetails.collarStyle?.name],
+        ["Collar Height", shirtDetails.collarHeight?.name],
+        ["Collar Button", shirtDetails.collarButton?.name],
+        ["Bottom Style", shirtDetails.bottom?.name],
+        ["Back Style", shirtDetails.back?.name],
+        ["Pocket Style", shirtDetails.pocket?.name],
+        ["Sleeve Style", shirtDetails.sleeves?.name],
+        ["Fit Type", shirtDetails.fit?.name],
+        ["Watch Compatible", shirtDetails.watchCompatible ? "Yes" : "No"],
+        ["Total Price", `₹${Number(product.price) * Number(product.qty)}`],
+      ].filter(([_, value]) => value !== undefined);
+
+      shirtInfo.forEach(([label, value]) => {
+        doc.setFont("helvetica", "bold");
+        doc.text(`${label}:`, 20, yPosition);
+        doc.setFont("helvetica", "normal");
+        doc.text(`${value}`, 80, yPosition);
+        yPosition += 10;
+      });
+
+      // Add price breakdown
+      yPosition += 10;
+      doc.setFont("helvetica", "bold");
+      doc.text("Price Breakdown:", 20, yPosition);
+      yPosition += 10;
+      doc.setFont("helvetica", "normal");
+
+      const priceDetails = [
+        ["Collar Style", shirtDetails.collarStyle?.price],
+        ["Collar Height", shirtDetails.collarHeight?.price],
+        ["Collar Button", shirtDetails.collarButton?.price],
+        ["Bottom Style", shirtDetails.bottom?.price],
+        ["Back Style", shirtDetails.back?.price],
+        ["Pocket", shirtDetails.pocket?.price],
+        ["Sleeves", shirtDetails.sleeves?.price],
+        ["Fit", shirtDetails.fit?.price],
+      ].filter(([_, price]) => price !== undefined);
+
+      priceDetails.forEach(([component, price]) => {
+        doc.text(`${component}: ₹${price}`, 20, yPosition);
+        yPosition += 7;
+      });
+    }
   });
 
-  // Thank you message
-  yPosition += 20;
+  // Footer
+  doc.addPage();
+  yPosition = 20;
   doc.setFontSize(14);
   doc.setFont("helvetica", "bold");
-  doc.text("Thank you for visiting our website!", 105, yPosition, { align: "center" });
+  doc.text("Thank you for shopping with us!", 105, yPosition, { align: "center" });
+  yPosition += 10;
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  doc.text("For any queries, please contact our customer support.", 105, yPosition, { align: "center" });
 
-  // Save the PDF with an appropriate name
-  doc.save(`${order._id}-details.pdf`); // Use order._id
+  // Save the PDF
+  doc.save(`order-${order._id}.pdf`);
 };
