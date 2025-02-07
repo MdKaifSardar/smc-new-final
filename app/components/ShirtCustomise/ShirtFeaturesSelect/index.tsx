@@ -78,7 +78,7 @@ const ShirtCustomizer = () => {
   //   null
   // );
   const [selectedItems, setSelectedItems] = useState<{
-    [key: string]: ProductItem;
+    [key in keyof ProductData]?: ProductItem;
   }>({});
   const [watchCompatible, setWatchCompatible] = useState(false);
   const [isCollarOpen, setIsCollarOpen] = useState(true);
@@ -272,16 +272,18 @@ const ShirtCustomizer = () => {
   //   }
   // };
 
-  const assignItemToSection = (section: keyof Shirt, item: ProductItem) => {
+  const assignItemToSection = (section: keyof Shirt, item: ProductItem | null) => {
     setShirt((prev) => {
-      const updatedShirt = {
-        ...prev,
-        [section]: {
+      const updatedShirt = { ...prev };
+      if (item === null) {
+        delete updatedShirt[section];
+      } else {
+        updatedShirt[section] = {
           name: item.name,
-          image: item.image?.url,
-          price: item.price,
-        },
-      };
+          image: item.image?.url ?? '',
+          price: item.price ?? 0,
+        };
+      }
       return updatedShirt;
     });
   };
@@ -304,8 +306,49 @@ const ShirtCustomizer = () => {
 
       if (data && data[section as keyof ProductData]?.length) {
         const defaultItem = data[section as keyof ProductData]![0];
+
+        // Skip assigning pocket if the default placket is pleat
+        if (section === "pocket") {
+          const defaultPlacket = data?.placket?.[0];
+          if (
+            defaultPlacket &&
+            defaultPlacket.name.toLowerCase().includes("pleat")
+          ) {
+            return;
+          }
+        }
+
         assignItemToSection(section as keyof Shirt, defaultItem); // Assign to the shirt object
-        if(section == "placket" && defaultItem.name.toLowerCase().includes("pleat")){
+
+        if (
+          section === "sleeves" &&
+          defaultItem.name.toLowerCase().includes("long")
+        ) {
+          setLongSleeveSelected(true);
+
+          // Assign default cuffStyle and cuffLinks if sleeves are long
+          const cuffStyleDefault = data?.cuffStyle?.[0];
+          const cuffLinksDefault = data?.cuffLinks?.[0];
+
+          if (cuffStyleDefault) {
+            assignItemToSection("cuffStyle", cuffStyleDefault);
+          }
+          if (cuffLinksDefault) {
+            assignItemToSection("cuffLinks", cuffLinksDefault);
+          }
+
+          setSelectedItems((prev) => ({
+            ...prev,
+            cuffStyle: cuffStyleDefault || prev.cuffStyle,
+            cuffLinks: cuffLinksDefault || prev.cuffLinks,
+            sleeves: defaultItem,
+          }));
+        }
+
+        if (
+          section === "placket" &&
+          defaultItem.name.toLowerCase().includes("pleat")
+        ) {
           setIsPleatSelected(true);
         }
 
@@ -322,53 +365,73 @@ const ShirtCustomizer = () => {
   }, [data]);
 
   const handleSelect = (section: keyof ProductData, item: ProductItem) => {
-    assignItemToSection(section as keyof Shirt, item); // Assign to the shirt object
+    assignItemToSection(section as keyof Shirt, item);
 
-    if (section === "sleeves" && item.name.toLowerCase().includes("long")) {
-      setLongSleeveSelected(true);
-    }
+    if (section === "sleeves") {
+      const isLongSleeve = item.name.toLowerCase().includes("long");
+      setLongSleeveSelected(isLongSleeve);
 
-    if (section === "sleeves" && item.name.toLowerCase().includes("short")) {
-      setLongSleeveSelected(false);
       setSelectedItems((prev) => {
-        const updatedItems = { ...prev };
+        const updatedItems = { ...prev, sleeves: item };
+
+        if (isLongSleeve) {
+          const cuffStyleDefault = data?.cuffStyle?.[0];
+          const cuffLinksDefault = data?.cuffLinks?.[0];
+
+          if (cuffStyleDefault)
+            assignItemToSection("cuffStyle", cuffStyleDefault);
+          if (cuffLinksDefault)
+            assignItemToSection("cuffLinks", cuffLinksDefault);
+
+          return {
+            ...updatedItems,
+            cuffStyle: cuffStyleDefault,
+            cuffLinks: cuffLinksDefault,
+          };
+        }
+
+        // Remove cuffStyle and cuffLinks from both state and the shirt object
+        assignItemToSection("cuffStyle", null);
+        assignItemToSection("cuffLinks", null);
         delete updatedItems["cuffStyle"];
         delete updatedItems["cuffLinks"];
+
         return updatedItems;
       });
     }
 
-    if (section === "placket" && item.name.toLowerCase().includes("pleat")) {
-      setIsPleatSelected(true);
+    if (section === "placket") {
+      const isPleat = item.name.toLowerCase().includes("pleat");
+      setIsPleatSelected(isPleat);
+
       setSelectedItems((prev) => {
         const updatedItems = { ...prev };
-        delete updatedItems["pocket"];
+
+        if (isPleat) {
+          delete updatedItems["pocket"]; // Completely remove pocket when pleat is selected
+          assignItemToSection("pocket", null);
+        } else {
+          const defaultPocket = data?.pocket?.[0]; // Restore default pocket
+          if (defaultPocket) {
+            updatedItems["pocket"] = defaultPocket;
+            assignItemToSection("pocket", defaultPocket);
+          }
+        }
+
         return updatedItems;
       });
-    }
-    if (section === "placket" && !item.name.toLowerCase().includes("pleat")) {
-      // Disable pocket section if placket item includes "pleat"
-      setIsPleatSelected(false);
     }
 
     if (section === "back") {
       setIsBackPopupOpen(true);
-      setSelectedBackImage(item.image?.url ?? null); // Ensure the value is either a string or null
-
-      // setSelectedItems((prev) => {
-      //   const updatedItems = { ...prev, [section]: item };
-      //   const newTotalPrice = calculateTotalPrice(updatedItems);
-      //   setTotalPrice(newTotalPrice);
-      //   return updatedItems;
-      // });
+      setSelectedBackImage(item.image?.url ?? null);
       assignItemToSection(section as keyof Shirt, item);
       return;
     }
 
     setSelectedItems((prev) => {
       const updatedItems = { ...prev, [section]: item };
-      const newTotalPrice = calculateTotalPrice(updatedItems);
-      setTotalPrice(newTotalPrice);
+      setTotalPrice(calculateTotalPrice(updatedItems));
       return updatedItems;
     });
   };
