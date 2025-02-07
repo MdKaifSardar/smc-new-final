@@ -92,9 +92,9 @@ export const downloadPDF = async (order: Order) => {
   // Basic order information with better formatting
   const orderInfo = [
     [`Order ID: ${order._id}`],
-    [`Order Status: ${order.orderConfirmation ? "✓ Confirmed" : "⧖ Pending"}`],
+    // [`Order Status: ${order.orderConfirmation ? "✓ Confirmed" : "⧖ Pending"}`],
     [`Delivery Status: ${order.deliveryStatus}`],
-    [`Order Status: ${order.orderConfirmation ? "✓ Confirmed" : "⧖ Pending"}`],
+    [`Order Status: ${order.orderConfirmation ? " Confirmed" : " Pending"}`],
     [`Delivery Status: ${order.deliveryStatus}`],
     [`Total Amount: ${formatCurrency(order.price)}`],
     [`Delivery Cost: ${formatCurrency(order.deliveryCost)}`],

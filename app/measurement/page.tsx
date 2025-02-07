@@ -66,6 +66,7 @@ const Page = () => {
       }
 
       // 4. Add shirt to cart
+      // console.log("user ID", user.id);
       const cartResponse = await addShirtToCart(shirtId, user.id);
 
       if (!cartResponse.success) {

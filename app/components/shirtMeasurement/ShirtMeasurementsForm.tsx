@@ -103,10 +103,11 @@ const ShirtMeasurementsForm: React.FC<ShirtMeasurementsFormProps> = ({ initialMe
 
                 <select
                   className="outline-none p-2 w-1/3 rounded-md shadow-sm sm:text-sm"
-                  value={measurementField?.value?.unit || "inch"}  // Correctly reference 'unit'
-                  onChange={(e) => handleChange(typedField, "unit", e.target.value)}  // Update 'unit'
+                  value={measurementField?.value?.unit || "inch"}
+                  onChange={(e) => handleChange(typedField, "unit", e.target.value)}
                 >
                   <option value="inch" className="outline-none">inches</option>
+                  <option value="cm" className="outline-none">cm</option>
                 </select>
               </div>
             </div>

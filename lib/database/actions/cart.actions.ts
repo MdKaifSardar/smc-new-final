@@ -18,7 +18,7 @@ export async function addShirtToCart(shirtId: string, clerkId: string) {
 
     // Find user with better error handling
     const user = await getUserById(clerkId); // Fetch user by ID
-    if (!user) {
+    if (!user.success) {
       console.error(`No user found for clerkId: ${clerkId}`);
       throw new Error("User not found. Please ensure you're logged in.");
     }
@@ -36,6 +36,8 @@ export async function addShirtToCart(shirtId: string, clerkId: string) {
     // }
 
     // Find or create cart with explicit error handling
+    // console.log("user", user);
+    // console.log("user.user._id", user.user._id);
     let cart = await Cart.findOne({ user: user.user._id });
     if (!cart) {
       cart = new Cart({
