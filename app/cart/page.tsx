@@ -6,10 +6,10 @@ import { Card, CardContent } from "@/app/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { toast } from "sonner";
-import { 
-  getSavedCartForUser, 
-  updateCartItemQuantity, 
-  deleteShirtFromCart 
+import {
+  getSavedCartForUser,
+  updateCartItemQuantity,
+  deleteShirtFromCart,
 } from "@/lib/database/actions/cart.actions";
 import { getFabricById } from "@/lib/database/actions/admin/ShirtArea/Fabric/fabric.actions";
 import { getColorById } from "@/lib/database/actions/admin/ShirtArea/Color/color.actions";
@@ -26,7 +26,7 @@ interface ShirtDetails {
   collarHeight?: { name: string };
   cuffStyle?: { name: string };
   cuffLinks?: { name: string };
-  watchCompatible?: boolean;
+  watchCompatible?: string;
   bottom?: { name: string };
   back?: { name: string };
   pocket?: { name: string };
@@ -72,18 +72,18 @@ interface CartData {
 
 const ShirtFeatures = ({ details }: { details: ShirtDetails }) => {
   const features = [
-    { label: 'Collar Style', value: details.collarStyle?.name },
-    { label: 'Collar Button', value: details.collarButton?.name },
-    { label: 'Collar Height', value: details.collarHeight?.name },
-    { label: 'Cuff Style', value: details.cuffStyle?.name },
-    { label: 'Cuff Links', value: details.cuffLinks?.name },
-    { label: 'Bottom', value: details.bottom?.name },
-    { label: 'Back', value: details.back?.name },
-    { label: 'Pocket', value: details.pocket?.name },
-    { label: 'Placket', value: details.placket?.name },
-    { label: 'Sleeves', value: details.sleeves?.name },
-    { label: 'Fit', value: details.fit?.name },
-  ].filter(f => f.value);
+    { label: "Collar Style", value: details.collarStyle?.name },
+    { label: "Collar Button", value: details.collarButton?.name },
+    { label: "Collar Height", value: details.collarHeight?.name },
+    { label: "Cuff Style", value: details.cuffStyle?.name },
+    { label: "Cuff Links", value: details.cuffLinks?.name },
+    { label: "Bottom", value: details.bottom?.name },
+    { label: "Back", value: details.back?.name },
+    { label: "Pocket", value: details.pocket?.name },
+    { label: "Placket", value: details.placket?.name },
+    { label: "Sleeves", value: details.sleeves?.name },
+    { label: "Fit", value: details.fit?.name },
+  ].filter((f) => f.value);
 
   return (
     <div className="grid grid-cols-2 gap-2 text-sm">
@@ -94,26 +94,32 @@ const ShirtFeatures = ({ details }: { details: ShirtDetails }) => {
       ))}
       <p>
         <span className="text-gray-600">Watch Compatible:</span>
-        {details.watchCompatible ? ' Yes' : ' No'}
+        {details.watchCompatible}
       </p>
     </div>
   );
 };
 
-const handleButtonClick = (callback: (event: React.MouseEvent) => void) => (event: React.MouseEvent) => {
-  event.preventDefault();
-  event.stopPropagation();
-  callback(event);
-};
+const handleButtonClick =
+  (callback: (event: React.MouseEvent) => void) =>
+  (event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    callback(event);
+  };
 
-const CartItem = ({ 
-  item, 
-  onUpdateQuantity, 
-  onDelete, 
-  isUpdating 
+const CartItem = ({
+  item,
+  onUpdateQuantity,
+  onDelete,
+  isUpdating,
 }: {
   item: CartItem;
-  onUpdateQuantity: (id: string, qty: number, event: React.MouseEvent) => Promise<void>;
+  onUpdateQuantity: (
+    id: string,
+    qty: number,
+    event: React.MouseEvent
+  ) => Promise<void>;
   onDelete: (id: string, event: React.MouseEvent) => Promise<void>;
   isUpdating: boolean;
 }) => {
@@ -126,14 +132,16 @@ const CartItem = ({
         const [fabricRes, colorRes, measurementRes] = await Promise.all([
           details.fabricId ? getFabricById(details.fabricId) : null,
           details.colorId ? getColorById(details.colorId) : null,
-          details.measurementId ? getMeasurementById(details.measurementId) : null
+          details.measurementId
+            ? getMeasurementById(details.measurementId)
+            : null,
         ]);
 
         setDetails({
           ...details,
           fabricDetails: fabricRes?.fabric,
           colorDetails: colorRes?.color,
-          measurementDetails: measurementRes || undefined
+          measurementDetails: measurementRes || undefined,
         });
 
         console.log(details);
@@ -147,9 +155,11 @@ const CartItem = ({
   }, [item.product]);
 
   if (isLoading) {
-    return <Card className="w-full p-6 flex justify-center">
-      <AiOutlineLoading3Quarters className="h-6 w-6 animate-spin" />
-    </Card>;
+    return (
+      <Card className="w-full p-6 flex justify-center">
+        <AiOutlineLoading3Quarters className="h-6 w-6 animate-spin" />
+      </Card>
+    );
   }
 
   return (
@@ -179,13 +189,14 @@ const CartItem = ({
                 <h4 className="font-medium mb-2">Material</h4>
                 {details.fabricDetails && (
                   <p className="text-sm">
-                    Fabric: {details.fabricDetails.fabricName} 
-                    {details.fabricDetails.type && ` (${details.fabricDetails.type})`}
+                    Fabric: {details.fabricDetails.fabricName}
+                    {details.fabricDetails.type &&
+                      ` (${details.fabricDetails.type})`}
                   </p>
                 )}
                 {details.colorDetails && (
                   <div className="flex items-center gap-2 mt-1">
-                    <div 
+                    <div
                       className="w-4 h-4 rounded-full border"
                       style={{ backgroundColor: details.colorDetails.hexCode }}
                     />
@@ -214,18 +225,34 @@ const CartItem = ({
             <Button
               size="icon"
               variant="outline"
-              onClick={handleButtonClick((event) => onUpdateQuantity(item.product._id, parseInt(item.qty) - 1, event))}
+              onClick={handleButtonClick((event) =>
+                onUpdateQuantity(
+                  item.product._id,
+                  parseInt(item.qty) - 1,
+                  event
+                )
+              )}
               disabled={isUpdating || parseInt(item.qty) <= 1}
             >
               <FaMinus className="h-4 w-4" />
             </Button>
             <span className="w-8 text-center">
-              {isUpdating ? <AiOutlineLoading3Quarters className="h-4 w-4 animate-spin" /> : item.qty}
+              {isUpdating ? (
+                <AiOutlineLoading3Quarters className="h-4 w-4 animate-spin" />
+              ) : (
+                item.qty
+              )}
             </span>
             <Button
               size="icon"
               variant="outline"
-              onClick={handleButtonClick((event) => onUpdateQuantity(item.product._id, parseInt(item.qty) + 1, event))}
+              onClick={handleButtonClick((event) =>
+                onUpdateQuantity(
+                  item.product._id,
+                  parseInt(item.qty) + 1,
+                  event
+                )
+              )}
               disabled={isUpdating}
             >
               <FaPlus className="h-4 w-4" />
@@ -234,7 +261,9 @@ const CartItem = ({
           <Button
             size="icon"
             variant="destructive"
-            onClick={handleButtonClick((event) => onDelete(item.product._id, event))}
+            onClick={handleButtonClick((event) =>
+              onDelete(item.product._id, event)
+            )}
             disabled={isUpdating}
           >
             <FaTrashAlt className="h-4 w-4" />
@@ -247,7 +276,7 @@ const CartItem = ({
 
 export default function CartPage() {
   const { user } = useUser();
-  const [cart, setCart] = useState<CartData['cart']>(undefined);
+  const [cart, setCart] = useState<CartData["cart"]>(undefined);
   const [loading, setLoading] = useState(true);
   const [updatingItem, setUpdatingItem] = useState<string | null>(null);
 
@@ -274,13 +303,19 @@ export default function CartPage() {
     }
   };
 
-  const handleButtonClick = (callback: (event: React.MouseEvent) => void) => (event: React.MouseEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-    callback(event);
-  };
+  const handleButtonClick =
+    (callback: (event: React.MouseEvent) => void) =>
+    (event: React.MouseEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
+      callback(event);
+    };
 
-  const updateQuantity = async (productId: string, newQty: number, event: React.MouseEvent) => {
+  const updateQuantity = async (
+    productId: string,
+    newQty: number,
+    event: React.MouseEvent
+  ) => {
     if (!user?.id) return;
 
     setUpdatingItem(productId);
@@ -290,9 +325,15 @@ export default function CartPage() {
         setCart((prevCart) => {
           if (!prevCart) return prevCart;
           const updatedProducts = prevCart.products.map((item) =>
-            item.product._id === productId ? { ...item, qty: newQty.toString() } : item
+            item.product._id === productId
+              ? { ...item, qty: newQty.toString() }
+              : item
           );
-          return { ...prevCart, products: updatedProducts, cartTotal: response.cart.cartTotal };
+          return {
+            ...prevCart,
+            products: updatedProducts,
+            cartTotal: response.cart.cartTotal,
+          };
         });
       }
     } catch (error) {
@@ -316,7 +357,11 @@ export default function CartPage() {
           const updatedProducts = prevCart.products.filter(
             (item) => item.product._id !== productId
           );
-          return { ...prevCart, products: updatedProducts, cartTotal: response.cart.cartTotal };
+          return {
+            ...prevCart,
+            products: updatedProducts,
+            cartTotal: response.cart.cartTotal,
+          };
         });
       }
     } catch (error) {
