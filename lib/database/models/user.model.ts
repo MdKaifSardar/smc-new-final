@@ -74,14 +74,15 @@ const UserSchema = new Schema(
         default: true,
       },
     },
-    // orders : [{
-    //   type : mongoose.Schema.Types.ObjectId,
-    //   ref : "Order"
-    // }]
+    orders : [{
+      type : mongoose.Schema.Types.ObjectId,
+      ref : "Order"
+    }]
   },
   {
     timestamps: true,
   }
 );
-const User = models?.User || model("User", UserSchema);
+
+const User = models.User || model("User", UserSchema);
 export default User;

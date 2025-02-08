@@ -91,81 +91,81 @@ export async function deleteUser(clerkId: string) {
   }
 }
 
-// Address operations of user:
-export async function changeActiveAddress(id: any, user_id: any) {
-  try {
-    await connectToDatabase();
-    const user = await User.findById(user_id);
-    let user_addresses = user.address;
-    let addresses = [];
+// // Address operations of user:
+// export async function changeActiveAddress(id: any, user_id: any) {
+//   try {
+//     await connectToDatabase();
+//     const user = await User.findById(user_id);
+//     let user_addresses = user.address;
+//     let addresses = [];
 
-    for (let i = 0; i < user_addresses.length; i++) {
-      let temp_address = {};
-      if (user_addresses[i]._id == id) {
-        temp_address = { ...user_addresses[i].toObject(), active: true };
-        addresses.push(temp_address);
-      } else {
-        temp_address = { ...user_addresses[i].toObject(), active: false };
-        addresses.push(temp_address);
-      }
-    }
-    await user.updateOne(
-      {
-        address: addresses,
-      },
-      { new: true }
-    );
-    return JSON.parse(JSON.stringify({ addresses }));
-  } catch (error:any) {
-    throw new Error(error);
-  }
-}
-export async function deleteAddress(id: any, user_id: any) {
-  try {
-    await connectToDatabase();
-    const user = await User.findById(user_id);
-    await user.updateOne(
-      {
-        $pull: {
-          address: { _id: id },
-        },
-      },
-      { new: true }
-    );
-    return JSON.parse(
-      JSON.stringify({
-        addresses: user.address.filter((a: any) => a._id != id),
-      })
-    );
-  } catch (error:any) {
-    throw new Error(error);
-  }
-}
-export async function saveAddress(address: any, user_id: any) {
-  try {
-    await connectToDatabase();
-    // Find the user by user_id
-    const user = await User.findOne({ clerkId: user_id });
+//     for (let i = 0; i < user_addresses.length; i++) {
+//       let temp_address = {};
+//       if (user_addresses[i]._id == id) {
+//         temp_address = { ...user_addresses[i].toObject(), active: true };
+//         addresses.push(temp_address);
+//       } else {
+//         temp_address = { ...user_addresses[i].toObject(), active: false };
+//         addresses.push(temp_address);
+//       }
+//     }
+//     await user.updateOne(
+//       {
+//         address: addresses,
+//       },
+//       { new: true }
+//     );
+//     return JSON.parse(JSON.stringify({ addresses }));
+//   } catch (error:any) {
+//     throw new Error(error);
+//   }
+// }
+// export async function deleteAddress(id: any, user_id: any) {
+//   try {
+//     await connectToDatabase();
+//     const user = await User.findById(user_id);
+//     await user.updateOne(
+//       {
+//         $pull: {
+//           address: { _id: id },
+//         },
+//       },
+//       { new: true }
+//     );
+//     return JSON.parse(
+//       JSON.stringify({
+//         addresses: user.address.filter((a: any) => a._id != id),
+//       })
+//     );
+//   } catch (error:any) {
+//     throw new Error(error);
+//   }
+// }
+// export async function saveAddress(address: any, user_id: any) {
+//   try {
+//     await connectToDatabase();
+//     // Find the user by user_id
+//     const user = await User.findOne({ clerkId: user_id });
 
-    if (!user) {
-      console.log("User not found");
-      return "User not found";
-    }else{
-      console.log(user)
-    }
+//     if (!user) {
+//       console.log("User not found");
+//       return "User not found";
+//     }else{
+//       console.log(user)
+//     }
 
-    console.log(address.phoneNumber)
+//     console.log(address.phoneNumber)
 
-    const updatedUser = await User.findOneAndUpdate({clerkId : user_id},{
-      address : address
-    }, {new: true});
-    console.log(updatedUser)
+//     const updatedUser = await User.findOneAndUpdate({clerkId : user_id},{
+//       address : address
+//     }, {new: true});
+//     console.log(updatedUser)
 
-    return JSON.parse(JSON.stringify({ address: updatedUser.address, message : "Address saved successfully" , success: true}));
-  } catch (error:any) {
-    throw new Error(error);
-  }
-}
+//     return JSON.parse(JSON.stringify({ address: updatedUser.address, message : "Address saved successfully" , success: true}));
+//   } catch (error:any) {
+//     throw new Error(error);
+//   }
+// }
 
 // Coupon operations of user:
 export async function applyCoupon(coupon: any, user_id: any) {
