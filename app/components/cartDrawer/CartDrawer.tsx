@@ -15,6 +15,7 @@ import Link from "next/link";
 import { useAtom, useStore } from "jotai";
 import { cartMenuState } from "@/app/utils/data/store";
 import { useUser } from "@clerk/nextjs";
+import { getShirtById, getShirtByIdInDetails } from "@/lib/database/actions/admin/ShirtArea/Shirt/shirt.actions";
 
 interface CartItem {
   product: string | {
@@ -114,6 +115,13 @@ const CartDrawer = () => {
     }
   }, [cartItems, isShirtEnriched]);
 
+  const showinDetails =async (productId: string) => {
+    if (!productId) return;
+    console.log("Product ID:", productId);
+    const response = await getShirtByIdInDetails(productId) as any;
+    console.log(response)
+  }
+
   const handleOnClickCartMenu = () => {
     if (user) setCartMenuOpen(true);
   };
@@ -173,6 +181,7 @@ const CartDrawer = () => {
               ) : (
                 cartItems.map((item, index) => {
                   const productId = getProductId(item);
+                  showinDetails(productId);
                   if (!productId) return null;
                   return (
                     <div key={index} className="flex items-center space-x-4 border-b-2 pb-3">

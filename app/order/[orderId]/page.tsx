@@ -10,6 +10,7 @@ import { format } from "date-fns";
 // Import downloadPDF from the checkout folder
 import { downloadPDF } from "../../checkout/down";
 import { getFabricById } from "@/lib/database/actions/admin/ShirtArea/Fabric/fabric.actions";
+import { useUser } from "@clerk/nextjs";
 
 const formatDate = (dateString: string | number | Date) => {
   try {
@@ -37,6 +38,7 @@ const formatDateTime = (dateString: string | number | Date) => {
 
 const OrderPage = () => {
   const { orderId } = useParams();
+  const {user} = useUser();
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -211,7 +213,7 @@ const OrderPage = () => {
               </div>
             </div>
             <Button
-              onClick={() => downloadPDF(order)}
+              onClick={() => downloadPDF(order, user)}
               className="w-full mt-3 mb-3"
             >
               Download Receipt
