@@ -69,7 +69,7 @@ export const createShirt = async (
   placket: object,
   pocket: object,
   fit: object,
-  watchCompatible: boolean,
+  watchCompatible: string,
   colorId: string,
   fabricId: string,
   clerkId: string

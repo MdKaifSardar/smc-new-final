@@ -80,7 +80,7 @@ const ShirtCustomizer = () => {
   const [selectedItems, setSelectedItems] = useState<{
     [key in keyof ProductData]?: ProductItem;
   }>({});
-  const [watchCompatible, setWatchCompatible] = useState(false);
+  const [watchCompatible, setWatchCompatible] = useState("No");
   const [isCollarOpen, setIsCollarOpen] = useState(true);
   const [isCuffOpen, setIsCuffOpen] = useState(true);
   const [longSleeveSelected, setLongSleeveSelected] = useState(false);
@@ -272,7 +272,10 @@ const ShirtCustomizer = () => {
   //   }
   // };
 
-  const assignItemToSection = (section: keyof Shirt, item: ProductItem | null) => {
+  const assignItemToSection = (
+    section: keyof Shirt,
+    item: ProductItem | null
+  ) => {
     setShirt((prev) => {
       const updatedShirt = { ...prev };
       if (item === null) {
@@ -280,7 +283,7 @@ const ShirtCustomizer = () => {
       } else {
         updatedShirt[section] = {
           name: item.name,
-          image: item.image?.url ?? '',
+          image: item.image?.url ?? "",
           price: item.price ?? 0,
         };
       }
@@ -436,9 +439,9 @@ const ShirtCustomizer = () => {
     });
   };
 
-  const handleToggle = () => {
-    setWatchCompatible((prev) => !prev);
-  };
+  // const handleToggle = () => {
+  //   setWatchCompatible((prev) => !prev);
+  // };
 
   const toggleCollarSection = () => {
     setIsCollarOpen((prev) => !prev);
@@ -708,16 +711,15 @@ const ShirtCustomizer = () => {
                     <span className="mr-3 text-lg font-medium text-gray-700">
                       Watch Compatible:
                     </span>
-                    <button
-                      onClick={handleToggle}
-                      className={`py-2 px-6 rounded-full text-white font-semibold transition-all duration-200 ease-in-out ${
-                        watchCompatible
-                          ? "bg-green-500 hover:bg-green-600"
-                          : "bg-red-500 hover:bg-red-600"
-                      }`}
+                    <select
+                      value={watchCompatible}
+                      onChange={(e) => setWatchCompatible(e.target.value)}
+                      className="py-2 px-4 border border-gray-300 rounded-lg text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                      {watchCompatible ? "Yes" : "No"}
-                    </button>
+                      <option value="No">No</option>
+                      <option value="Left">Left</option>
+                      <option value="Right">Right</option>
+                    </select>
                   </div>
                 </div>
               )}
