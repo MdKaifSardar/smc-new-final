@@ -783,21 +783,23 @@ const ShirtCustomizer = () => {
           </div>
 
           {/* Footer - Fixed at bottom */}
-          <div className="sticky bottom-0 p-4 border-t bg-gray-50 flex justify-between items-center space-x-4">
-            <button
-              onClick={() => setActiveSection(null)}
-              className="bg-[#C40600] text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition duration-300"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={() => handleConfirmAndProceed()}
-              className="bg-[#C40600] text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition duration-300"
-              disabled={!selectedItems[activeSection]}
-            >
-              Confirm & Proceed
-            </button>
-          </div>
+          {activeSection !== "back" && (
+            <div className="sticky bottom-0 p-4 border-t bg-gray-50 flex justify-between items-center space-x-4">
+              <button
+                onClick={() => setActiveSection(null)}
+                className="bg-[#C40600] text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition duration-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleConfirmAndProceed()}
+                className="bg-[#C40600] text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition duration-300"
+                disabled={!selectedItems[activeSection]}
+              >
+                Confirm & Proceed
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
