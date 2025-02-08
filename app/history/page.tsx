@@ -1,14 +1,14 @@
 "use client";
-
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { FaSpinner, FaBoxOpen } from "react-icons/fa";
+import { Card, CardContent } from "@/app/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { getFabricById } from "@/lib/database/actions/admin/ShirtArea/Fabric/fabric.actions";
+import { format } from "date-fns";
 import { useUser } from "@clerk/nextjs";
 import { getUserOrders } from "@/lib/database/actions/order.actions";
-import { Card, CardContent } from "@/app/components/ui/card";
-import { Badge } from "@/components/ui/badge"
-// Replace lucide-react icons with react-icons
-import { FaSpinner, FaBoxOpen } from "react-icons/fa";
-import { format } from "date-fns";
-import Link from "next/link";
+import { getMeasurementById } from "@/lib/database/actions/measurement.actions";
 
 // Types
 interface OrderProduct {
@@ -17,13 +17,26 @@ interface OrderProduct {
     price: number;
     name: string;
     image?: string;
-    fabricId?: { name: string; type: string };
+    fabricId?: string | { _id: string; name: string; type: string };
     colorId?: { name: string };
     measurementId?: {
+      // Shirt measurements
       collar: number;
-      chest: number;
-      waist: number;
+      cuff: number;
+      elbow: number;
+      forearm: number;
+      halfChest: number;
+      halfHips: number;
+      halfWaist: number;
       sleevesLength: number;
+      // Body measurements
+      chest: number;
+      elbowWidth: number;
+      hips: number;
+      neck: number;
+      shoulder: number;
+      upperArm: number;
+      waist: number;
     };
   };
   qty: string;
@@ -60,7 +73,7 @@ const DeliveryStatusBadge = ({ status }: { status: Order["deliveryStatus"] }) =>
   const statusColors = {
     pending: "bg-yellow-100 text-yellow-800",
     shipped: "bg-blue-100 text-blue-800",
-    delivered: "bg-green-100 text-green-800"
+    delivered: "bg-green-100 text-green-800",
   };
 
   return (
@@ -76,7 +89,7 @@ const PaymentMethodBadge = ({ method }: { method: Order["paymentMethod"] }) => {
     credit_card: "Credit Card",
     debit_card: "Debit Card",
     paypal: "PayPal",
-    cash_on_delivery: "Cash on Delivery"
+    cash_on_delivery: "Cash on Delivery",
   };
 
   return (
@@ -88,11 +101,68 @@ const PaymentMethodBadge = ({ method }: { method: Order["paymentMethod"] }) => {
 
 // Order Card Component
 const OrderCard = ({ order }: { order: Order }) => {
+  const [fabricDetails, setFabricDetails] = useState<{ [key: string]: any }>({});
+  const [measurementDetails, setMeasurementDetails] = useState<{ [key: string]: any }>({});
+
+  // Fetch fabric details for each product using the dedicated function.
+  useEffect(() => {
+    async function fetchFabricDetails() {
+      const details: { [key: string]: any } = {};
+      for (const item of order.products) {
+        if (item.product && item.product.fabricId) {
+          // Extract an id string from fabricId whether it's a string or an object.
+          const fabricId =
+            typeof item.product.fabricId === "string"
+              ? item.product.fabricId
+              : item.product.fabricId._id;
+          if (!details[fabricId]) {
+            try {
+              const response = await getFabricById(fabricId);
+              if (response.success) {
+                details[fabricId] = response.fabric;
+              }
+            } catch (error) {
+              console.error("Error fetching fabric:", error);
+            }
+          }
+        }
+      }
+      setFabricDetails(details);
+    }
+    fetchFabricDetails();
+  }, [order]);
+
+  // Fetch measurement details for each product using the dedicated function.
+  // useEffect(() => {
+  //   async function fetchMeasurements() {
+  //     const details: { [key: string]: any } = {};
+  //     for (const item of order.products) {
+  //       if (item.product && item.product.measurementId) {
+  //         const measurementId = typeof item.product.measurementId === 'string'
+  //           ? item.product.measurementId
+  //           : item.product.measurementId._id;
+
+  //         console.log("measurementId : " , measurementId);
+  //         if (!details[measurementId]) {
+  //           try {
+  //             const measurement = await getMeasurementById(measurementId);
+  //             details[measurementId] = measurement;
+  //           } catch (error) {
+  //             console.error("Error fetching measurement:", error);
+  //           }
+  //         }
+  //       }
+  //     }
+  //     setMeasurementDetails(details);
+  //   }
+  //   fetchMeasurements();
+  // }, [order]);
+
   const formatDate = (dateString: string) => {
     try {
-      return format(new Date(dateString), 'PPP');
+      return format(new Date(dateString), "PPP");
     } catch (error) {
-      return 'Date not available';
+      return "Date not available";
     }
   };
 
@@ -126,43 +196,99 @@ const OrderCard = ({ order }: { order: Order }) => {
         </div>
 
         {/* Products List */}
-        {order.products.map((item, index) => (
-          item.product && (
+        {order.products.map((item, index) =>
+          item.product ? (
             <div key={index} className="border-t pt-4 mb-4">
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <h3 className="font-medium mb-2">Product Details</h3>
                   <div className="space-y-1 text-sm">
-                    <p>Name: {item.product.name || 'Custom Shirt'}</p>
+                    <p>Name: {item.product.name || "Custom Shirt"}</p>
                     <p>Quantity: {item.qty}</p>
                     <p>Price per item: ₹{item.price}</p>
                     {item.product.fabricId && (
-                      <p>Fabric: {item.product.fabricId.name} ({item.product.fabricId.type})</p>
+                      <div className="flex items-center space-x-2">
+                        {(() => {
+                          const fabricId =
+                            typeof item.product.fabricId === "string"
+                              ? item.product.fabricId
+                              : item.product.fabricId._id;
+                          const fabric = fabricDetails[fabricId];
+                          return fabric && fabric.image?.url ? (
+                            <img
+                              src={fabric.image.url}
+                              alt={fabric.fabricName}
+                              className="w-10 h-10 object-cover rounded"
+                            />
+                          ) : null;
+                        })()}
+                        <p>
+                          Fabric:{" "}
+                          {(() => {
+                            const fabricId =
+                              typeof item.product.fabricId === "string"
+                                ? item.product.fabricId
+                                : item.product.fabricId._id;
+                            const fabric = fabricDetails[fabricId];
+                            return fabric?.fabricName || (typeof item.product.fabricId !== "string"
+                              ? item.product.fabricId.name
+                              : "N/A");
+                          })()}
+                        </p>
+                      </div>
                     )}
-                    {item.product.colorId && (
+                    {/* {item.product.colorId && (
                       <p>Color: {item.product.colorId.name}</p>
-                    )}
+                    )} */}
                   </div>
                 </div>
 
-                {/* Measurements & Shipping Details */}
-                <div>
-                  {item.product.measurementId && (
-                    <div className="mb-4">
+                {/* Measurements Section */}
+                {/* {item.product.measurementId && (() => {
+                  const measurementId = typeof item.product.measurementId === 'string'
+                    ? item.product.measurementId
+                    : item.product.measurementId._id;
+                  const measurement = measurementDetails[measurementId];
+
+                  return measurement ? (
+                    <div>
                       <h4 className="font-medium mb-1">Measurements</h4>
                       <div className="text-sm grid grid-cols-2 gap-2">
-                        <p>Collar: {item.product.measurementId.collar}″</p>
-                        <p>Chest: {item.product.measurementId.chest}″</p>
-                        <p>Waist: {item.product.measurementId.waist}″</p>
-                        <p>Sleeves: {item.product.measurementId.sleevesLength}″</p>
+                        <div>
+                          <h5 className="font-medium text-gray-600 mb-1">Shirt Measurements</h5>
+                          <div className="space-y-1">
+                            <p>Collar: {measurement.collar ?? "N/A"}″</p>
+                            <p>Cuff: {measurement.cuff ?? "N/A"}″</p>
+                            <p>Elbow: {measurement.elbow ?? "N/A"}″</p>
+                            <p>Forearm: {measurement.forearm ?? "N/A"}″</p>
+                            <p>Half Chest: {measurement.halfChest ?? "N/A"}″</p>
+                            <p>Half Hips: {measurement.halfHips ?? "N/A"}″</p>
+                            <p>Half Waist: {measurement.halfWaist ?? "N/A"}″</p>
+                            <p>Sleeves Length: {measurement.sleevesLength ?? "N/A"}″</p>
+                          </div>
+                        </div>
+                        <div>
+                          <h5 className="font-medium text-gray-600 mb-1">Body Measurements</h5>
+                          <div className="space-y-1">
+                            <p>Chest: {measurement.chest ?? "N/A"}″</p>
+                            <p>Elbow Width: {measurement.elbowWidth ?? "N/A"}″</p>
+                            <p>Hips: {measurement.hips ?? "N/A"}″</p>
+                            <p>Neck: {measurement.neck ?? "N/A"}″</p>
+                            <p>Shoulder: {measurement.shoulder ?? "N/A"}″</p>
+                            <p>Upper Arm: {measurement.upperArm ?? "N/A"}″</p>
+                            <p>Waist: {measurement.waist ?? "N/A"}″</p>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  )}
-                </div>
+                  ) : (
+                    <div className="text-sm text-gray-500">Loading measurements...</div>
+                  );
+                })()} */}
               </div>
             </div>
-          )
-        ))}
+          ) : null
+        )}
 
         {/* Shipping Address */}
         <div className="border-t pt-4 grid md:grid-cols-2 gap-6">
@@ -171,7 +297,10 @@ const OrderCard = ({ order }: { order: Order }) => {
             <div className="text-sm space-y-1">
               <p>{order.orderAddress.address1}</p>
               {order.orderAddress.address2 && <p>{order.orderAddress.address2}</p>}
-              <p>{order.orderAddress.city}, {order.orderAddress.state} {order.orderAddress.zipCode}</p>
+              <p>
+                {order.orderAddress.city}, {order.orderAddress.state}{" "}
+                {order.orderAddress.zipCode}
+              </p>
               <p>{order.orderAddress.country}</p>
               <p>Phone: {order.orderAddress.phoneNumber}</p>
             </div>
@@ -204,11 +333,14 @@ export default function OrderHistory() {
         setLoading(false);
         return;
       }
-      
+
       try {
+        // Direct call to the server action
         const response = await getUserOrders(user.id);
         if (response.success && response.orders) {
           setOrders(response.orders);
+        } else {
+          console.error("Failed to fetch orders:", response.message);
         }
       } catch (error) {
         console.error("Error fetching orders:", error);
@@ -260,3 +392,4 @@ export default function OrderHistory() {
     </div>
   );
 }
+

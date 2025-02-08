@@ -190,7 +190,7 @@ const CartItem = ({
                   <div className="flex items-center gap-2">
                     {details.fabricDetails.image && (
                       <Image
-                        src={details.fabricDetails.image?.url}
+                        src={(details as any).fabricDetails.image?.url}
                         alt={details.fabricDetails.fabricName || "Fabric Image"}
                         width={80}
                         height={80}

@@ -157,7 +157,7 @@ const AccountPopUp = () => {
     if (!isSignUpLoaded || !isSignInLoaded) return;
 
     try {
-      if (pendingVerification && signUp && signUp.status === "missing_requirements") {
+      if (pendingVerification && (signUp as any).status === "needs_email_verification") {
         // Handle email verification
         const completeSignUp = await signUp.attemptEmailAddressVerification({
           code: verificationCode,
@@ -282,22 +282,22 @@ const AccountPopUp = () => {
 
             <div>
               <Label className="font-semibold">Phone</Label>
-              <p className="text-gray-700">{user?.unsafeMetadata?.phone as string || 'Not provided'}</p>
+              <p className="text-gray-700">{(user as any)?.unsafeMetadata?.phone || 'Not provided'}</p>
             </div>
 
             <div>
               <Label className="font-semibold">WhatsApp</Label>
-              <p className="text-gray-700">{user?.unsafeMetadata?.whatsapp as string || 'Not provided'}</p>
+              <p className="text-gray-700">{(user as any)?.unsafeMetadata?.whatsapp || 'Not provided'}</p>
             </div>
 
             <div>
               <Label className="font-semibold">Country</Label>
-              <p className="text-gray-700">{user?.unsafeMetadata?.country as string || 'Not provided'}</p>
+              <p className="text-gray-700">{(user as any)?.unsafeMetadata?.country || 'Not provided'}</p>
             </div>
 
             <div>
               <Label className="font-semibold">Zipcode</Label>
-              <p className="text-gray-700">{(user?.unsafeMetadata?.zipCode as string) || 'Not provided'}</p>
+              <p className="text-gray-700">{(user as any)?.unsafeMetadata?.zipCode || 'Not provided'}</p>
             </div>
           </div>
 
