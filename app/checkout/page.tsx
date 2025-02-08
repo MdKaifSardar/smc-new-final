@@ -206,17 +206,18 @@ const CheckoutPage = () => {
                   {/* Form for inputting the delivery address */}
                   <div>
                     <Label htmlFor="name">Name</Label>
-                    <Input id="name" placeholder="Name" value={deliveryAddress.name} onChange={(e) => setDeliveryAddress({ ...deliveryAddress, name: e.target.value })} />
+                    <Input id="name" placeholder="Name" required value={deliveryAddress.name} onChange={(e) => setDeliveryAddress({ ...deliveryAddress, name: e.target.value })} />
                   </div>
                   <div>
                     <Label htmlFor="phoneNumber">Phone Number</Label>
-                    <Input id="phoneNumber" placeholder="Phone Number" value={deliveryAddress.phoneNumber} onChange={(e) => setDeliveryAddress({ ...deliveryAddress, phoneNumber: e.target.value })} />
+                    <Input id="phoneNumber" placeholder="Phone Number" required value={deliveryAddress.phoneNumber} onChange={(e) => setDeliveryAddress({ ...deliveryAddress, phoneNumber: e.target.value })} />
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="zipCode">Zip Code / Postal Code</Label>
                       <Input
                         id="zipCode"
+                        required
                         placeholder="Zip Code / Postal Code" value={deliveryAddress.zipCode}
                         onChange={(e) => setDeliveryAddress({ ...deliveryAddress, zipCode: e.target.value })
                         }
@@ -224,13 +225,13 @@ const CheckoutPage = () => {
                     </div>
                     <div>
                       <Label htmlFor="city">City</Label>
-                      <Input id="city" placeholder="City" value={deliveryAddress.city} onChange={(e) => setDeliveryAddress({ ...deliveryAddress, city: e.target.value })} />
+                      <Input id="city" placeholder="City" required value={deliveryAddress.city} onChange={(e) => setDeliveryAddress({ ...deliveryAddress, city: e.target.value })} />
                     </div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="state">State</Label>
-                      <Input id="state" placeholder="State" value={deliveryAddress.state} onChange={(e) => setDeliveryAddress({ ...deliveryAddress, state: e.target.value })} />
+                      <Input id="state" placeholder="State" required value={deliveryAddress.state} onChange={(e) => setDeliveryAddress({ ...deliveryAddress, state: e.target.value })} />
                     </div>
                     <div>
                       <Label htmlFor="country">Country</Label>
@@ -238,17 +239,17 @@ const CheckoutPage = () => {
                         id="country"
                         placeholder="Country"
                         defaultValue="India"
-                        value={deliveryAddress.country} onChange={(e) => setDeliveryAddress({ ...deliveryAddress, country: e.target.value })}
+                        value={deliveryAddress.country} required onChange={(e) => setDeliveryAddress({ ...deliveryAddress, country: e.target.value })}
                       />
                     </div>
                   </div>
                   <div>
                     <Label htmlFor="address1">Address 1</Label>
-                    <Input id="address1" placeholder="Address 1" value={deliveryAddress.address1} onChange={(e) => setDeliveryAddress({ ...deliveryAddress, address1: e.target.value })} />
+                    <Input id="address1" placeholder="Address 1" required value={deliveryAddress.address1} onChange={(e) => setDeliveryAddress({ ...deliveryAddress, address1: e.target.value })} />
                   </div>
                   <div>
                     <Label htmlFor="address2">Address 2</Label>
-                    <Input id="address2" placeholder="Address 2" value={deliveryAddress.address2} onChange={(e) => setDeliveryAddress({ ...deliveryAddress, address2: e.target.value })} />
+                    <Input id="address2" placeholder="Address 2" required value={deliveryAddress.address2} onChange={(e) => setDeliveryAddress({ ...deliveryAddress, address2: e.target.value })} />
                   </div>
                   <Button className="w-full bg-[#c40600] text-white" onClick={handleSaveAddress}>
                     Save Address And Continue
