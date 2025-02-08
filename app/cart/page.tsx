@@ -40,7 +40,9 @@ interface ShirtDetails {
   fabricDetails?: {
     fabricName: string;
     type: string;
-    image?: string;
+    image?: {
+      url: string;
+    };
   };
   colorDetails?: {
     name: string;
