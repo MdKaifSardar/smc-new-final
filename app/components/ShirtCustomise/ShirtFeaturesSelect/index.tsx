@@ -470,42 +470,46 @@ const ShirtCustomizer = () => {
 
   return (
     <div className="mt-[4rem] flex-col md:flex-row justify-between items-start mb-10 flex w-full h-fit">
-      <div className="relative mt-[1.5rem] md:mt-0 flex justify-center items-center w-full h-[87vh]">
-        {Object.entries(selectedItems).map(([section, item], index) =>
-          item.image?.url ? (
-            <img
-              key={index}
-              src={item.image.url}
-              alt={item.name}
-              className="absolute top-auto bottom-auto left-auto right-auto w-[90%] md:w-[40vw] h-auto object-cover rounded-none"
-              style={{
-                // transform: "translate(-50%, -50%)",
-                // left: "50%",
-                // top: "50%",
-                zIndex: getZIndex(section, index),
-              }}
-            />
-          ) : null
-        )}
-        {isBackPopupOpen && selectedBackImage && (
-          <div className="absolute w-fit h-fit top-auto left-auto right-auto bottom-auto bg-opacity-50 flex justify-center items-center z-[100]">
-            <div className="bg-white rounded-lg">
-              <h3 className="text-xl font-bold">Selected Back</h3>
+      {loading ? (
+        <div>loading...</div>
+      ) : (
+        <div className="relative mt-[1.5rem] md:mt-0 flex justify-center items-center w-full h-[87vh]">
+          {Object.entries(selectedItems).map(([section, item], index) =>
+            item.image?.url ? (
               <img
-                src={selectedBackImage}
-                alt="Selected Back"
-                className="w-[30rem] h-auto object-cover"
+                key={index}
+                src={item.image.url}
+                alt={item.name}
+                className="absolute top-auto bottom-auto left-auto right-auto w-[90%] md:w-[40vw] h-auto object-cover rounded-none"
+                style={{
+                  // transform: "translate(-50%, -50%)",
+                  // left: "50%",
+                  // top: "50%",
+                  zIndex: getZIndex(section, index),
+                }}
               />
-              <button
-                onClick={closeBackPopup}
-                className="mt-4 py-2 px-4 bg-red-500 text-white rounded"
-              >
-                Close
-              </button>
+            ) : null
+          )}
+          {isBackPopupOpen && selectedBackImage && (
+            <div className="absolute w-fit h-fit top-auto left-auto right-auto bottom-auto bg-opacity-50 flex justify-center items-center z-[100]">
+              <div className="bg-white rounded-lg">
+                <h3 className="text-xl font-bold">Selected Back</h3>
+                <img
+                  src={selectedBackImage}
+                  alt="Selected Back"
+                  className="w-[30rem] h-auto object-cover"
+                />
+                <button
+                  onClick={closeBackPopup}
+                  className="mt-4 py-2 px-4 bg-red-500 text-white rounded"
+                >
+                  Close
+                </button>
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       <div className="flex md:flex fixed top-[9rem] z-[100] left-0 bg-white p-2 shadow-lg rounded-lg items-center space-x-4">
         <div className="text-xl font-bold">Total: ${totalPrice.toFixed(2)}</div>

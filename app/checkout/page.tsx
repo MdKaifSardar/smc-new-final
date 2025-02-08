@@ -4,13 +4,19 @@ import React, { useState, useEffect } from "react";
 import { Input } from "@/app/components/ui/input";
 import { Label } from "@/app/components/ui/label";
 import { useRouter } from "next/navigation";
-import { Card, CardHeader, CardTitle, CardContent } from "@/app/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from "@/app/components/ui/card";
 import { Button } from "@/app/components/ui/button";
-import { toast } from "react-toast";
+import { toast, ToastContainer } from "react-toast";
 import { FaMapPin, FaCreditCard } from "react-icons/fa";
 import { GiTicket } from "react-icons/gi";
 import { useUser } from "@clerk/nextjs";
 import { createOrder } from "@/lib/database/actions/order.actions";
+import { checkCouponExists } from "@/lib/database/actions/admin/coupon/coupon.actions";
 
 type Steps = {
   title: string;
@@ -32,15 +38,15 @@ const CheckoutPage = () => {
       return savedAddress
         ? JSON.parse(savedAddress)
         : {
-          name: "",
-          phoneNumber: "",
-          address1: "",
-          address2: "",
-          city: "",
-          state: "",
-          country: "",
-          zipCode: "",
-        };
+            name: "",
+            phoneNumber: "",
+            address1: "",
+            address2: "",
+            city: "",
+            state: "",
+            country: "",
+            zipCode: "",
+          };
     }
     return {
       name: "",
@@ -55,6 +61,7 @@ const CheckoutPage = () => {
   });
   const [currentStep, setCurrentStep] = useState(0);
   const [couponCode, setCouponCode] = useState("");
+  const [offerValue, setOfferValue] = useState<number | null>(null);
   const [paymentMethod, setPaymentMethod] = useState("");
 
   // New state for cart data
@@ -91,11 +98,11 @@ const CheckoutPage = () => {
   const subtotal =
     cart && cart.products
       ? cart.products.reduce(
-        (sum: number, item: any) => sum + item.price * Number(item.qty),
-        0
-      )
+          (sum: number, item: any) => sum + item.price * Number(item.qty),
+          0
+        )
       : 0;
-  const discount = 0; // You can update this logic if needed
+  const discount = offerValue ? (subtotal * offerValue) / 100 : 0;
   const total = subtotal - discount;
 
   const handleNext = () => {
@@ -115,9 +122,31 @@ const CheckoutPage = () => {
         toast(response.message);
       }
     } catch (error: any) {
-      toast.error(error.message || 'Failed to save address');
+      toast.error(error.message || "Failed to save address");
     } finally {
       handleNext();
+    }
+  };
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode) {
+      toast.error("Please enter a coupon code.");
+      return;
+    }
+
+    try {
+      const response = await checkCouponExists(couponCode.toUpperCase());
+      console.log(response);
+
+      if (response.success) {
+        setOfferValue(response.discount);
+        toast.success(`Coupon applied! You get ${response.discount}% off.`);
+        setCurrentStep(2); // Move to the next step
+      } else {
+        toast.error(response.message || "Invalid coupon.");
+      }
+    } catch (error) {
+      toast.error("An error occurred. Please try again.");
     }
   };
 
@@ -131,10 +160,10 @@ const CheckoutPage = () => {
         deliveryAddress,
         "cash_on_delivery",
         total,
-        total, // totalBeforeDiscount
+        subtotal, // totalBeforeDiscount
         couponCode,
         user.id,
-        0 // totalSaved (update if needed)
+        discount // totalSaved
       );
 
       if (orderResponse.success) {
@@ -153,23 +182,34 @@ const CheckoutPage = () => {
 
   return (
     <div className="container mx-auto pt-36 font-play">
-      <h1 className="text-4xl text-[#646464] font-bold mb-6 text-center">CHECKOUT</h1>
+      <ToastContainer />
+      <h1 className="text-4xl text-[#646464] font-bold mb-6 text-center">
+        CHECKOUT
+      </h1>
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Left section for checkout steps */}
         <div className="lg:w-2/3 w-full px-4">
           <div className="flex flex-col lg:flex-row mb-8">
             {steps.map((step, index) => (
-              <div key={index} className="flex items-center mb-4 lg:mb-0 lg:flex-row flex-col lg:space-x-4">
+              <div
+                key={index}
+                className="flex items-center mb-4 lg:mb-0 lg:flex-row flex-col lg:space-x-4"
+              >
                 <div
-                  className={`rounded-full p-2 ${index <= currentStep
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-secondary text-secondary-foreground"
-                    }`}
+                  className={`rounded-full p-2 ${
+                    index <= currentStep
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-secondary text-secondary-foreground"
+                  }`}
                 >
                   {index < currentStep ? null : step.icon}
                 </div>
                 <div className="ml-0 lg:ml-4 lg:mr-8 text-center lg:text-left">
-                  <p className={`text-sm font-medium ${index <= currentStep ? "text-primary" : "text-secondary-foreground"}`}>
+                  <p
+                    className={`text-sm font-medium ${
+                      index <= currentStep ? "text-primary" : "text-secondary-foreground"
+                    }`}
+                  >
                     {step.title}
                   </p>
                 </div>
@@ -182,7 +222,9 @@ const CheckoutPage = () => {
 
           <Card className="bg-[#f5f5f0]">
             <CardHeader>
-              <CardTitle className="subHeading">{steps[currentStep].title}</CardTitle>
+              <CardTitle className="subHeading">
+                {steps[currentStep].title}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               {currentStep === 1 && (
@@ -195,9 +237,12 @@ const CheckoutPage = () => {
                     onChange={(e) => setCouponCode(e.target.value)}
                     className="w-full p-2 border rounded"
                   />
-                  <Button className="w-full bg-[#c40600] text-white" onClick={handleNext}>
+                  <button
+                    className="w-full bg-[#c40600] text-white p-2 rounded"
+                    onClick={handleApplyCoupon}
+                  >
                     Apply Coupon
-                  </Button>
+                  </button>
                 </div>
               )}
               {currentStep === 0 && (
@@ -206,11 +251,33 @@ const CheckoutPage = () => {
                   {/* Form for inputting the delivery address */}
                   <div>
                     <Label htmlFor="name">Name</Label>
-                    <Input id="name" placeholder="Name" required value={deliveryAddress.name} onChange={(e) => setDeliveryAddress({ ...deliveryAddress, name: e.target.value })} />
+                    <Input
+                      id="name"
+                      placeholder="Name"
+                      required
+                      value={deliveryAddress.name}
+                      onChange={(e) =>
+                        setDeliveryAddress({
+                          ...deliveryAddress,
+                          name: e.target.value,
+                        })
+                      }
+                    />
                   </div>
                   <div>
                     <Label htmlFor="phoneNumber">Phone Number</Label>
-                    <Input id="phoneNumber" placeholder="Phone Number" required value={deliveryAddress.phoneNumber} onChange={(e) => setDeliveryAddress({ ...deliveryAddress, phoneNumber: e.target.value })} />
+                    <Input
+                      id="phoneNumber"
+                      placeholder="Phone Number"
+                      required
+                      value={deliveryAddress.phoneNumber}
+                      onChange={(e) =>
+                        setDeliveryAddress({
+                          ...deliveryAddress,
+                          phoneNumber: e.target.value,
+                        })
+                      }
+                    />
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -218,20 +285,47 @@ const CheckoutPage = () => {
                       <Input
                         id="zipCode"
                         required
-                        placeholder="Zip Code / Postal Code" value={deliveryAddress.zipCode}
-                        onChange={(e) => setDeliveryAddress({ ...deliveryAddress, zipCode: e.target.value })
+                        placeholder="Zip Code / Postal Code"
+                        value={deliveryAddress.zipCode}
+                        onChange={(e) =>
+                          setDeliveryAddress({
+                            ...deliveryAddress,
+                            zipCode: e.target.value,
+                          })
                         }
                       />
                     </div>
                     <div>
                       <Label htmlFor="city">City</Label>
-                      <Input id="city" placeholder="City" required value={deliveryAddress.city} onChange={(e) => setDeliveryAddress({ ...deliveryAddress, city: e.target.value })} />
+                      <Input
+                        id="city"
+                        placeholder="City"
+                        required
+                        value={deliveryAddress.city}
+                        onChange={(e) =>
+                          setDeliveryAddress({
+                            ...deliveryAddress,
+                            city: e.target.value,
+                          })
+                        }
+                      />
                     </div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="state">State</Label>
-                      <Input id="state" placeholder="State" required value={deliveryAddress.state} onChange={(e) => setDeliveryAddress({ ...deliveryAddress, state: e.target.value })} />
+                      <Input
+                        id="state"
+                        placeholder="State"
+                        required
+                        value={deliveryAddress.state}
+                        onChange={(e) =>
+                          setDeliveryAddress({
+                            ...deliveryAddress,
+                            state: e.target.value,
+                          })
+                        }
+                      />
                     </div>
                     <div>
                       <Label htmlFor="country">Country</Label>
@@ -239,19 +333,51 @@ const CheckoutPage = () => {
                         id="country"
                         placeholder="Country"
                         defaultValue="India"
-                        value={deliveryAddress.country} required onChange={(e) => setDeliveryAddress({ ...deliveryAddress, country: e.target.value })}
+                        value={deliveryAddress.country}
+                        required
+                        onChange={(e) =>
+                          setDeliveryAddress({
+                            ...deliveryAddress,
+                            country: e.target.value,
+                          })
+                        }
                       />
                     </div>
                   </div>
                   <div>
                     <Label htmlFor="address1">Address 1</Label>
-                    <Input id="address1" placeholder="Address 1" required value={deliveryAddress.address1} onChange={(e) => setDeliveryAddress({ ...deliveryAddress, address1: e.target.value })} />
+                    <Input
+                      id="address1"
+                      placeholder="Address 1"
+                      required
+                      value={deliveryAddress.address1}
+                      onChange={(e) =>
+                        setDeliveryAddress({
+                          ...deliveryAddress,
+                          address1: e.target.value,
+                        })
+                      }
+                    />
                   </div>
                   <div>
                     <Label htmlFor="address2">Address 2</Label>
-                    <Input id="address2" placeholder="Address 2" required value={deliveryAddress.address2} onChange={(e) => setDeliveryAddress({ ...deliveryAddress, address2: e.target.value })} />
+                    <Input
+                      id="address2"
+                      placeholder="Address 2"
+                      required
+                      value={deliveryAddress.address2}
+                      onChange={(e) =>
+                        setDeliveryAddress({
+                          ...deliveryAddress,
+                          address2: e.target.value,
+                        })
+                      }
+                    />
                   </div>
-                  <Button className="w-full bg-[#c40600] text-white" onClick={handleSaveAddress}>
+                  <Button
+                    className="w-full bg-[#c40600] text-white"
+                    onClick={handleSaveAddress}
+                  >
                     Save Address And Continue
                   </Button>
                 </div>
@@ -264,8 +390,11 @@ const CheckoutPage = () => {
                 <Label className="text-lg font-semibold"></Label>
                 <div className="grid grid-cols-1 gap-4">
                   <Card
-                    className={`p-4 cursor-pointer transition-all ${paymentMethod === "paypal" ? "border-primary border-2" : ""
-                      }`}
+                    className={`p-4 cursor-pointer transition-all ${
+                      paymentMethod === "paypal"
+                        ? "border-primary border-2"
+                        : ""
+                    }`}
                     onClick={() => setPaymentMethod("paypal")}
                   >
                     <CardContent className="flex items-center space-x-4 p-2">
@@ -286,10 +415,12 @@ const CheckoutPage = () => {
                     </CardContent>
                   </Card>
 
-                  
                   <Card
-                    className={`p-4 cursor-pointer transition-all ${paymentMethod === "cash-on-delivery" ? "border-primary border-2" : ""
-                      }`}
+                    className={`p-4 cursor-pointer transition-all ${
+                      paymentMethod === "cash-on-delivery"
+                        ? "border-primary border-2"
+                        : ""
+                    }`}
                     onClick={() => setPaymentMethod("cash-on-delivery")}
                   >
                     <CardContent className="flex items-center space-x-4 p-2">
@@ -323,12 +454,20 @@ const CheckoutPage = () => {
 
           <div className="mt-4 flex space-x-4 justify-center lg:justify-start">
             {currentStep > 0 && (
-              <Button variant={"outline"} className="bg-[#c40600] text-white" onClick={handlePrevious}>
+              <Button
+                variant={"outline"}
+                className="bg-[#c40600] text-white"
+                onClick={handlePrevious}
+              >
                 Back
               </Button>
             )}
             {currentStep < steps.length - 1 && (
-              <Button variant={"outline"} className="bg-[#c40600] text-white" onClick={handleNext}>
+              <Button
+                variant={"outline"}
+                className="bg-[#c40600] text-white"
+                onClick={handleNext}
+              >
                 Continue
               </Button>
             )}
@@ -351,7 +490,8 @@ const CheckoutPage = () => {
                   {cart?.products?.length > 0 ? (
                     cart.products.map((item: any, index: number) => {
                       // Safely access product id
-                      const productId = item?.product?._id?.toString() || item?.product;
+                      const productId =
+                        item?.product?._id?.toString() || item?.product;
                       if (!productId) return null;
 
                       return (
@@ -361,7 +501,10 @@ const CheckoutPage = () => {
                             <p>Qty: {item.qty || 0}</p>
                           </div>
                           <p className="font-semibold">
-                            ₹{((item.price || 0) * Number(item.qty || 0)).toFixed(2)}
+                            ₹
+                            {(
+                              (item.price || 0) * Number(item.qty || 0)
+                            ).toFixed(2)}
                           </p>
                         </div>
                       );
@@ -380,7 +523,7 @@ const CheckoutPage = () => {
                   </div>
                   <div className="flex justify-between font-bold">
                     <p>Total:</p>
-                    <p>₹{(total).toFixed(2)}</p>
+                    <p>₹{total.toFixed(2)}</p>
                   </div>
                 </div>
               )}
@@ -394,15 +537,15 @@ const CheckoutPage = () => {
 
 async function saveAddress(deliveryAddress: any, userId: string) {
   try {
-    const response = await fetch('/api/address', {
-      method: 'POST',
+    const response = await fetch("/api/address", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         userId,
-        ...deliveryAddress
-      })
+        ...deliveryAddress,
+      }),
     });
 
     //     const data = await response.json();
@@ -418,11 +561,10 @@ async function saveAddress(deliveryAddress: any, userId: string) {
     //       success: true,
     //       message: 'Address saved successfully'
     //     };
-
   } catch (error: any) {
     return {
       success: false,
-      message: error.message || 'Error saving address'
+      message: error.message || "Error saving address",
     };
   }
 }
