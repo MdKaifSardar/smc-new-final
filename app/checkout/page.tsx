@@ -17,6 +17,9 @@ import { GiTicket } from "react-icons/gi";
 import { useUser } from "@clerk/nextjs";
 import { createOrder } from "@/lib/database/actions/order.actions";
 import { checkCouponExists } from "@/lib/database/actions/admin/coupon/coupon.actions";
+import { getShirtByIdInDetails } from "@/lib/database/actions/admin/ShirtArea/Shirt/shirt.actions";
+import Image from "next/image";
+import { AiOutlineLoading3Quarters } from "react-icons/ai";
 
 type Steps = {
   title: string;
@@ -28,6 +31,123 @@ const steps: Steps[] = [
   { title: "Apply Coupon", icon: <GiTicket className="h-5 w-5" /> },
   { title: "Choose Payment", icon: <FaCreditCard className="h-5 w-5" /> },
 ];
+
+const MiniShirtPreview = ({ details }: { details: any }) => {
+  return (
+    <div className="relative w-16 h-20">
+      {/* Layer 1 - Fit */}
+      {details.fitImage && (
+        <Image
+          src={details.fitImage}
+          alt="Fit Style"
+          fill
+          className="object-contain absolute top-0 left-0"
+        />
+      )}
+      {details.bottomImage && (
+        <Image
+          src={details.bottomImage}
+          alt="Bottom Style"
+          fill
+          className="object-contain absolute top-0 left-0"
+        />
+      )}
+      {details.placketImage && (
+        <Image
+          src={details.placketImage}
+          alt="Placket"
+          fill
+          className="object-contain absolute top-0 left-0"
+        />
+      )}
+      {details.pocketImage && (
+        <Image
+          src={details.pocketImage}
+          alt="Pocket"
+          fill
+          className="object-contain absolute top-0 left-0"
+        />
+      )}
+      {details.sleevesImage && (
+        <Image
+          src={details.sleevesImage}
+          alt="Sleeves"
+          fill
+          className="object-contain absolute top-0 left-0"
+        />
+      )}
+      {details.collarImage && (
+        <Image
+          src={details.collarImage}
+          alt="Collar"
+          fill
+          className="object-contain absolute top-0 left-0"
+        />
+      )}
+    </div>
+  );
+};
+
+const ShirtCompositeImage = ({ details }: { details: any }) => {
+  return (
+    <div className="relative w-[200px] h-[300px]">
+      {/* Layer 1 - Fit */}
+      {details.fitImage && (
+        <Image
+          src={details.fitImage}
+          alt="Fit Style"
+          fill
+          className="object-contain absolute top-0 left-0"
+        />
+      )}
+      {/* Layer 2 - Bottom */}
+      {details.bottomImage && (
+        <Image
+          src={details.bottomImage}
+          alt="Bottom Style"
+          fill
+          className="object-contain absolute top-0 left-0"
+        />
+      )}
+      {/* Layer 3 - Placket */}
+      {details.placketImage && (
+        <Image
+          src={details.placketImage}
+          alt="Placket"
+          fill
+          className="object-contain absolute top-0 left-0"
+        />
+      )}
+      {/* Layer 4 - Pocket */}
+      {details.pocketImage && (
+        <Image
+          src={details.pocketImage}
+          alt="Pocket"
+          fill
+          className="object-contain absolute top-0 left-0"
+        />
+      )}
+      {/* Layer 5 - Sleeves */}
+      {details.sleevesImage && (
+        <Image
+          src={details.sleevesImage}
+          alt="Sleeves"
+          fill
+          className="object-contain absolute top-0 left-0"
+        />
+      )}
+      {/* Layer 6 - Collar */}
+      {details.collarImage && (
+        <Image
+          src={details.collarImage}
+          alt="Collar"
+          fill
+          className="object-contain absolute top-0 left-0"
+        />
+      )}
+    </div>
+  );
+};
 
 const CheckoutPage = () => {
   const { isSignedIn, user, isLoaded } = useUser();
@@ -69,6 +189,9 @@ const CheckoutPage = () => {
   const [cartLoading, setCartLoading] = useState<boolean>(true);
   const [cartError, setCartError] = useState<string | null>(null);
 
+  // Add this state at the top of your component
+  const [enrichedCart, setEnrichedCart] = useState<any>(null);
+
   // Fetch cart on mount if user available
   useEffect(() => {
     async function fetchCart() {
@@ -91,6 +214,40 @@ const CheckoutPage = () => {
     }
     fetchCart();
   }, [isLoaded, user]);
+
+  // Add this useEffect after your existing cart fetching useEffect
+  useEffect(() => {
+    const enrichCartItems = async () => {
+      if (!cart?.products) return;
+      
+      const enrichedProducts = await Promise.all(
+        cart.products.map(async (item: any) => {
+          const productId = item?.product?._id?.toString() || item?.product;
+          if (!productId) return item;
+          
+          try {
+            const response = await getShirtByIdInDetails(productId);
+            return {
+              ...item,
+              shirt: response?.success ? response.shirt : null
+            };
+          } catch (error) {
+            console.error("Error fetching shirt details:", error);
+            return item;
+          }
+        })
+      );
+
+      setEnrichedCart({
+        ...cart,
+        products: enrichedProducts
+      });
+    };
+
+    if (cart) {
+      enrichCartItems();
+    }
+  }, [cart]);
 
   if (!isSignedIn) return <div>Sign in to view this page</div>;
 
@@ -482,9 +639,11 @@ const CheckoutPage = () => {
             </CardHeader>
             <CardContent>
               {cartLoading ? (
-                <p>Loading order summary...</p>
+                <div className="flex justify-center">
+                  <AiOutlineLoading3Quarters className="h-6 w-6 animate-spin" />
+                </div>
               ) : cartError ? (
-                <p>Error: {cartError}</p>
+                <p className="text-red-500">Error: {cartError}</p>
               ) : (
                 <div className="space-y-4">
                   {cart?.products?.length > 0 ? (
@@ -495,10 +654,104 @@ const CheckoutPage = () => {
                       if (!productId) return null;
 
                       return (
-                        <div key={index} className="flex justify-between">
-                          <div>
-                            <p className="font-semibold">ID: {productId}</p>
-                            <p>Qty: {item.qty || 0}</p>
+                        <div key={index} className="border-b pb-6 last:border-b-0">
+                          {/* Product Header */}
+                          <div className="flex justify-between mb-4">
+                            <h3 className="font-semibold">Custom Shirt</h3>
+                            <p className="font-semibold">
+                              ₹{((item.price || 0) * Number(item.qty || 0)).toFixed(2)}
+                            </p>
+                          </div>
+
+                          {/* Shirt Images */}
+                          <div className="bg-white p-4 rounded-lg mb-4">
+                            <div className="flex gap-4">
+                              {/* Front View */}
+                              <div className="flex-1">
+                                <h4 className="text-sm font-medium mb-2">Front View</h4>
+                                <ShirtCompositeImage details={item.shirt} />
+                              </div>
+                              
+                              {/* Back View */}
+                              {item.shirt?.backImage && (
+                                <div className="w-[100px]">
+                                  <h4 className="text-sm font-medium mb-2">Back View</h4>
+                                  <div className="relative w-[100px] h-[150px]">
+                                    <Image
+                                      src={item.shirt.backImage}
+                                      alt="Back View"
+                                      fill
+                                      className="object-contain"
+                                    />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Material & Color */}
+                          <div className="bg-white p-4 rounded-lg mb-4">
+                            <h4 className="text-sm font-medium mb-2">Material & Color</h4>
+                            <div className="flex items-center gap-4">
+                              {item.shirt?.fabricImage && (
+                                <Image
+                                  src={item.shirt.fabricImage}
+                                  alt={item.shirt.fabricName || "Fabric"}
+                                  width={50}
+                                  height={50}
+                                  className="rounded-md object-cover"
+                                />
+                              )}
+                              <div>
+                                <p className="text-sm">{item.shirt?.fabricName}</p>
+                                {item.shirt?.colorName && (
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <div
+                                      className="w-4 h-4 rounded-full border"
+                                      style={{ backgroundColor: item.shirt.colorHexCode }}
+                                    />
+                                    <span className="text-sm">{item.shirt.colorName}</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Measurements */}
+                          <div className="bg-white p-4 rounded-lg">
+                          <h4 className="text-sm font-medium mb-2">Measurements</h4>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <h5 className="text-xs font-medium mb-1">Shirt Measurements</h5>
+                              <div className="space-y-2 text-xs">
+                                <p>Collar: {item.shirt?.measurementCollar}″</p>
+                                <p>Half Chest: {item.shirt?.measurementHalfChest}″</p>
+                                <p>Half Waist: {item.shirt?.measurementHalfWaist}″</p>
+                                <p>Half Hips: {item.shirt?.measurementHalfHips}″</p>
+                                <p>Sleeve Length: {item.shirt?.measurementSleeveLength}″</p>
+                                <p>Elbow: {item.shirt?.measurementElbow}″</p>
+                                <p>Forearm: {item.shirt?.measurementForearm}″</p>
+                                <p>Cuff: {item.shirt?.measurementCuff}″</p>
+                              </div>
+                            </div>
+                            <div>
+                              <h5 className="text-xs font-medium mb-1">Body Measurements</h5>
+                              <div className="space-y-2 text-xs">
+                                <p>Neck: {item.shirt?.measurementNeck}″</p>
+                                <p>Chest: {item.shirt?.measurementChest}″</p>
+                                <p>Waist: {item.shirt?.measurementWaist}″</p>
+                                <p>Hips: {item.shirt?.measurementHips}″</p>
+                                <p>Elbow Width: {item.shirt?.measurementElbowWidth}″</p>
+                                <p>Upper Arm: {item.shirt?.measurementUpperArm}″</p>
+                                <p>Shoulder: {item.shirt?.measurementShoulder}″</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                          {/* Quantity */}
+                          <div className="mt-4 text-sm text-gray-600">
+                            Quantity: {item.qty}
                           </div>
                           <p className="font-semibold">
                             ₹

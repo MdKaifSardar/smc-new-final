@@ -1,61 +1,35 @@
 "use client"
 
-import React, { useState, useEffect } from "react";
-import SectionSelector from "../components/ShirtCustomise/ShirtFeaturesSelect";
+import React, { Suspense } from "react";
+import dynamic from 'next/dynamic';
 import { ToastContainer } from "react-toastify";
 
+const LoadingScreen = () => {
+  return (
+    <div className="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center">
+      <div className="animate-spin rounded-full h-32 w-32 border-t-4 border-b-4 border-[#C40600] mb-4"></div>
+      <h2 className="text-2xl font-bold text-gray-800">Loading your customizer...</h2>
+      <p className="text-gray-600 mt-2">Please wait while we prepare everything</p>
+    </div>
+  );
+};
+
+// Dynamically import SectionSelector with SSR disabled
+const SectionSelector = dynamic(
+  () => import("../components/ShirtCustomise/ShirtFeaturesSelect"),
+  {
+    loading: () => <LoadingScreen />,
+    ssr: false
+  }
+);
+
 const Page = () => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [componentLoaded, setComponentLoaded] = useState(false);
-  const [dataLoaded, setDataLoaded] = useState(false);
-
-  useEffect(() => {
-    let mounted = true;
-
-    const checkLoading = async () => {
-      try {
-        // Check if component is loaded
-        setComponentLoaded(true);
-
-        // Add your data loading checks here
-        // For example, if you're fetching data:
-        // const data = await fetchYourData();
-        // if (data) setDataLoaded(true);
-
-        // For now, we'll simulate data loading
-        setTimeout(() => {
-          if (mounted) {
-            setDataLoaded(true);
-          }
-        }, 1000);
-
-        // If everything is loaded, stop loading state
-        if (componentLoaded && dataLoaded) {
-          setIsLoading(false);
-        }
-      } catch (error) {
-        console.error("Error during loading:", error);
-      }
-    };
-
-    checkLoading();
-
-    // Cleanup function
-    return () => {
-      mounted = false;
-    };
-  }, [componentLoaded, dataLoaded]);
-
   return (
     <div className="w-full pt-8 font-play">
-      <ToastContainer />
-      {isLoading || !componentLoaded || !dataLoaded ? (
-        <div className="flex justify-center items-center h-screen">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
-        </div>
-      ) : (
+      <ToastContainer/>
+      <Suspense fallback={<LoadingScreen />}>
         <SectionSelector />
-      )}
+      </Suspense>
     </div>
   );
 };

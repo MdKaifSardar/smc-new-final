@@ -15,6 +15,8 @@ import Link from "next/link";
 import { useAtom, useStore } from "jotai";
 import { cartMenuState } from "@/app/utils/data/store";
 import { useUser } from "@clerk/nextjs";
+import { getShirtById, getShirtByIdInDetails } from "@/lib/database/actions/admin/ShirtArea/Shirt/shirt.actions";
+import Image from "next/image";
 
 interface CartItem {
   product: string | {
@@ -31,18 +33,71 @@ interface CartItem {
   };
 }
 
+const MiniShirtPreview = ({ details }: { details: any }) => {
+  return (
+    <div className="relative w-16 h-20 sm:w-20 sm:h-24">
+      {details.fitImage && (
+        <Image
+          src={details.fitImage}
+          alt="Fit Style"
+          fill
+          className="object-contain absolute top-0 left-0"
+        />
+      )}
+      {details.bottomImage && (
+        <Image
+          src={details.bottomImage}
+          alt="Bottom Style"
+          fill
+          className="object-contain absolute top-0 left-0"
+        />
+      )}
+      {details.placketImage && (
+        <Image
+          src={details.placketImage}
+          alt="Placket"
+          fill
+          className="object-contain absolute top-0 left-0"
+        />
+      )}
+      {details.pocketImage && (
+        <Image
+          src={details.pocketImage}
+          alt="Pocket"
+          fill
+          className="object-contain absolute top-0 left-0"
+        />
+      )}
+      {details.sleevesImage && (
+        <Image
+          src={details.sleevesImage}
+          alt="Sleeves"
+          fill
+          className="object-contain absolute top-0 left-0"
+        />
+      )}
+      {details.collarImage && (
+        <Image
+          src={details.collarImage}
+          alt="Collar"
+          fill
+          className="object-contain absolute top-0 left-0"
+        />
+      )}
+    </div>
+  );
+};
+
 let setCartMenuOpenGlobal: (open: boolean) => void;
 
 const CartDrawer = () => {
   const [cartMenuOpen, setCartMenuOpen] = useAtom(cartMenuState, { store: useStore() });
-  setCartMenuOpenGlobal = setCartMenuOpen; // Assign to global variable
+  setCartMenuOpenGlobal = setCartMenuOpen;
   const { user, isLoaded } = useUser();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  // Flag to avoid infinite enrichment calls.
   const [isShirtEnriched, setIsShirtEnriched] = useState(false);
 
-  // Helper function to get product id from cart item
   function getProductId(item: CartItem): string {
     if (!item.product) return "";
     if (typeof item.product === "object") {
@@ -51,14 +106,13 @@ const CartDrawer = () => {
     return item.product;
   }
 
-  // Fetch cart if user is logged in
   useEffect(() => {
     async function fetchCart() {
       if (!isLoaded || !user) {
         setLoading(false);
         return;
       }
-      const clerkId = user.id; // use Clerk's user id
+      const clerkId = user.id;
       if (!clerkId) {
         console.error("Clerk ID is undefined");
         setLoading(false);
@@ -68,9 +122,8 @@ const CartDrawer = () => {
         setLoading(true);
         const res = await fetch(`/api/cart?clerkId=${clerkId}`);
         const data = await res.json();
-        if (data.success && data.cart && data.cart.products) {
+        if (data.success && data.cart?.products) {
           setCartItems(data.cart.products);
-          // Reset enrichment flag whenever cart is refreshed.
           setIsShirtEnriched(false);
         } else {
           setCartItems([]);
@@ -84,27 +137,20 @@ const CartDrawer = () => {
     fetchCart();
   }, [isLoaded, user]);
 
-  // Enrich each cart item with shirt details from the database
   useEffect(() => {
     if (cartItems.length > 0 && !isShirtEnriched) {
       async function enrichCartItems() {
         const enrichedItems = await Promise.all(
           cartItems.map(async (item) => {
-            // Skip if already enriched
             if (item.shirt) return item;
             const productId = getProductId(item);
             try {
-              const res = await fetch(`/api/shirt?shirtId=${productId}`);
-              if (res.ok) {
-                const data = await res.json();
-                if (data.success && data.shirt) {
-                  return { ...item, shirt: data.shirt };
-                }
-              }
+              const data = await getShirtByIdInDetails(productId);
+              return data.success ? { ...item, shirt: data.shirt } : item;
             } catch (error) {
               console.error("Error fetching shirt details", error);
+              return item;
             }
-            return item;
           })
         );
         setCartItems(enrichedItems);
@@ -122,7 +168,6 @@ const CartDrawer = () => {
     setCartItems(cartItems.filter((item) => getProductId(item) !== productId));
   };
 
-  // Update quantity should also use user.id
   const updateQuantity = async (productId: string, newQuantity: number) => {
     if (!user) return;
     try {
@@ -134,10 +179,7 @@ const CartDrawer = () => {
       const data = await res.json();
       if (data.success && data.cart) {
         setCartItems(data.cart.products);
-        // Reset enrichment flag as cart items may have changed.
         setIsShirtEnriched(false);
-      } else {
-        console.error(data.message);
       }
     } catch (error) {
       console.error("Error updating quantity", error);
@@ -151,82 +193,100 @@ const CartDrawer = () => {
       <Sheet open={cartMenuOpen} onOpenChange={setCartMenuOpen}>
         <SheetTrigger asChild>
           <button onClick={handleOnClickCartMenu}>
-            <FaShoppingCart className="text-[#4a2b2b]" />
+            <FaShoppingCart className="text-[#4a2b2b] w-6 h-6 sm:w-7 sm:h-7" />
           </button>
         </SheetTrigger>
-        <SheetContent className="w-[90%] max-w-[450px] sm:max-w-[540px] mt-32 z-50">
-          <SheetHeader>
-            <SheetTitle className="subHeading">CART</SheetTitle>
+        <SheetContent className="w-full sm:max-w-lg h-screen overflow-y-auto">
+          <SheetHeader className="sticky top-0 bg-white z-10">
+            <SheetTitle className="subHeading text-xl sm:text-2xl px-4 py-6 border-b">
+              SHOPPING CART
+            </SheetTitle>
           </SheetHeader>
-          {(!user) ? (
-            <div className="p-4">
-              <p>Please log in to view your cart.</p>
-            </div>
-          ) : loading ? (
-            <div className="p-4">
-              <p>Loading cart...</p>
-            </div>
-          ) : (
-            <div className="mt-4 space-y-4">
-              {cartItems.length === 0 ? (
-                <p className="p-4">Your cart is empty.</p>
-              ) : (
-                cartItems.map((item, index) => {
-                  const productId = getProductId(item);
-                  if (!productId) return null;
-                  return (
-                    <div key={index} className="flex items-center space-x-4 border-b-2 pb-3">
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-xs sm:text-sm tracking-wide">
-                          Shirt ID: {productId}
-                        </h3>
-                        {item.shirt && (
-                          <div className="mt-1 text-xs text-gray-600">
-                            <p>Price: ₹{item.shirt.price.toFixed(2)}</p>
-                          </div>
-                        )}
-                        <div className="flex items-center justify-between mt-2">
-                          <div className="flex items-center">
-                            <button
-                              className="p-1"
-                              onClick={() => updateQuantity(productId, Number(item.qty) - 1)}
-                            >
-                              <AiOutlineMinus className="w-4 h-4" />
-                            </button>
-                            <span className="mx-2">{item.qty}</span>
-                            <button
-                              className="p-1"
-                              onClick={() => updateQuantity(productId, Number(item.qty) + 1)}
-                            >
-                              <AiOutlinePlus className="w-4 h-4" />
-                            </button>
-                          </div>
-                          <p className="font-semibold text-xs sm:text-base">
-                            ₹{item.price.toFixed(2)}
+          
+          <div className="px-4 pb-24"> {/* Added padding-bottom for checkout section */}
+            {!user ? (
+              <div className="p-4 text-center">
+                <p>Please log in to view your cart.</p>
+              </div>
+            ) : loading ? (
+              <div className="p-4 text-center">
+                <p>Loading cart...</p>
+              </div>
+            ) : cartItems.length === 0 ? (
+              <p className="p-4 text-center">Your cart is empty.</p>
+            ) : (
+              cartItems.map((item, index) => {
+                const productId = getProductId(item);
+                return productId ? (
+                  <div key={index} className="flex gap-4 py-4 border-b">
+                    <div className="flex-shrink-0">
+                      {item.shirt && <MiniShirtPreview details={item.shirt} />}
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-sm sm:text-base truncate">
+                        Custom Shirt
+                      </h3>
+                      
+                      {item.shirt && (
+                        <div className="mt-1 text-xs sm:text-sm text-gray-600">
+                          <p>₹{item.shirt.price.toFixed(2)}</p>
+                          <p className="text-gray-500 truncate">
+                            {item.shirt.fabricName} - {item.shirt.colorName}
                           </p>
                         </div>
-                      </div>
-                      <div className="text-right">
-                        <button onClick={() => removeItem(productId)} className="text-gray-500 hover:text-gray-700">
-                          <AiOutlineClose className="w-4 h-4" />
-                        </button>
+                      )}
+                      
+                      <div className="mt-2 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => updateQuantity(productId, Number(item.qty) - 1)}
+                            className="p-1 hover:bg-gray-100 rounded"
+                          >
+                            <AiOutlineMinus className="w-4 h-4" />
+                          </button>
+                          <span className="w-8 text-center">{item.qty}</span>
+                          <button
+                            onClick={() => updateQuantity(productId, Number(item.qty) + 1)}
+                            className="p-1 hover:bg-gray-100 rounded"
+                          >
+                            <AiOutlinePlus className="w-4 h-4" />
+                          </button>
+                        </div>
+                        <p className="font-semibold text-sm sm:text-base">
+                          ₹{(item.price * Number(item.qty)).toFixed(2)}
+                        </p>
                       </div>
                     </div>
-                  );
-                })
-              )}
-            </div>
-          )}
+                    
+                    <button 
+                      onClick={() => removeItem(productId)}
+                      className="self-start text-gray-400 hover:text-gray-600"
+                    >
+                      <AiOutlineClose className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </button>
+                  </div>
+                ) : null;
+              })
+            )}
+          </div>
+
           {user && cartItems.length > 0 && (
-            <div className="absolute  w-[90%] mt-6 bg-white">
-              <p className="text-sm text-gray-500">
-                Tax included. Shipping calculated at checkout.
-              </p>
-              <Link href={"/checkout"}>
-                <Button className="w-full mt-4 bg-[#c40600]">
-                  CHECKOUT - ₹{total.toFixed(2)}
-                </Button>
-              </Link>
+            <div className="sticky bottom-0 bg-white border-t">
+              <div className="p-4 space-y-4">
+                <div className="flex justify-between text-lg font-semibold">
+                  <span>Subtotal:</span>
+                  <span>₹{total.toFixed(2)}</span>
+                </div>
+                <p className="text-xs text-center text-gray-500">
+                  Tax included. Shipping calculated at checkout.
+                </p>
+                <Link href="/checkout" className="block" onClick={() => setCartMenuOpen(false)}>
+                  <Button className="w-full bg-red-600 hover:bg-red-700 h-12 text-lg">
+                    Checkout Now
+                  </Button>
+                </Link>
+              </div>
             </div>
           )}
         </SheetContent>
@@ -235,11 +295,8 @@ const CartDrawer = () => {
   );
 };
 
-// Export a function to open the cart drawer
 export const openCartDrawer = () => {
-  if (setCartMenuOpenGlobal) {
-    setCartMenuOpenGlobal(true);
-  }
+  setCartMenuOpenGlobal?.(true);
 };
 
 export default CartDrawer;

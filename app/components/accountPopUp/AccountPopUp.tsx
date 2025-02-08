@@ -82,9 +82,8 @@ const AccountPopUp = () => {
 
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
-
-    if (isLoaded && !isSignedIn) {
-      // Trigger the pop-up every 20 seconds.
+    if (isLoaded && !isSignedIn && !pendingVerification) {
+      // Trigger the pop-up every 20 seconds only if no email verification is pending.
       intervalId = setInterval(() => {
         setAccountMenuOpen(true);
       }, 20000);
@@ -93,7 +92,7 @@ const AccountPopUp = () => {
     return () => {
       clearInterval(intervalId);
     };
-  }, [isLoaded, isSignedIn, setAccountMenuOpen]);
+  }, [isLoaded, isSignedIn, pendingVerification, setAccountMenuOpen]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -137,7 +136,7 @@ const AccountPopUp = () => {
 
     try {
       const result = await signIn.create({
-        strategy:"password",
+        strategy: "password",
         identifier: formData.email,
         password: formData.password,
       });
@@ -206,7 +205,7 @@ const AccountPopUp = () => {
         strategy: "reset_password_email_code",
         identifier: formData.email,
       });
-      
+
       toast.success("Password reset email sent! Check your inbox.");
       setShowVerificationDialog(true);
       setAccountMenuOpen(false);
@@ -240,89 +239,89 @@ const AccountPopUp = () => {
         <DialogTrigger asChild>
           <div className="relative"> */}
       <button onClick={handleOnClickAccountMenu} className="lg:flex relative font-bold font-play">
-        {isSignedIn ? (<Image 
-          src={user.imageUrl} 
+        {isSignedIn ? (<Image
+          src={user.imageUrl}
           alt={`${user?.firstName || ''} ${user?.lastName || ''}`}
-          width={32} 
+          width={32}
           height={32}
           className="rounded-full"
           onClick={showUserDetailsHandler}
-          />) : "Login"}
+        />) : "Login"}
       </button>
       {/* </div>
         </DialogTrigger>
       </Dialog> */}
 
       <Dialog open={userDetailsOpen} onOpenChange={setUserDetailsOpen}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogTitle className="text-xl font-bold">Profile Details</DialogTitle>
-        <div className="mt-4 space-y-4">
-          <div className="flex items-center justify-center mb-6">
-            <Image 
-              src={user?.imageUrl!} 
-              alt="Profile"
-              width={80} 
-              height={80}
-              className="rounded-full"
-            />
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogTitle className="text-xl font-bold">Profile Details</DialogTitle>
+          <div className="mt-4 space-y-4">
+            <div className="flex items-center justify-center mb-6">
+              <Image
+                src={user?.imageUrl!}
+                alt="Profile"
+                width={80}
+                height={80}
+                className="rounded-full"
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <div>
+                <Label className="font-semibold">Name</Label>
+                <p className="text-gray-700">
+                  {user?.firstName} {user?.lastName}
+                </p>
+              </div>
+
+              <div>
+                <Label className="font-semibold">Email</Label>
+                <p className="text-gray-700">{user?.emailAddresses[0]?.emailAddress}</p>
+              </div>
+
+              <div>
+                <Label className="font-semibold">Phone</Label>
+                <p className="text-gray-700">{(user as any)?.unsafeMetadata?.phone || 'Not provided'}</p>
+              </div>
+
+              <div>
+                <Label className="font-semibold">WhatsApp</Label>
+                <p className="text-gray-700">{(user as any)?.unsafeMetadata?.whatsapp || 'Not provided'}</p>
+              </div>
+
+              <div>
+                <Label className="font-semibold">Country</Label>
+                <p className="text-gray-700">{(user as any)?.unsafeMetadata?.country || 'Not provided'}</p>
+              </div>
+
+              <div>
+                <Label className="font-semibold">Zipcode</Label>
+                <p className="text-gray-700">{(user as any)?.unsafeMetadata?.zipCode || 'Not provided'}</p>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 mt-6">
+              <Button
+                variant="default"
+                onClick={() => setUserDetailsOpen(false)}
+                className="bg-gray-500 text-white hover:bg-gray-600"
+              >
+                Close
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  signOut();
+                  setUserDetailsOpen(false);
+                }}
+                className="bg-[#c40600] hover:bg-[#a30500]"
+              >
+                Logout
+              </Button>
+            </div>
           </div>
-          
-          <div className="grid gap-2">
-            <div>
-              <Label className="font-semibold">Name</Label>
-              <p className="text-gray-700">
-                {user?.firstName} {user?.lastName}
-              </p>
-            </div>
-
-            <div>
-              <Label className="font-semibold">Email</Label>
-              <p className="text-gray-700">{user?.emailAddresses[0]?.emailAddress}</p>
-            </div>
-
-            <div>
-              <Label className="font-semibold">Phone</Label>
-              <p className="text-gray-700">{(user as any)?.unsafeMetadata?.phone || 'Not provided'}</p>
-            </div>
-
-            <div>
-              <Label className="font-semibold">WhatsApp</Label>
-              <p className="text-gray-700">{(user as any)?.unsafeMetadata?.whatsapp || 'Not provided'}</p>
-            </div>
-
-            <div>
-              <Label className="font-semibold">Country</Label>
-              <p className="text-gray-700">{(user as any)?.unsafeMetadata?.country || 'Not provided'}</p>
-            </div>
-
-            <div>
-              <Label className="font-semibold">Zipcode</Label>
-              <p className="text-gray-700">{(user as any)?.unsafeMetadata?.zipCode || 'Not provided'}</p>
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-3 mt-6">
-            <Button 
-              variant="default" 
-              onClick={() => setUserDetailsOpen(false)}
-              className="bg-gray-500 text-white hover:bg-gray-600"
-            >
-              Close
-            </Button>
-            <Button 
-              variant="destructive" 
-              onClick={() => {
-                signOut();
-                setUserDetailsOpen(false);
-              }}
-              className="bg-[#c40600] hover:bg-[#a30500]"
-            >
-              Logout
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={accountMenuOpen} onOpenChange={setAccountMenuOpen}>
         <DialogContent className="sm:max-w-[725px] flex">
@@ -393,7 +392,7 @@ const AccountPopUp = () => {
                   >
                     Forgot Password
                   </Button>
-                  
+
                 </CardFooter>
               </TabsContent>
               <TabsContent value="signup">
