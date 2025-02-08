@@ -228,37 +228,40 @@ const CartItem = ({
 
   return (
     <Card className="w-full">
-      <CardContent className="p-6 space-y-6">
+      <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
         {/* Header with Price */}
-        <div className="flex justify-between">
-          <h3 className="font-semibold text-lg">Custom Shirt</h3>
+        <div className="flex flex-col sm:flex-row sm:justify-between gap-2 sm:gap-0">
+          <h3 className="font-semibold text-base sm:text-lg">Custom Shirt</h3>
           <div className="text-right">
-            <p className="font-bold text-lg">
+            <p className="font-bold text-base sm:text-lg">
               ${(item.price * parseInt(item.qty)).toFixed(2)}
             </p>
-            <p className="text-sm text-gray-500">${item.price.toFixed(2)} each</p>
+            <p className="text-xs sm:text-sm text-gray-500">${item.price.toFixed(2)} each</p>
           </div>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* Left Column - Composite Image and Material */}
-          <div className="space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+          {/* Left Column - Images and Material */}
+          <div className="space-y-4 sm:space-y-6">
             {/* Shirt Images Container */}
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <div className="flex gap-4">
+            <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
+              <div className="flex flex-col sm:flex-row gap-4">
                 {/* Main Front View */}
                 <div className="flex-1">
-                  <h4 className="font-medium mb-2">Front View</h4>
-                  <ShirtCompositeImage details={details} />
+                  <h4 className="font-medium mb-2 text-sm sm:text-base">Front View</h4>
+                  <div className="flex justify-center">
+                    <div className="w-[200px] sm:w-[250px] lg:w-[300px] h-[300px] sm:h-[350px] lg:h-[400px] relative">
+                      <ShirtCompositeImage details={details} />
+                    </div>
+                  </div>
                 </div>
                 
                 {/* Back View */}
                 {details.backImage && (
-                  <div className="w-[150px]">
-                    <h4 className="font-medium mb-2">Back View</h4>
-                    <div className="relative w-[150px] h-[200px]">
+                  <div className="w-full sm:w-[120px] lg:w-[150px]">
+                    <h4 className="font-medium mb-2 text-sm sm:text-base">Back View</h4>
+                    <div className="relative w-full sm:w-[120px] lg:w-[150px] h-[150px] sm:h-[170px] lg:h-[200px]">
                       <Image
-
                         src={details.backImage}
                         alt="Shirt Back"
                         fill
@@ -271,27 +274,27 @@ const CartItem = ({
             </div>
 
             {/* Material & Color */}
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h4 className="font-medium mb-4">Material & Color</h4>
-              <div className="flex items-center gap-4">
+            <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
+              <h4 className="font-medium mb-2 sm:mb-4 text-sm sm:text-base">Material & Color</h4>
+              <div className="flex items-center gap-3 sm:gap-4">
                 {details.fabricImage && (
                   <Image
                     src={details.fabricImage}
                     alt={details.fabricName || "Fabric"}
-                    width={80}
-                    height={80}
-                    className="rounded-md object-cover"
+                    width={60}
+                    height={60}
+                    className="rounded-md object-cover w-[50px] h-[50px] sm:w-[80px] sm:h-[80px]"
                   />
                 )}
                 <div>
-                  <p className="font-medium">{details.fabricName}</p>
+                  <p className="text-sm sm:text-base font-medium">{details.fabricName}</p>
                   {details.colorName && (
-                    <div className="flex items-center gap-2 mt-2">
+                    <div className="flex items-center gap-2 mt-1 sm:mt-2">
                       <div
-                        className="w-6 h-6 rounded-full border"
+                        className="w-4 h-4 sm:w-6 sm:h-6 rounded-full border"
                         style={{ backgroundColor: details.colorHexCode }}
                       />
-                      <span>{details.colorName}</span>
+                      <span className="text-sm">{details.colorName}</span>
                     </div>
                   )}
                 </div>
@@ -300,12 +303,12 @@ const CartItem = ({
           </div>
 
           {/* Right Column - Measurements */}
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h4 className="font-medium mb-4">Measurements</h4>
-            <div className="grid grid-cols-2 gap-4">
+          <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
+            <h4 className="font-medium mb-2 sm:mb-4 text-sm sm:text-base">Measurements</h4>
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
               <div>
-                <h5 className="font-medium mb-2">Shirt Measurements</h5>
-                <div className="space-y-2 text-sm">
+                <h5 className="font-medium mb-1 sm:mb-2 text-xs sm:text-sm">Shirt Measurements</h5>
+                <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm">
                   <p>Collar: {details.measurementCollar}″</p>
                   <p>Half Chest: {details.measurementHalfChest}″</p>
                   <p>Half Waist: {details.measurementHalfWaist}″</p>
@@ -317,8 +320,8 @@ const CartItem = ({
                 </div>
               </div>
               <div>
-                <h5 className="font-medium mb-2">Body Measurements</h5>
-                <div className="space-y-2 text-sm">
+                <h5 className="font-medium mb-1 sm:mb-2 text-xs sm:text-sm">Body Measurements</h5>
+                <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm">
                   <p>Neck: {details.measurementNeck}″</p>
                   <p>Chest: {details.measurementChest}″</p>
                   <p>Waist: {details.measurementWaist}″</p>
@@ -333,21 +336,22 @@ const CartItem = ({
         </div>
 
         {/* Quantity Controls */}
-        <div className="flex justify-end items-center gap-4">
-          <div className="flex items-center gap-2">
+        <div className="flex justify-end items-center gap-2 sm:gap-4 pt-2 sm:pt-0">
+          <div className="flex items-center gap-1 sm:gap-2">
             <Button
               size="icon"
               variant="outline"
+              className="h-8 w-8 sm:h-10 sm:w-10"
               onClick={handleButtonClick((event) =>
                 onUpdateQuantity(item.product._id, parseInt(item.qty) - 1, event)
               )}
               disabled={isUpdating || parseInt(item.qty) <= 1}
             >
-              <FaMinus className="h-4 w-4" />
+              <FaMinus className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
-            <span className="w-8 text-center">
+            <span className="w-6 sm:w-8 text-center text-sm sm:text-base">
               {isUpdating ? (
-                <AiOutlineLoading3Quarters className="h-4 w-4 animate-spin" />
+                <AiOutlineLoading3Quarters className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
               ) : (
                 item.qty
               )}
@@ -355,21 +359,23 @@ const CartItem = ({
             <Button
               size="icon"
               variant="outline"
+              className="h-8 w-8 sm:h-10 sm:w-10"
               onClick={handleButtonClick((event) =>
                 onUpdateQuantity(item.product._id, parseInt(item.qty) + 1, event)
               )}
               disabled={isUpdating}
             >
-              <FaPlus className="h-4 w-4" />
+              <FaPlus className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
           </div>
           <Button
             size="icon"
             variant="destructive"
+            className="h-8 w-8 sm:h-10 sm:w-10"
             onClick={handleButtonClick((event) => onDelete(item.product._id, event))}
             disabled={isUpdating}
           >
-            <FaTrashAlt className="h-4 w-4" />
+            <FaTrashAlt className="h-3 w-3 sm:h-4 sm:w-4" />
           </Button>
         </div>
       </CardContent>
@@ -495,9 +501,9 @@ export default function CartPage() {
   }
 
   return (
-    <div className="min-h-screen pt-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-      <h1 className="text-3xl font-bold mb-8">Shopping Cart</h1>
-      <div className="space-y-6">
+    <div className="min-h-screen pt-16 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-8">Shopping Cart</h1>
+      <div className="space-y-4 sm:space-y-6">
         {cart.products.map((item) => (
           <CartItem
             key={item.product._id}
@@ -508,18 +514,18 @@ export default function CartPage() {
           />
         ))}
 
-        <div className="mt-8 border-t pt-6">
+        <div className="mt-6 sm:mt-8 border-t pt-4 sm:pt-6">
           <div className="flex flex-col items-end gap-2">
-            <p className="text-2xl font-bold">
+            <p className="text-xl sm:text-2xl font-bold">
               Total: ${cart.cartTotal.toFixed(2)}
             </p>
             {cart.totalAfterDiscount !== undefined && (
-              <p className="text-xl text-green-600">
+              <p className="text-lg sm:text-xl text-green-600">
                 Discounted Total: ${cart.totalAfterDiscount.toFixed(2)}
               </p>
             )}
-            <Link href="/checkout">
-              <Button size="lg" className="mt-4">
+            <Link href="/checkout" className="w-full sm:w-auto">
+              <Button size="lg" className="mt-4 w-full sm:w-auto">
                 Proceed to Checkout
               </Button>
             </Link>
