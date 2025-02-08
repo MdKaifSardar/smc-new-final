@@ -31,10 +31,10 @@ const UserSchema = new Schema(
       type : String,
       default : ""
     },
-    // image : {
-    //   type : String,
-    //   default : "",
-    // },
+    image : {
+      type : String,
+      default : "",
+    },
     whatsapp : {
       type : String,
       default : ""
@@ -74,10 +74,10 @@ const UserSchema = new Schema(
         default: true,
       },
     },
-    orders : [{
-      type : mongoose.Schema.Types.ObjectId,
-      ref : "Order"
-    }]
+    // orders : [{
+    //   type : mongoose.Schema.Types.ObjectId,
+    //   ref : "Order"
+    // }]
   },
   {
     timestamps: true,

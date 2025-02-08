@@ -73,7 +73,7 @@ const AccountPopUp = () => {
     setActive: setSignInActive,
   } = useSignIn();
 
-  const { isLoaded, isSignedIn } = useUser();
+  const { isLoaded, isSignedIn, user } = useUser();
   const { signOut } = useClerk();
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
 
@@ -168,6 +168,10 @@ const AccountPopUp = () => {
       setAccountMenuOpen(true);
     }
   };
+
+  const showUserDetailsHandler = () => {
+    console.log("clicked")
+  }
 
   return (
     <div className="z-[600]">
