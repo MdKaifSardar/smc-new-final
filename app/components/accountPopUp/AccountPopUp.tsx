@@ -81,10 +81,18 @@ const AccountPopUp = () => {
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
 
   useEffect(() => {
-    // Check if user is loaded and not signed in
+    let intervalId: NodeJS.Timeout;
+
     if (isLoaded && !isSignedIn) {
-      setAccountMenuOpen(true);
+      // Trigger the pop-up every 20 seconds.
+      intervalId = setInterval(() => {
+        setAccountMenuOpen(true);
+      }, 20000);
     }
+
+    return () => {
+      clearInterval(intervalId);
+    };
   }, [isLoaded, isSignedIn, setAccountMenuOpen]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

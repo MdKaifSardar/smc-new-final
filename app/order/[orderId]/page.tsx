@@ -9,16 +9,17 @@ import { getOrderDetailsById } from "@/lib/database/actions/order.actions";
 import { format } from "date-fns";
 // Import downloadPDF from the checkout folder
 import { downloadPDF } from "../../checkout/down";
+import { getFabricById } from "@/lib/database/actions/admin/ShirtArea/Fabric/fabric.actions";
 
 const formatDate = (dateString: string | number | Date) => {
   try {
     const date = new Date(dateString);
     if (isNaN(date.getTime())) {
-      return 'Date unavailable';
+      return "Date unavailable";
     }
-    return format(date, 'MMM d, yyyy');
+    return format(date, "MMM d, yyyy");
   } catch (error) {
-    return 'Date unavailable';
+    return "Date unavailable";
   }
 };
 
@@ -26,11 +27,11 @@ const formatDateTime = (dateString: string | number | Date) => {
   try {
     const date = new Date(dateString);
     if (isNaN(date.getTime())) {
-      return 'Date unavailable';
+      return "Date unavailable";
     }
-    return format(date, 'MMM d, yyyy, h:mm a');
+    return format(date, "MMM d, yyyy, h:mm a");
   } catch (error) {
-    return 'Date unavailable';
+    return "Date unavailable";
   }
 };
 
@@ -39,11 +40,13 @@ const OrderPage = () => {
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [fabrics, setFabrics] = useState<{ [key: string]: any }>({});
 
   useEffect(() => {
     async function fetchOrderDetails() {
       try {
         const response = await getOrderDetailsById(orderId as string);
+        console.log(response);
         if (response.success) {
           setOrder(response.order);
         } else {
@@ -60,6 +63,26 @@ const OrderPage = () => {
       fetchOrderDetails();
     }
   }, [orderId]);
+
+  useEffect(() => {
+    if (order?.products) {
+      order.products.forEach(async (product: any) => {
+        if (product.product?.fabricId) {
+          try {
+            const fabricResponse = await getFabricById(product.product.fabricId);
+            if (fabricResponse.success) {
+              setFabrics(prev => ({
+                ...prev,
+                [product.product.fabricId]: fabricResponse.fabric
+              }));
+            }
+          } catch (error) {
+            console.error('Error fetching fabric:', error);
+          }
+        }
+      });
+    }
+  }, [order]);
 
   if (loading) {
     return (
@@ -89,20 +112,27 @@ const OrderPage = () => {
             </Link>
             <div className="text-center mb-6">
               <h1 className="text-2xl font-bold">
-                THANK YOU {order.orderAddress?.firstName} {order.orderAddress?.lastName}
+                THANK YOU {order.orderAddress?.firstName}{" "}
+                {order.orderAddress?.lastName}
               </h1>
               <p className="text-gray-600">Order ID: {order._id}</p>
             </div>
             <div className="mb-6 border rounded-lg overflow-hidden">
               <div className="flex flex-wrap">
                 <div className="w-full sm:w-1/2 md:w-1/5 p-4 border-b sm:border-b-0 sm:border-r">
-                  <div className="font-semibold text-sm mb-1">ORDER NUMBER:</div>
+                  <div className="font-semibold text-sm mb-1">
+                    ORDER NUMBER:
+                  </div>
                   <div>{order._id}</div>
                 </div>
 
                 <div className="w-full sm:w-1/2 md:w-1/4 p-4 border-b md:border-b-0 md:border-r">
-                  <div className="font-semibold text-sm mb-1">PAYMENT METHOD:</div>
-                  <div className="capitalize">{order.paymentMethod?.replace(/_/g, ' ')}</div>
+                  <div className="font-semibold text-sm mb-1">
+                    PAYMENT METHOD:
+                  </div>
+                  <div className="capitalize">
+                    {order.paymentMethod?.replace(/_/g, " ")}
+                  </div>
                 </div>
 
                 <div className="w-full sm:w-1/2 md:w-1/4 p-4">
@@ -114,10 +144,15 @@ const OrderPage = () => {
             <div className="mb-6 border rounded-lg overflow-hidden">
               <div className="p-4">
                 <h2 className="font-semibold text-lg mb-2">Shipping Address</h2>
-                <p>{order.orderAddress?.firstName} {order.orderAddress?.lastName}</p>
+                <p>
+                  {order.orderAddress?.firstName} {order.orderAddress?.lastName}
+                </p>
                 <p>{order.orderAddress?.address1}</p>
                 <p>{order.orderAddress?.address2}</p>
-                <p>{order.orderAddress?.city}, {order.orderAddress?.state} {order.orderAddress?.zipCode}</p>
+                <p>
+                  {order.orderAddress?.city}, {order.orderAddress?.state}{" "}
+                  {order.orderAddress?.zipCode}
+                </p>
                 <p>{order.orderAddress?.country}</p>
                 <p>Phone: {order.orderAddress?.phoneNumber}</p>
               </div>
@@ -132,14 +167,14 @@ const OrderPage = () => {
                       <>
                         <div className="flex-shrink-0">
                           <img
-                            src={product.product.fabric?.image?.url}
+                            src={fabrics[product.product?.fabricId]?.image?.url}
                             alt={product.product.fabric?.fabricName || "Fabric"}
                             className="w-20 h-20 object-cover rounded-md"
                           />
                         </div>
                         <div className="flex-grow">
                           <p><strong>Custom Shirt</strong></p>
-                          <p><strong>Fabric:</strong> {product.product.fabric?.fabricName || "N/A"}</p>
+                          <p><strong>Fabric:</strong> {fabrics[product.product?.fabricId]?.fabricName || "N/A"}</p>
                           <p><strong>Quantity:</strong> {product.qty}</p>
                           <p><strong>Price:</strong> ₹{product.price}</p>
                         </div>
@@ -147,11 +182,22 @@ const OrderPage = () => {
                     ) : (
                       // Regular product display
                       <div className="w-full">
-                        <p><strong>Name:</strong> {product.product?.fabrics.fabricName || "N/A"}</p>
-                        <p><strong>Quantity:</strong> {product.qty}</p>
-                        <p><strong>Price:</strong> ₹{product.price}</p>
-                        <p><strong>Size:</strong> {product.size}</p>
-                        <p><strong>Color:</strong> {product.color?.color}</p>
+                        <p>
+                          <strong>Name:</strong>{" "}
+                          {product.product?.fabrics.fabricName || "N/A"}
+                        </p>
+                        <p>
+                          <strong>Quantity:</strong> {product.qty}
+                        </p>
+                        <p>
+                          <strong>Price:</strong> ₹{product.price}
+                        </p>
+                        <p>
+                          <strong>Size:</strong> {product.size}
+                        </p>
+                        <p>
+                          <strong>Color:</strong> {product.color?.color}
+                        </p>
                       </div>
                     )}
                   </div>
