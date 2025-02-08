@@ -9,6 +9,7 @@ import { getOrderDetailsById } from "@/lib/database/actions/order.actions";
 import { format } from "date-fns";
 // Import downloadPDF from the checkout folder
 import { downloadPDF } from "../../checkout/down";
+import { getFabricById } from "@/lib/database/actions/admin/ShirtArea/Fabric/fabric.actions";
 
 const formatDate = (dateString: string | number | Date) => {
   try {
@@ -39,6 +40,7 @@ const OrderPage = () => {
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [fabrics, setFabrics] = useState<{ [key: string]: any }>({});
 
   useEffect(() => {
     async function fetchOrderDetails() {
@@ -61,6 +63,26 @@ const OrderPage = () => {
       fetchOrderDetails();
     }
   }, [orderId]);
+
+  useEffect(() => {
+    if (order?.products) {
+      order.products.forEach(async (product: any) => {
+        if (product.product?.fabricId) {
+          try {
+            const fabricResponse = await getFabricById(product.product.fabricId);
+            if (fabricResponse.success) {
+              setFabrics(prev => ({
+                ...prev,
+                [product.product.fabricId]: fabricResponse.fabric
+              }));
+            }
+          } catch (error) {
+            console.error('Error fetching fabric:', error);
+          }
+        }
+      });
+    }
+  }, [order]);
 
   if (loading) {
     return (
@@ -145,12 +167,17 @@ const OrderPage = () => {
                       <>
                         <div className="flex-shrink-0">
                           <img
+<<<<<<< HEAD
                             src={product.product.color?.image?.url}
+=======
+                            src={fabrics[product.product?.fabricId]?.image?.url}
+>>>>>>> e9c9e95ef6f5db86b29f97d786f718eff5824ddf
                             alt={product.product.fabric?.fabricName || "Fabric"}
                             className="w-20 h-20 object-cover rounded-md"
                           />
                         </div>
                         <div className="flex-grow">
+<<<<<<< HEAD
                           <p>
                             <strong>Custom Shirt</strong>
                           </p>
@@ -164,6 +191,12 @@ const OrderPage = () => {
                           <p>
                             <strong>Price:</strong> ₹{product.price}
                           </p>
+=======
+                          <p><strong>Custom Shirt</strong></p>
+                          <p><strong>Fabric:</strong> {fabrics[product.product?.fabricId]?.fabricName || "N/A"}</p>
+                          <p><strong>Quantity:</strong> {product.qty}</p>
+                          <p><strong>Price:</strong> ₹{product.price}</p>
+>>>>>>> e9c9e95ef6f5db86b29f97d786f718eff5824ddf
                         </div>
                       </>
                     ) : (
