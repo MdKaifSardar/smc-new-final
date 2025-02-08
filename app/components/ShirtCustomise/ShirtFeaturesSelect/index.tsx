@@ -67,6 +67,16 @@ interface Shirt {
   sleeves?: ShirtItem;
 }
 
+const LoadingScreen = () => {
+  return (
+    <div className="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center">
+      <div className="animate-spin rounded-full h-32 w-32 border-t-4 border-b-4 border-[#C40600] mb-4"></div>
+      <h2 className="text-2xl font-bold text-gray-800">Loading your customizer...</h2>
+      <p className="text-gray-600 mt-2">Please wait while we prepare everything</p>
+    </div>
+  );
+};
+
 const ShirtCustomizer = () => {
   const [totalPrice, setTotalPrice] = useState(0);
   const { data, loading } = useProductData() as {
@@ -468,6 +478,10 @@ const ShirtCustomizer = () => {
     setSelectedBackImage(null);
   };
 
+  if (loading) {
+    return <LoadingScreen />;
+  }
+
   return (
     <div className="mt-[4rem] flex-col md:flex-row justify-between items-start mb-10 flex w-full h-fit">
       <div className="relative mt-[1.5rem] md:mt-0 flex justify-center items-center w-full h-[87vh]">
@@ -646,85 +660,83 @@ const ShirtCustomizer = () => {
           {["collarStyle", "collarHeight", "collarButton"].some((section) =>
             sections.includes(section)
           ) && (
-            <div className="mt-4 w-full">
-              <h3
-                className="text-lg text-center font-semibold text-gray-700 py-2 cursor-pointer bg-gray-200 rounded-lg"
-                onClick={toggleCollarSection}
-              >
-                Collar {isCollarOpen ? "▲" : "▼"}
-              </h3>
-              {isCollarOpen && (
-                <div className="mt-2">
-                  {["collarStyle", "collarHeight", "collarButton"].map(
-                    (section) =>
-                      sections.includes(section) && (
-                        <div
-                          key={section}
-                          className={`flex flex-col justify-center items-center w-full p-3 cursor-pointer rounded-lg transition-all duration-200 ease-in-out hover:bg-gray-100 ${
-                            activeSection === section ? "bg-gray-300" : ""
-                          }`}
-                          onClick={() =>
-                            setActiveSection(section as keyof ProductData)
-                          }
-                        >
-                          {section.charAt(0).toUpperCase() + section.slice(1)}
-                        </div>
-                      )
-                  )}
-                </div>
-              )}
-            </div>
-          )}
+              <div className="mt-4 w-full">
+                <h3
+                  className="text-lg text-center font-semibold text-gray-700 py-2 cursor-pointer bg-gray-200 rounded-lg"
+                  onClick={toggleCollarSection}
+                >
+                  Collar {isCollarOpen ? "▲" : "▼"}
+                </h3>
+                {isCollarOpen && (
+                  <div className="mt-2">
+                    {["collarStyle", "collarHeight", "collarButton"].map(
+                      (section) =>
+                        sections.includes(section) && (
+                          <div
+                            key={section}
+                            className={`flex flex-col justify-center items-center w-full p-3 cursor-pointer rounded-lg transition-all duration-200 ease-in-out hover:bg-gray-100 ${activeSection === section ? "bg-gray-300" : ""
+                              }`}
+                            onClick={() =>
+                              setActiveSection(section as keyof ProductData)
+                            }
+                          >
+                            {section.charAt(0).toUpperCase() + section.slice(1)}
+                          </div>
+                        )
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
           {/* Cuff Section */}
           {["cuffStyle", "cuffLinks"].some((section) =>
             sections.includes(section)
           ) && (
-            <div className="mt-6 w-full">
-              <h3
-                className="text-lg text-center font-semibold text-gray-700 py-2 cursor-pointer bg-gray-200 rounded-lg"
-                onClick={toggleCuffSection}
-              >
-                Cuff {isCuffOpen ? "▲" : "▼"}
-              </h3>
-              {isCuffOpen && longSleeveSelected && (
-                <div className="mt-2">
-                  {["cuffStyle", "cuffLinks"].map(
-                    (section) =>
-                      sections.includes(section) && (
-                        <div
-                          key={section}
-                          className={`flex flex-col justify-center items-center w-full p-3 cursor-pointer rounded-lg transition-all duration-200 ease-in-out hover:bg-gray-100 ${
-                            activeSection === section ? "bg-gray-300" : ""
-                          }`}
-                          onClick={() =>
-                            setActiveSection(section as keyof ProductData)
-                          }
-                        >
-                          {section.charAt(0).toUpperCase() + section.slice(1)}
-                        </div>
-                      )
-                  )}
+              <div className="mt-6 w-full">
+                <h3
+                  className="text-lg text-center font-semibold text-gray-700 py-2 cursor-pointer bg-gray-200 rounded-lg"
+                  onClick={toggleCuffSection}
+                >
+                  Cuff {isCuffOpen ? "▲" : "▼"}
+                </h3>
+                {isCuffOpen && longSleeveSelected && (
+                  <div className="mt-2">
+                    {["cuffStyle", "cuffLinks"].map(
+                      (section) =>
+                        sections.includes(section) && (
+                          <div
+                            key={section}
+                            className={`flex flex-col justify-center items-center w-full p-3 cursor-pointer rounded-lg transition-all duration-200 ease-in-out hover:bg-gray-100 ${activeSection === section ? "bg-gray-300" : ""
+                              }`}
+                            onClick={() =>
+                              setActiveSection(section as keyof ProductData)
+                            }
+                          >
+                            {section.charAt(0).toUpperCase() + section.slice(1)}
+                          </div>
+                        )
+                    )}
 
-                  {/* Watch Compatible Button */}
-                  <div className="flex items-center justify-center mt-4">
-                    <span className="mr-3 text-lg font-medium text-gray-700">
-                      Watch Compatible:
-                    </span>
-                    <select
-                      value={watchCompatible}
-                      onChange={(e) => setWatchCompatible(e.target.value)}
-                      className="py-2 px-4 border border-gray-300 rounded-lg text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="No">No</option>
-                      <option value="Left">Left</option>
-                      <option value="Right">Right</option>
-                    </select>
+                    {/* Watch Compatible Button */}
+                    <div className="flex items-center justify-center mt-4">
+                      <span className="mr-3 text-lg font-medium text-gray-700">
+                        Watch Compatible:
+                      </span>
+                      <select
+                        value={watchCompatible}
+                        onChange={(e) => setWatchCompatible(e.target.value)}
+                        className="py-2 px-4 border border-gray-300 rounded-lg text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="No">No</option>
+                        <option value="Left">Left</option>
+                        <option value="Right">Right</option>
+                      </select>
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
-          )}
+                )}
+              </div>
+            )}
         </div>
       </div>
 
@@ -756,11 +768,10 @@ const ShirtCustomizer = () => {
                     <div
                       key={item._id}
                       onClick={() => handleSelect(activeSection, item)}
-                      className={`p-4 border rounded-lg cursor-pointer transition shadow-sm ${
-                        selectedItems[activeSection]?._id === item._id
+                      className={`p-4 border rounded-lg cursor-pointer transition shadow-sm ${selectedItems[activeSection]?._id === item._id
                           ? "bg-blue-100 border-blue-500 ring-2 ring-blue-400"
                           : "hover:bg-gray-100"
-                      }`}
+                        }`}
                     >
                       {item.icon?.url && (
                         <img
