@@ -66,6 +66,21 @@ const FabricsWithColors = () => {
     setIsNextEnabled(!!selectedFabric && !!selectedColor);
   }, [selectedFabric, selectedColor]);
 
+  // New effect to set the default fabric and color if none is selected
+  useEffect(() => {
+    if (!selectedFabric && fabrics.length > 0) {
+      const firstFabricId = fabrics[0]._id;
+      const fabricColors = colors[firstFabricId];
+      if (fabricColors && fabricColors.length > 0) {
+        const defaultColor = fabricColors[0];
+        setSelectedFabric(firstFabricId);
+        setSelectedColor(defaultColor._id);
+        localStorage.setItem("fabricId", firstFabricId);
+        localStorage.setItem("colorId", defaultColor._id);
+      }
+    }
+  }, [fabrics, colors, selectedFabric]);
+
   const handleFabricClick = (fabricId: string) => {
     setSelectedFabric(fabricId);
     setSelectedColor(null);
@@ -110,11 +125,10 @@ const FabricsWithColors = () => {
             {filteredFabrics.map((fabric) => (
               <div
                 key={fabric._id}
-                className={`w-full rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:scale-105 overflow-hidden relative cursor-pointer ${
-                  selectedFabric === fabric._id
+                className={`w-full rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:scale-105 overflow-hidden relative cursor-pointer ${selectedFabric === fabric._id
                     ? "border-4 border-blue-500"
                     : ""
-                }`}
+                  }`}
                 onClick={() => handleFabricClick(fabric._id)}
               >
                 <div className="absolute top-0 left-0 w-full bg-white text-center p-2 font-semibold text-gray-800">
@@ -135,11 +149,10 @@ const FabricsWithColors = () => {
                     {colors[fabric._id]?.map((color) => (
                       <div
                         key={color._id}
-                        className={`w-8 h-8 rounded-full cursor-pointer border-2 ${
-                          selectedColor === color._id
+                        className={`w-8 h-8 rounded-full cursor-pointer border-2 ${selectedColor === color._id
                             ? "border-blue-500"
                             : "border-transparent"
-                        }`}
+                          }`}
                         style={{ backgroundColor: color.hexCode }}
                         onClick={() => handleColorClick(fabric._id, color)}
                       ></div>

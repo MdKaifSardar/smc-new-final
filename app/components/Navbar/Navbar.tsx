@@ -44,8 +44,8 @@ export default function Navbar() {
 
   return (
     <nav className="w-full bg-[#f5f5f0] shadow-md px-4 py-2 flex justify-between items-center fixed top-0 z-[10]">
-      <div className="flex items-center">
-        <Image src={"/logo.png"} alt="logo" width={130} height={80} />
+      <div className="flex items-center" onClick={() => window.location.href = "/"}>
+        <Image src={"/logo.png"} alt="logo" width={130} height={80}/>
       </div>
 
       <div className="flex items-center space-x-4">

@@ -29,6 +29,7 @@ interface ShirtDetails {
   collarHeightImage?: string;
   collarHeightPrice?: number;
   watchCompatible?: string;
+<<<<<<< HEAD
   bottomName?: string;
   bottomImage?: string;
   bottomPrice?: number;
@@ -66,6 +67,35 @@ interface ShirtDetails {
   measurementElbowWidth?: number;
   measurementUpperArm?: number;
   measurementShoulder?: number;
+=======
+  bottom?: { name: string };
+  back?: { name: string };
+  pocket?: { name: string };
+  placket?: { name: string };
+  sleeves?: { name: string };
+  fit?: { name: string };
+  fabricId?: string;
+  colorId?: string;
+  measurementId?: string;
+  fabricDetails?: {
+    fabricName: string;
+    type: string;
+    image?: {
+      url: string;
+    };
+  };
+  colorDetails?: {
+    name: string;
+    hexCode: string;
+    image?: string;
+  };
+  measurementDetails?: {
+    collar: number;
+    chest: number;
+    waist: number;
+    sleevesLength: number;
+  };
+>>>>>>> 1bd052d92ad6ea9406c46105092745f901357613
 }
 
 interface CartItem {
@@ -256,10 +286,18 @@ const CartItem = ({
                     <h4 className="font-medium mb-2">Back View</h4>
                     <div className="relative w-[150px] h-[200px]">
                       <Image
+<<<<<<< HEAD
                         src={details.backImage}
                         alt="Shirt Back"
                         fill
                         className="object-contain"
+=======
+                        src={(details as any).fabricDetails.image?.url}
+                        alt={details.fabricDetails.fabricName || "Fabric Image"}
+                        width={80}
+                        height={80}
+                        className="object-cover rounded-md"
+>>>>>>> 1bd052d92ad6ea9406c46105092745f901357613
                       />
                     </div>
                   </div>
