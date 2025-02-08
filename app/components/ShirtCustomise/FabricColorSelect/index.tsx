@@ -151,12 +151,14 @@ const FabricsWithColors = () => {
           </div>
 
           <div className="fixed bottom-[1rem] right-[1rem]">
-            <button
-              onClick={() => (window.location.href = "/form-new")}
-              className="hover:bg-[#530e0c] bg-[#C40600] mt-10 text-white py-3 px-6 rounded-lg font-medium transition duration-300"
-            >
-              Next
-            </button>
+            {selectedFabric && selectedColor && (
+              <button
+                onClick={() => (window.location.href = "/form-new")}
+                className="hover:bg-[#530e0c] bg-[#C40600] mt-10 text-white py-3 px-6 rounded-lg font-medium transition duration-300"
+              >
+                Next
+              </button>
+            )}
           </div>
         </div>
       </div>
