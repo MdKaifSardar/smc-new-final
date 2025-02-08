@@ -65,6 +65,9 @@ const AccountPopUp = () => {
     country: "",
     zipCode: "",
   });
+  const [userDetailsOpen, setUserDetailsOpen] = useState(false);
+  const [showResetPasswordDialog, setShowResetPasswordDialog] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
 
   const { isLoaded: isSignUpLoaded, signUp, setActive } = useSignUp();
   const {
@@ -108,6 +111,7 @@ const AccountPopUp = () => {
           zipCode: formData.zipCode,
         },
       });
+      console.log(result);
 
       // Prepare email verification
       await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
@@ -125,6 +129,7 @@ const AccountPopUp = () => {
 
     try {
       const result = await signIn.create({
+        strategy:"password",
         identifier: formData.email,
         password: formData.password,
       });
@@ -141,21 +146,32 @@ const AccountPopUp = () => {
   };
 
   const handleVerification = async () => {
-    if (!isSignUpLoaded) return;
+    if (!isSignUpLoaded || !isSignInLoaded) return;
 
     try {
-      const completeSignUp = await signUp.attemptEmailAddressVerification({
-        code: verificationCode,
-      });
+      if (pendingVerification && signUp.status === "needs_email_verification") {
+        // Handle email verification
+        const completeSignUp = await signUp.attemptEmailAddressVerification({
+          code: verificationCode,
+        });
 
-      if (completeSignUp.status === "complete") {
-        await setActive({ session: completeSignUp.createdSessionId });
-        setShowVerificationDialog(false);
+        if (completeSignUp.status === "complete") {
+          await setActive({ session: completeSignUp.createdSessionId });
+          setShowVerificationDialog(false);
+          toast.success("Email verified successfully!");
+        }
+      } else {
+        // Handle password reset
+        const result = await signIn.attemptFirstFactor({
+          strategy: "reset_password_email_code",
+          code: verificationCode,
+        });
 
-        // Additional user metadata can be added via your backend webhook
-        toast.success("Email verified successfully!");
+        if (result.status === "needs_new_password") {
+          setShowVerificationDialog(false);
+          setShowResetPasswordDialog(true);
+        }
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       toast.error("Error during verification: " + err.message);
     }
@@ -171,7 +187,44 @@ const AccountPopUp = () => {
 
   const showUserDetailsHandler = () => {
     console.log("clicked")
+    setUserDetailsOpen((prev) => !(prev));
   }
+
+  const handleforgotpassword = async () => {
+    if (!isSignInLoaded) return;
+
+    try {
+      await signIn.create({
+        strategy: "reset_password_email_code",
+        identifier: formData.email,
+      });
+      
+      toast.success("Password reset email sent! Check your inbox.");
+      setShowVerificationDialog(true);
+      setAccountMenuOpen(false);
+      setPendingVerification(true);
+    } catch (err: any) {
+      toast.error("Error sending reset email: " + err.message);
+    }
+  }
+
+  const handleResetPassword = async () => {
+    if (!isSignInLoaded) return;
+
+    try {
+      const result = await signIn.resetPassword({
+        password: newPassword,
+      });
+
+      if (result.status === "complete") {
+        await setSignInActive({ session: result.createdSessionId });
+        setShowResetPasswordDialog(false);
+        toast.success("Password reset successfully!");
+      }
+    } catch (err: any) {
+      toast.error("Error resetting password: " + err.message);
+    }
+  };
 
   return (
     <div className="z-[600]">
@@ -179,45 +232,89 @@ const AccountPopUp = () => {
         <DialogTrigger asChild>
           <div className="relative"> */}
       <button onClick={handleOnClickAccountMenu} className="lg:flex relative font-bold font-play">
-        {isSignedIn ? "Account" : "Login"}
+        {isSignedIn ? (<Image 
+          src={user.imageUrl} 
+          alt={`${user?.firstName || ''} ${user?.lastName || ''}`}
+          width={32} 
+          height={32}
+          className="rounded-full"
+          onClick={showUserDetailsHandler}
+          />) : "Login"}
       </button>
       {/* </div>
         </DialogTrigger>
       </Dialog> */}
 
-      {/* Updated Logout Dialog */}
-      <Dialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
-        <DialogContent>
-          <DialogTitle>Log Out</DialogTitle>
-          <Card>
-            <CardHeader className="px-6 py-4">
-              <h3 className="text-lg font-medium">Log Out</h3>
-              <p className="text-sm text-muted-foreground">
-                Are you sure you want to log out?
+      <Dialog open={userDetailsOpen} onOpenChange={setUserDetailsOpen}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogTitle className="text-xl font-bold">Profile Details</DialogTitle>
+        <div className="mt-4 space-y-4">
+          <div className="flex items-center justify-center mb-6">
+            <Image 
+              src={user?.imageUrl!} 
+              alt="Profile"
+              width={80} 
+              height={80}
+              className="rounded-full"
+            />
+          </div>
+          
+          <div className="grid gap-2">
+            <div>
+              <Label className="font-semibold">Name</Label>
+              <p className="text-gray-700">
+                {user?.firstName} {user?.lastName}
               </p>
-            </CardHeader>
-            <CardFooter className="flex justify-end gap-3 px-6 py-4">
-              <Button
-                variant="default"
-                className="w-24"
-                onClick={() => setLogoutDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="destructive"
-                className="w-24"
-                onClick={() => {
-                  setLogoutDialogOpen(false);
-                  signOut();
-                }}
-              >
-                Log Out
-              </Button>
-            </CardFooter>
-          </Card>
-        </DialogContent>
-      </Dialog>
+            </div>
+
+            <div>
+              <Label className="font-semibold">Email</Label>
+              <p className="text-gray-700">{user?.emailAddresses[0]?.emailAddress}</p>
+            </div>
+
+            <div>
+              <Label className="font-semibold">Phone</Label>
+              <p className="text-gray-700">{user?.unsafeMetadata?.phone || 'Not provided'}</p>
+            </div>
+
+            <div>
+              <Label className="font-semibold">WhatsApp</Label>
+              <p className="text-gray-700">{user?.unsafeMetadata?.whatsapp || 'Not provided'}</p>
+            </div>
+
+            <div>
+              <Label className="font-semibold">Country</Label>
+              <p className="text-gray-700">{user?.unsafeMetadata?.country || 'Not provided'}</p>
+            </div>
+
+            <div>
+              <Label className="font-semibold">Zipcode</Label>
+              <p className="text-gray-700">{user?.unsafeMetadata?.zipCode || 'Not provided'}</p>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 mt-6">
+            <Button 
+              variant="default" 
+              onClick={() => setUserDetailsOpen(false)}
+              className="bg-gray-500 text-white hover:bg-gray-600"
+            >
+              Close
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={() => {
+                signOut();
+                setUserDetailsOpen(false);
+              }}
+              className="bg-[#c40600] hover:bg-[#a30500]"
+            >
+              Logout
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
 
       <Dialog open={accountMenuOpen} onOpenChange={setAccountMenuOpen}>
         <DialogContent className="sm:max-w-[725px] flex">
@@ -281,6 +378,14 @@ const AccountPopUp = () => {
                   >
                     Sign In
                   </Button>
+                  <Button
+                    type="submit"
+                    className="w-full bg-[#c40600]"
+                    onClick={handleforgotpassword}
+                  >
+                    Forgot Password
+                  </Button>
+                  
                 </CardFooter>
               </TabsContent>
               <TabsContent value="signup">
@@ -462,6 +567,43 @@ const AccountPopUp = () => {
                 onClick={handleVerification}
               >
                 Verify Email
+              </Button>
+            </CardFooter>
+          </Card>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showResetPasswordDialog} onOpenChange={setShowResetPasswordDialog}>
+        <DialogContent>
+          <Card>
+            <CardHeader>
+              <CardTitle>Reset Password</CardTitle>
+              <CardDescription>
+                Enter your new password
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="new-password" className="font-bold">
+                  New Password
+                </Label>
+                <Input
+                  id="new-password"
+                  name="new-password"
+                  type="password"
+                  required
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                />
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button
+                type="submit"
+                className="w-full bg-[#c40600]"
+                onClick={handleResetPassword}
+              >
+                Reset Password
               </Button>
             </CardFooter>
           </Card>

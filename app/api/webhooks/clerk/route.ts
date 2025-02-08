@@ -63,27 +63,45 @@ export async function POST(req: Request) {
       unsafe_metadata,
     } = evt.data;
 
-    console.log(evt.data)
-
-    const user = {
-      clerkId: id,
-      email: email_addresses[0]?.email_address || null,
-      firstName:first_name || "",
-      lastName:last_name || "",
-      image : image_url || null,
-      phoneNumber:unsafe_metadata.phone || null, // Primary phone number
-      whatsapp: unsafe_metadata.whatsapp || null, // Use second phone if available
-      zipCode: unsafe_metadata.zipCode || null,
-      country: unsafe_metadata.country || null,
-    };
-
-    const newUser = await createUser(user);
-
-    return NextResponse.json({ 
-      message: "User created successfully", 
-      user: newUser, 
-      success: true 
+    // Add debug logging
+    console.log('Creating user with data:', {
+      id,
+      email: email_addresses?.[0]?.email_address,
+      firstName: first_name,
+      lastName: last_name,
+      imageUrl: image_url, // Log the image URL specifically
+      metadata: unsafe_metadata
     });
+
+    try {
+      const user = {
+        clerkId: id,
+        email: email_addresses[0]?.email_address || null,
+        firstName: first_name || "",
+        lastName: last_name || "",
+        image: image_url || null, // Ensure this matches your schema
+        phoneNumber: unsafe_metadata?.phone || null,
+        whatsapp: unsafe_metadata?.whatsapp || null,
+        zipCode: unsafe_metadata?.zipCode || null,
+        country: unsafe_metadata?.country || null,
+      };
+
+      const newUser = await createUser(user);
+      console.log('User created successfully:', newUser);
+
+      return NextResponse.json({ 
+        message: "User created successfully", 
+        user: newUser, 
+        success: true 
+      });
+    } catch (error:any) {
+      console.error('Error creating user:', error);
+      return NextResponse.json({ 
+        message: "Error creating user", 
+        error: error.message, 
+        success: false 
+      }, { status: 500 });
+    }
   }
 
   // UPDATE USER
