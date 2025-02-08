@@ -13,6 +13,7 @@ import {
 } from "@/lib/database/actions/cart.actions";
 import { getFabricById } from "@/lib/database/actions/admin/ShirtArea/Fabric/fabric.actions";
 import { getColorById } from "@/lib/database/actions/admin/ShirtArea/Color/color.actions";
+import { getShirtById } from "@/lib/database/actions/admin/ShirtArea/Shirt/shirt.actions";
 import { getMeasurementById } from "@/lib/database/actions/measurement.actions";
 import Image from "next/image";
 import { FaMinus, FaPlus, FaTrashAlt } from "react-icons/fa";
@@ -102,11 +103,11 @@ const ShirtFeatures = ({ details }: { details: ShirtDetails }) => {
 
 const handleButtonClick =
   (callback: (event: React.MouseEvent) => void) =>
-  (event: React.MouseEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-    callback(event);
-  };
+    (event: React.MouseEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
+      callback(event);
+    };
 
 const CartItem = ({
   item,
@@ -127,24 +128,20 @@ const CartItem = ({
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Modify fetchDetails in [app/cart/page.tsx](C:/Users/dasha/Documents/GitHub/SMC-user-final/app/cart/page.tsx)
     async function fetchDetails() {
       try {
-        const [fabricRes, colorRes, measurementRes] = await Promise.all([
-          details.fabricId ? getFabricById(details.fabricId) : null,
-          details.colorId ? getColorById(details.colorId) : null,
-          details.measurementId
-            ? getMeasurementById(details.measurementId)
-            : null,
-        ]);
-
-        setDetails({
-          ...details,
-          fabricDetails: fabricRes?.fabric,
-          colorDetails: colorRes?.color,
-          measurementDetails: measurementRes || undefined,
-        });
-
-        console.log(details);
+        if (item.product.fabricId) {
+          const fabricResponse = await getFabricById(item.product.fabricId);
+          console.log(fabricResponse);
+          if (fabricResponse.success) {
+            const updatedDetails = JSON.parse(JSON.stringify({
+              ...item.product,
+              fabricDetails: fabricResponse.fabric,
+            }));
+            setDetails(updatedDetails);
+          }
+        }
       } catch (error) {
         console.error("Error fetching details:", error);
       } finally {
@@ -183,16 +180,28 @@ const CartItem = ({
               <h4 className="font-medium mb-2">Style Details</h4>
               <ShirtFeatures details={details} />
             </div>
-
-            {(details.fabricDetails || details.colorDetails) && (
+            {(details.fabricDetails) && (
               <div>
+                <h1></h1>
                 <h4 className="font-medium mb-2">Material</h4>
                 {details.fabricDetails && (
-                  <p className="text-sm">
-                    Fabric: {details.fabricDetails.fabricName}
-                    {details.fabricDetails.type &&
-                      ` (${details.fabricDetails.type})`}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    {details.fabricDetails.image && (
+                      <Image
+                        src={details.fabricDetails.image?.url}
+                        alt={details.fabricDetails.fabricName || "Fabric Image"}
+                        width={80}
+                        height={80}
+                        className="object-cover rounded-md"
+                      />
+                    )}
+                    <p className="text-sm">
+                      <strong>Fabric: </strong>
+                       {details.fabricDetails.fabricName}
+                      {details.fabricDetails.type &&
+                        ` (${details.fabricDetails.type})`}
+                    </p>
+                  </div>
                 )}
                 {details.colorDetails && (
                   <div className="flex items-center gap-2 mt-1">
@@ -305,11 +314,11 @@ export default function CartPage() {
 
   const handleButtonClick =
     (callback: (event: React.MouseEvent) => void) =>
-    (event: React.MouseEvent) => {
-      event.preventDefault();
-      event.stopPropagation();
-      callback(event);
-    };
+      (event: React.MouseEvent) => {
+        event.preventDefault();
+        event.stopPropagation();
+        callback(event);
+      };
 
   const updateQuantity = async (
     productId: string,
