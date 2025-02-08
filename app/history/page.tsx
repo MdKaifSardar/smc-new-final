@@ -1,14 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { FaSpinner, FaBoxOpen } from "react-icons/fa";
-import { Card, CardContent } from "@/app/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { getFabricById } from "@/lib/database/actions/admin/ShirtArea/Fabric/fabric.actions";
-import { format } from "date-fns";
-import { useUser } from "@clerk/nextjs";
-import { getUserOrders } from "@/lib/database/actions/order.actions";
-<<<<<<< HEAD
+import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "@/app/components/ui/card";
 import { Badge } from "@/components/ui/badge"
 // Replace lucide-react icons with react-icons
@@ -16,10 +7,12 @@ import { FaSpinner, FaBoxOpen } from "react-icons/fa";
 import { format } from "date-fns";
 import Link from "next/link";
 import Image from "next/image";
+import { useUser } from "@clerk/nextjs";
+import { getUserOrders } from "@/lib/database/actions/order.actions";
 import { getShirtByIdInDetails } from "@/lib/database/actions/admin/ShirtArea/Shirt/shirt.actions";
-=======
+
 import { getMeasurementById } from "@/lib/database/actions/measurement.actions";
->>>>>>> 1bd052d92ad6ea9406c46105092745f901357613
+
 
 // Types
 interface OrderProduct {
@@ -174,7 +167,7 @@ const ShirtCompositeImage = ({ details }: { details: any }) => {
 
 // Update the OrderCard component
 const OrderCard = ({ order }: { order: Order }) => {
-<<<<<<< HEAD
+
   const [shirtDetails, setShirtDetails] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
 
@@ -190,14 +183,14 @@ const OrderCard = ({ order }: { order: Order }) => {
             };
           })
         );
-        
+
         const detailsMap = details.reduce((acc, curr) => {
           if (curr.details) {
             acc[curr.id] = curr.details;
           }
           return acc;
         }, {} as Record<string, any>);
-        
+
         setShirtDetails(detailsMap);
         setLoading(false);
       } catch (error) {
@@ -218,72 +211,6 @@ const OrderCard = ({ order }: { order: Order }) => {
       </Card>
     );
   }
-=======
-  const [fabricDetails, setFabricDetails] = useState<{ [key: string]: any }>({});
-  const [measurementDetails, setMeasurementDetails] = useState<{ [key: string]: any }>({});
-
-  // Fetch fabric details for each product using the dedicated function.
-  useEffect(() => {
-    async function fetchFabricDetails() {
-      const details: { [key: string]: any } = {};
-      for (const item of order.products) {
-        if (item.product && item.product.fabricId) {
-          // Extract an id string from fabricId whether it's a string or an object.
-          const fabricId =
-            typeof item.product.fabricId === "string"
-              ? item.product.fabricId
-              : item.product.fabricId._id;
-          if (!details[fabricId]) {
-            try {
-              const response = await getFabricById(fabricId);
-              if (response.success) {
-                details[fabricId] = response.fabric;
-              }
-            } catch (error) {
-              console.error("Error fetching fabric:", error);
-            }
-          }
-        }
-      }
-      setFabricDetails(details);
-    }
-    fetchFabricDetails();
-  }, [order]);
-
-  // Fetch measurement details for each product using the dedicated function.
-  // useEffect(() => {
-  //   async function fetchMeasurements() {
-  //     const details: { [key: string]: any } = {};
-  //     for (const item of order.products) {
-  //       if (item.product && item.product.measurementId) {
-  //         const measurementId = typeof item.product.measurementId === 'string'
-  //           ? item.product.measurementId
-  //           : item.product.measurementId._id;
-
-  //         console.log("measurementId : " , measurementId);
-  //         if (!details[measurementId]) {
-  //           try {
-  //             const measurement = await getMeasurementById(measurementId);
-  //             details[measurementId] = measurement;
-  //           } catch (error) {
-  //             console.error("Error fetching measurement:", error);
-  //           }
-  //         }
-  //       }
-  //     }
-  //     setMeasurementDetails(details);
-  //   }
-  //   fetchMeasurements();
-  // }, [order]);
-
-  const formatDate = (dateString: string) => {
-    try {
-      return format(new Date(dateString), "PPP");
-    } catch (error) {
-      return "Date not available";
-    }
-  };
->>>>>>> 1bd052d92ad6ea9406c46105092745f901357613
 
   return (
     <Card className="w-full">
@@ -314,10 +241,18 @@ const OrderCard = ({ order }: { order: Order }) => {
           </div>
         </div>
 
-<<<<<<< HEAD
         {/* Updated Products List */}
-        {order.products.map((item, index) => (
-          item.product && shirtDetails[item.product._id] && (
+        {order.products.map((item, index) => {
+          // Check if product and shirtDetails exist before rendering
+          if (!item.product || !shirtDetails[item.product._id]) {
+            return (
+              <div key={index} className="text-sm text-gray-500">
+                Loading measurements...
+              </div>
+            );
+          }
+
+          return (
             <div key={index} className="border-t pt-4 mb-4">
               <div className="grid md:grid-cols-2 gap-6">
                 {/* Left Column - Images and Material */}
@@ -330,7 +265,7 @@ const OrderCard = ({ order }: { order: Order }) => {
                         <h4 className="font-medium mb-2">Front View</h4>
                         <ShirtCompositeImage details={shirtDetails[item.product._id]} />
                       </div>
-                      
+
                       {/* Back View */}
                       {shirtDetails[item.product._id].backImage && (
                         <div className="w-[120px]">
@@ -382,116 +317,32 @@ const OrderCard = ({ order }: { order: Order }) => {
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <h4 className="font-medium mb-2">Measurements</h4>
                     <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <h5 className="font-medium mb-1">Shirt Measurements</h5>
-                          <div className="space-y-2 text-sm">
-                            <p>Collar: {shirtDetails[item.product._id].measurementCollar}″</p>
-                            <p>Half Chest: {shirtDetails[item.product._id].measurementHalfChest}″</p>
-                            <p>Half Waist: {shirtDetails[item.product._id].measurementHalfWaist}″</p>
-                            <p>Half Hips: {shirtDetails[item.product._id].measurementHalfHips}″</p>
-                            <p>Sleeve Length: {shirtDetails[item.product._id].measurementSleeveLength}″</p>
-                            <p>Elbow: {shirtDetails[item.product._id].measurementElbow}″</p>
-                            <p>Forearm: {shirtDetails[item.product._id].measurementForearm}″</p>
-                            <p>Cuff: {shirtDetails[item.product._id].measurementCuff}″</p>
-                          </div>
-                        </div>
-                        <div>
-                          <h5 className="font-medium mb-1">Body Measurements</h5>
-                          <div className="space-y-2 text-sm">
-                            <p>Neck: {shirtDetails[item.product._id].measurementNeck}″</p>
-                            <p>Chest: {shirtDetails[item.product._id].measurementChest}″</p>
-                            <p>Waist: {shirtDetails[item.product._id].measurementWaist}″</p>
-                            <p>Hips: {shirtDetails[item.product._id].measurementHips}″</p>
-                            <p>Elbow Width: {shirtDetails[item.product._id].measurementElbowWidth}″</p>
-                            <p>Upper Arm: {shirtDetails[item.product._id].measurementUpperArm}″</p>
-                            <p>Shoulder: {shirtDetails[item.product._id].measurementShoulder}″</p>
-=======
-        {/* Products List */}
-        {order.products.map((item, index) =>
-          item.product ? (
-            <div key={index} className="border-t pt-4 mb-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <h3 className="font-medium mb-2">Product Details</h3>
-                  <div className="space-y-1 text-sm">
-                    <p>Name: {item.product.name || "Custom Shirt"}</p>
-                    <p>Quantity: {item.qty}</p>
-                    <p>Price per item: ₹{item.price}</p>
-                    {item.product.fabricId && (
-                      <div className="flex items-center space-x-2">
-                        {(() => {
-                          const fabricId =
-                            typeof item.product.fabricId === "string"
-                              ? item.product.fabricId
-                              : item.product.fabricId._id;
-                          const fabric = fabricDetails[fabricId];
-                          return fabric && fabric.image?.url ? (
-                            <img
-                              src={fabric.image.url}
-                              alt={fabric.fabricName}
-                              className="w-10 h-10 object-cover rounded"
-                            />
-                          ) : null;
-                        })()}
-                        <p>
-                          Fabric:{" "}
-                          {(() => {
-                            const fabricId =
-                              typeof item.product.fabricId === "string"
-                                ? item.product.fabricId
-                                : item.product.fabricId._id;
-                            const fabric = fabricDetails[fabricId];
-                            return fabric?.fabricName || (typeof item.product.fabricId !== "string"
-                              ? item.product.fabricId.name
-                              : "N/A");
-                          })()}
-                        </p>
-                      </div>
-                    )}
-                    {/* {item.product.colorId && (
-                      <p>Color: {item.product.colorId.name}</p>
-                    )} */}
-                  </div>
-                </div>
-
-                {/* Measurements Section */}
-                {/* {item.product.measurementId && (() => {
-                  const measurementId = typeof item.product.measurementId === 'string'
-                    ? item.product.measurementId
-                    : item.product.measurementId._id;
-                  const measurement = measurementDetails[measurementId];
-
-                  return measurement ? (
-                    <div>
-                      <h4 className="font-medium mb-1">Measurements</h4>
-                      <div className="text-sm grid grid-cols-2 gap-2">
-                        <div>
-                          <h5 className="font-medium text-gray-600 mb-1">Shirt Measurements</h5>
-                          <div className="space-y-1">
-                            <p>Collar: {measurement.collar ?? "N/A"}″</p>
-                            <p>Cuff: {measurement.cuff ?? "N/A"}″</p>
-                            <p>Elbow: {measurement.elbow ?? "N/A"}″</p>
-                            <p>Forearm: {measurement.forearm ?? "N/A"}″</p>
-                            <p>Half Chest: {measurement.halfChest ?? "N/A"}″</p>
-                            <p>Half Hips: {measurement.halfHips ?? "N/A"}″</p>
-                            <p>Half Waist: {measurement.halfWaist ?? "N/A"}″</p>
-                            <p>Sleeves Length: {measurement.sleevesLength ?? "N/A"}″</p>
-                          </div>
-                        </div>
-                        <div>
-                          <h5 className="font-medium text-gray-600 mb-1">Body Measurements</h5>
-                          <div className="space-y-1">
-                            <p>Chest: {measurement.chest ?? "N/A"}″</p>
-                            <p>Elbow Width: {measurement.elbowWidth ?? "N/A"}″</p>
-                            <p>Hips: {measurement.hips ?? "N/A"}″</p>
-                            <p>Neck: {measurement.neck ?? "N/A"}″</p>
-                            <p>Shoulder: {measurement.shoulder ?? "N/A"}″</p>
-                            <p>Upper Arm: {measurement.upperArm ?? "N/A"}″</p>
-                            <p>Waist: {measurement.waist ?? "N/A"}″</p>
->>>>>>> 1bd052d92ad6ea9406c46105092745f901357613
-                          </div>
+                      <div>
+                        <h5 className="font-medium mb-1">Shirt Measurements</h5>
+                        <div className="space-y-2 text-sm">
+                          <p>Collar: {shirtDetails[item.product._id].measurementCollar}″</p>
+                          <p>Half Chest: {shirtDetails[item.product._id].measurementHalfChest}″</p>
+                          <p>Half Waist: {shirtDetails[item.product._id].measurementHalfWaist}″</p>
+                          <p>Half Hips: {shirtDetails[item.product._id].measurementHalfHips}″</p>
+                          <p>Sleeve Length: {shirtDetails[item.product._id].measurementSleeveLength}″</p>
+                          <p>Elbow: {shirtDetails[item.product._id].measurementElbow}″</p>
+                          <p>Forearm: {shirtDetails[item.product._id].measurementForearm}″</p>
+                          <p>Cuff: {shirtDetails[item.product._id].measurementCuff}″</p>
                         </div>
                       </div>
+                      <div>
+                        <h5 className="font-medium mb-1">Body Measurements</h5>
+                        <div className="space-y-2 text-sm">
+                          <p>Neck: {shirtDetails[item.product._id].measurementNeck}″</p>
+                          <p>Chest: {shirtDetails[item.product._id].measurementChest}″</p>
+                          <p>Waist: {shirtDetails[item.product._id].measurementWaist}″</p>
+                          <p>Hips: {shirtDetails[item.product._id].measurementHips}″</p>
+                          <p>Elbow Width: {shirtDetails[item.product._id].measurementElbowWidth}″</p>
+                          <p>Upper Arm: {shirtDetails[item.product._id].measurementUpperArm}″</p>
+                          <p>Shoulder: {shirtDetails[item.product._id].measurementShoulder}″</p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                   {/* Order Details */}
@@ -502,20 +353,12 @@ const OrderCard = ({ order }: { order: Order }) => {
                       <p>Price per item: ₹{item.price}</p>
                       <p>Total: ₹{(parseInt(item.qty) * item.price).toFixed(2)}</p>
                     </div>
-<<<<<<< HEAD
                   </div>
                 </div>
-=======
-                  ) : (
-                    <div className="text-sm text-gray-500">Loading measurements...</div>
-                  );
-                })()} */}
->>>>>>> 1bd052d92ad6ea9406c46105092745f901357613
               </div>
             </div>
-          ) : null
-        )}
-
+          );
+        })}
         {/* Keep existing shipping and payment details */}
         <div className="border-t pt-4 grid md:grid-cols-2 gap-6">
           <div>
