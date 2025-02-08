@@ -167,36 +167,16 @@ const OrderPage = () => {
                       <>
                         <div className="flex-shrink-0">
                           <img
-<<<<<<< HEAD
-                            src={product.product.color?.image?.url}
-=======
                             src={fabrics[product.product?.fabricId]?.image?.url}
->>>>>>> e9c9e95ef6f5db86b29f97d786f718eff5824ddf
                             alt={product.product.fabric?.fabricName || "Fabric"}
                             className="w-20 h-20 object-cover rounded-md"
                           />
                         </div>
                         <div className="flex-grow">
-<<<<<<< HEAD
-                          <p>
-                            <strong>Custom Shirt</strong>
-                          </p>
-                          <p>
-                            <strong>Fabric:</strong>{" "}
-                            {product.product.fabric?.fabricName || "N/A"}
-                          </p>
-                          <p>
-                            <strong>Quantity:</strong> {product.qty}
-                          </p>
-                          <p>
-                            <strong>Price:</strong> ₹{product.price}
-                          </p>
-=======
                           <p><strong>Custom Shirt</strong></p>
                           <p><strong>Fabric:</strong> {fabrics[product.product?.fabricId]?.fabricName || "N/A"}</p>
                           <p><strong>Quantity:</strong> {product.qty}</p>
                           <p><strong>Price:</strong> ₹{product.price}</p>
->>>>>>> e9c9e95ef6f5db86b29f97d786f718eff5824ddf
                         </div>
                       </>
                     ) : (
