@@ -8,6 +8,7 @@ import { getColorById } from "../Color/color.actions";
 import { getFabricById } from "../Fabric/fabric.actions";
 import { getMonogramById } from "../Monogram/monogram.actions";
 import { getMeasurementById } from "../../../measurement.actions";
+import { watch } from "fs";
 
 interface ProductItem {
   name: string;
@@ -273,3 +274,76 @@ export const updateShirtPrice = async (shirtId: string, price: number) => {
     return { message: "Error updating shirt price.", success: false };
   }
 };
+
+export const getShirtByIdInDetails = async (shirtId: string) => {
+  try{
+    const shirt = await ShirtModel.findById(shirtId);
+    console.log(shirt);
+    const colorId = shirt?.colorId.toString();
+    const fabricId = shirt?.fabricId.toString();
+    const measurementId = shirt?.measurementId.toString();
+    const color = await getColorById(colorId);
+    const fabric = await getFabricById(fabricId);
+    const measurement = await getMeasurementById(measurementId);
+    console.log(measurement);
+    console.log(fabric);
+    console.log(color);
+    console.log(colorId);
+    const shirtDetails = {
+      price : shirt?.price,
+      collarName : shirt?.collarStyle?.name,
+      collarImage : shirt?.collarStyle?.image,
+      collarPrice : shirt?.collarStyle?.price,
+      collarButtonName : shirt?.collarButton?.name,
+      collarButtonImage : shirt?.collarButton?.image,
+      collarButtonPrice : shirt?.collarButton?.price,
+      collarHeightName : shirt?.collarHeight?.name,
+      collarHeightImage : shirt?.collarHeight?.image,
+      collarHeightPrice : shirt?.collarHeight?.price,
+      watchCompatible : shirt?.watchCompatible,
+      bottomName : shirt?.bottom?.name,
+      bottomImage : shirt?.bottom?.image,
+      bottomPrice : shirt?.bottom?.price,
+      backName : shirt?.back?.name,
+      backImage : shirt?.back?.image,
+      backPrice : shirt?.back?.price,
+      pocketName : shirt?.pocket?.name,
+      pocketImage : shirt?.pocket?.image,
+      pocketPrice : shirt?.pocket?.price,
+      placketName : shirt?.placket?.name,
+      placketImage : shirt?.placket?.image,
+      placketPrice : shirt?.placket?.price,
+      sleevesName : shirt?.sleeves?.name,
+      sleevesImage : shirt?.sleeves?.image,
+      sleevesPrice : shirt?.sleeves?.price,
+      fitName : shirt?.fit?.name,
+      fitImage : shirt?.fit?.image,
+      fitPrice : shirt?.fit?.price,
+      colorName : color?.color?.name,
+      colorHexCode : color?.color?.hexCode,
+      fabricName : fabric?.fabric?.fabricName,
+      fabricImage : fabric?.fabric?.image?.url,
+      measurementCollar: measurement?.collar,
+      measurementHalfChest: measurement?.halfChest,
+      measurementHalfWaist: measurement?.halfWaist,
+      measurementHalfHips: measurement?.halfHips,
+      measurementSleeveLength: measurement?.sleevesLength,
+      measurementElbow: measurement?.elbow,
+      measurementForearm: measurement?.forearm,
+      measurementCuff: measurement?.cuff,
+      measurementNeck: measurement?.neck,
+      measurementChest: measurement?.chest,
+      measurementWaist: measurement?.waist,
+      measurementHips: measurement?.hips,
+      measurementElbowWidth: measurement?.elbowWidth,
+      measurementUpperArm: measurement?.upperArm,
+      measurementShoulder: measurement?.shoulder,
+    }
+    return {
+      success: true,
+      shirt : shirtDetails
+    };
+  }catch(error : any){
+    console.log(error);
+  }
+}

@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge"
 import { FaSpinner, FaBoxOpen } from "react-icons/fa";
 import { format } from "date-fns";
 import Link from "next/link";
+import Image from "next/image";
+import { getShirtByIdInDetails } from "@/lib/database/actions/admin/ShirtArea/Shirt/shirt.actions";
 
 // Types
 interface OrderProduct {
@@ -86,27 +88,125 @@ const PaymentMethodBadge = ({ method }: { method: Order["paymentMethod"] }) => {
   );
 };
 
-// Order Card Component
+// First, add the ShirtCompositeImage component
+const ShirtCompositeImage = ({ details }: { details: any }) => {
+  return (
+    <div className="relative w-[250px] h-[350px]">
+      {/* Layer 1 - Fit */}
+      {details.fitImage && (
+        <Image
+          src={details.fitImage}
+          alt="Fit Style"
+          fill
+          className="object-contain absolute top-0 left-0"
+        />
+      )}
+      {/* Layer 2 - Bottom */}
+      {details.bottomImage && (
+        <Image
+          src={details.bottomImage}
+          alt="Bottom Style"
+          fill
+          className="object-contain absolute top-0 left-0"
+        />
+      )}
+      {/* Layer 3 - Placket */}
+      {details.placketImage && (
+        <Image
+          src={details.placketImage}
+          alt="Placket"
+          fill
+          className="object-contain absolute top-0 left-0"
+        />
+      )}
+      {/* Layer 4 - Pocket */}
+      {details.pocketImage && (
+        <Image
+          src={details.pocketImage}
+          alt="Pocket"
+          fill
+          className="object-contain absolute top-0 left-0"
+        />
+      )}
+      {/* Layer 5 - Sleeves */}
+      {details.sleevesImage && (
+        <Image
+          src={details.sleevesImage}
+          alt="Sleeves"
+          fill
+          className="object-contain absolute top-0 left-0"
+        />
+      )}
+      {/* Layer 6 - Collar */}
+      {details.collarImage && (
+        <Image
+          src={details.collarImage}
+          alt="Collar"
+          fill
+          className="object-contain absolute top-0 left-0"
+        />
+      )}
+    </div>
+  );
+};
+
+// Update the OrderCard component
 const OrderCard = ({ order }: { order: Order }) => {
-  const formatDate = (dateString: string) => {
-    try {
-      return format(new Date(dateString), 'PPP');
-    } catch (error) {
-      return 'Date not available';
-    }
-  };
+  const [shirtDetails, setShirtDetails] = useState<Record<string, any>>({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchShirtDetails = async () => {
+      try {
+        const details = await Promise.all(
+          order.products.map(async (item) => {
+            const response = await getShirtByIdInDetails(item.product._id);
+            return {
+              id: item.product._id,
+              details: response?.success ? response.shirt : null
+            };
+          })
+        );
+        
+        const detailsMap = details.reduce((acc, curr) => {
+          if (curr.details) {
+            acc[curr.id] = curr.details;
+          }
+          return acc;
+        }, {} as Record<string, any>);
+        
+        setShirtDetails(detailsMap);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching shirt details:', error);
+        setLoading(false);
+      }
+    };
+
+    fetchShirtDetails();
+  }, [order.products]);
+
+  if (loading) {
+    return (
+      <Card className="w-full p-6">
+        <div className="flex justify-center">
+          <FaSpinner className="h-8 w-8 animate-spin" />
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <Card className="w-full">
       <CardContent className="p-6">
-        {/* Order Header */}
+        {/* Keep existing order header */}
         <div className="flex flex-col md:flex-row justify-between mb-6">
           <div>
             <Link href={`/order/${order._id}`} className="font-medium hover:underline">
               Order ID: {order._id}
             </Link>
             <p className="text-sm text-gray-500">
-              Placed on {formatDate(order.createdAt)}
+              Placed on {(order.createdAt)}
             </p>
             <div className="mt-2">
               <DeliveryStatusBadge status={order.deliveryStatus} />
@@ -125,46 +225,117 @@ const OrderCard = ({ order }: { order: Order }) => {
           </div>
         </div>
 
-        {/* Products List */}
+        {/* Updated Products List */}
         {order.products.map((item, index) => (
-          item.product && (
+          item.product && shirtDetails[item.product._id] && (
             <div key={index} className="border-t pt-4 mb-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <h3 className="font-medium mb-2">Product Details</h3>
-                  <div className="space-y-1 text-sm">
-                    <p>Name: {item.product.name || 'Custom Shirt'}</p>
-                    <p>Quantity: {item.qty}</p>
-                    <p>Price per item: ₹{item.price}</p>
-                    {item.product.fabricId && (
-                      <p>Fabric: {item.product.fabricId.name} ({item.product.fabricId.type})</p>
-                    )}
-                    {item.product.colorId && (
-                      <p>Color: {item.product.colorId.name}</p>
-                    )}
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* Left Column - Images and Material */}
+                <div className="space-y-6">
+                  {/* Shirt Images */}
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="flex gap-4">
+                      {/* Front View */}
+                      <div className="flex-1">
+                        <h4 className="font-medium mb-2">Front View</h4>
+                        <ShirtCompositeImage details={shirtDetails[item.product._id]} />
+                      </div>
+                      
+                      {/* Back View */}
+                      {shirtDetails[item.product._id].backImage && (
+                        <div className="w-[120px]">
+                          <h4 className="font-medium mb-2">Back View</h4>
+                          <div className="relative w-[120px] h-[170px]">
+                            <Image
+                              src={shirtDetails[item.product._id].backImage}
+                              alt="Shirt Back"
+                              fill
+                              className="object-contain"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Material & Color */}
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="font-medium mb-2">Material & Color</h4>
+                    <div className="flex items-center gap-4">
+                      {shirtDetails[item.product._id].fabricImage && (
+                        <Image
+                          src={shirtDetails[item.product._id].fabricImage}
+                          alt={shirtDetails[item.product._id].fabricName || "Fabric"}
+                          width={60}
+                          height={60}
+                          className="rounded-md object-cover"
+                        />
+                      )}
+                      <div>
+                        <p>{shirtDetails[item.product._id].fabricName}</p>
+                        {shirtDetails[item.product._id].colorName && (
+                          <div className="flex items-center gap-2 mt-2">
+                            <div
+                              className="w-6 h-6 rounded-full border"
+                              style={{ backgroundColor: shirtDetails[item.product._id].colorHexCode }}
+                            />
+                            <span>{shirtDetails[item.product._id].colorName}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                {/* Measurements & Shipping Details */}
-                <div>
-                  {item.product.measurementId && (
-                    <div className="mb-4">
-                      <h4 className="font-medium mb-1">Measurements</h4>
-                      <div className="text-sm grid grid-cols-2 gap-2">
-                        <p>Collar: {item.product.measurementId.collar}″</p>
-                        <p>Chest: {item.product.measurementId.chest}″</p>
-                        <p>Waist: {item.product.measurementId.waist}″</p>
-                        <p>Sleeves: {item.product.measurementId.sleevesLength}″</p>
+                {/* Right Column - Measurements */}
+                <div className="space-y-6">
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="font-medium mb-2">Measurements</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <h5 className="font-medium mb-1">Shirt Measurements</h5>
+                          <div className="space-y-2 text-sm">
+                            <p>Collar: {shirtDetails[item.product._id].measurementCollar}″</p>
+                            <p>Half Chest: {shirtDetails[item.product._id].measurementHalfChest}″</p>
+                            <p>Half Waist: {shirtDetails[item.product._id].measurementHalfWaist}″</p>
+                            <p>Half Hips: {shirtDetails[item.product._id].measurementHalfHips}″</p>
+                            <p>Sleeve Length: {shirtDetails[item.product._id].measurementSleeveLength}″</p>
+                            <p>Elbow: {shirtDetails[item.product._id].measurementElbow}″</p>
+                            <p>Forearm: {shirtDetails[item.product._id].measurementForearm}″</p>
+                            <p>Cuff: {shirtDetails[item.product._id].measurementCuff}″</p>
+                          </div>
+                        </div>
+                        <div>
+                          <h5 className="font-medium mb-1">Body Measurements</h5>
+                          <div className="space-y-2 text-sm">
+                            <p>Neck: {shirtDetails[item.product._id].measurementNeck}″</p>
+                            <p>Chest: {shirtDetails[item.product._id].measurementChest}″</p>
+                            <p>Waist: {shirtDetails[item.product._id].measurementWaist}″</p>
+                            <p>Hips: {shirtDetails[item.product._id].measurementHips}″</p>
+                            <p>Elbow Width: {shirtDetails[item.product._id].measurementElbowWidth}″</p>
+                            <p>Upper Arm: {shirtDetails[item.product._id].measurementUpperArm}″</p>
+                            <p>Shoulder: {shirtDetails[item.product._id].measurementShoulder}″</p>
+                          </div>
+                        </div>
                       </div>
+                  </div>
+
+                  {/* Order Details */}
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="font-medium mb-2">Order Details</h4>
+                    <div className="space-y-1 text-sm">
+                      <p>Quantity: {item.qty}</p>
+                      <p>Price per item: ₹{item.price}</p>
+                      <p>Total: ₹{(parseInt(item.qty) * item.price).toFixed(2)}</p>
                     </div>
-                  )}
+                  </div>
                 </div>
               </div>
             </div>
           )
         ))}
 
-        {/* Shipping Address */}
+        {/* Keep existing shipping and payment details */}
         <div className="border-t pt-4 grid md:grid-cols-2 gap-6">
           <div>
             <h3 className="font-medium mb-2">Shipping Address</h3>
@@ -181,7 +352,7 @@ const OrderCard = ({ order }: { order: Order }) => {
           <div>
             <h3 className="font-medium mb-2">Payment Details</h3>
             <div className="text-sm space-y-1">
-              <p>Payment Date: {formatDate(order.paymentTime)}</p>
+              <p>Payment Date: {(order.paymentTime)}</p>
               <p>Delivery Cost: ₹{order.deliveryCost.toFixed(2)}</p>
               {order.receipt && <p>Receipt Number: {order.receipt}</p>}
             </div>
