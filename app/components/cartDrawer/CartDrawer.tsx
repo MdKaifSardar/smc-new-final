@@ -291,7 +291,7 @@ const CartDrawer = () => {
         >
           <SheetHeader className="sticky top-0 bg-white z-50 w-full">
             <SheetTitle className="subHeading text-xl sm:text-2xl px-4 py-6 border-b">
-              WISH LIST
+             CART LIST
             </SheetTitle>
             <button
               onClick={handleClose}
