@@ -74,7 +74,7 @@ export async function createOrder(
       cartTotal: total,
       totalAfterDiscount: totalBeforeDiscount,
       // For cash on delivery orders, we confirm immediately and use pending status
-      orderConfirmation: paymentMethod === "cash_on_delivery" ? true : false,
+      orderConfirmation: false,
       deliveryStatus: "pending",
       price: total,
       deliveryCost: 0,
