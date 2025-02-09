@@ -281,7 +281,7 @@ const CartDrawer = () => {
       }}>
         <SheetTrigger asChild>
           <button onClick={handleOnClickCartMenu}>
-            <FaShoppingCart className="text-[#4a2b2b] w-6 h-6 sm:w-7 sm:h-7" />
+            <FaShoppingCart className="text-[#4a2b2b]  w-5 h-5 sm:w-5 sm:h-5" />
           </button>
         </SheetTrigger>
         <SheetContent
