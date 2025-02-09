@@ -207,7 +207,7 @@ const CartItem = ({
       try {
         const response = await getShirtByIdInDetails(item.product._id);
         if (response?.success && response.shirt) {
-          setDetails(response.shirt);
+          setDetails({ ...response.shirt, _id: item.product._id });
         }
       } catch (error) {
         console.error("Error fetching details:", error);
