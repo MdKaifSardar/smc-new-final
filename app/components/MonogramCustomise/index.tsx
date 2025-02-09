@@ -1,5 +1,8 @@
 "use client";
-import { updateShirtIds, updateShirtPrice } from "@/lib/database/actions/admin/ShirtArea/Shirt/shirt.actions";
+import {
+  updateShirtIds,
+  updateShirtPrice,
+} from "@/lib/database/actions/admin/ShirtArea/Shirt/shirt.actions";
 import { useEffect, useState } from "react";
 import { toast, ToastContainer } from "react-toastify"; // Add ToastContainer import
 import { useRouter } from "next/navigation";
@@ -294,7 +297,7 @@ const MonogramCustomizer = () => {
   };
 
   return (
-    <div className="mt-[6.5rem] flex-col md:flex-row justify-between items-start flex w-full h-fit">
+    <div className="mt-[4rem] flex-col md:flex-row justify-between items-start mb-10 flex w-full h-fit">
       <ToastContainer /> {/* Add ToastContainer here */}
       <div className="relative flex justify-center items-center w-full h-[87vh]">
         {Object.entries(selectedItems).map(([section, item], index) =>
@@ -329,7 +332,6 @@ const MonogramCustomizer = () => {
           </div>
         )} */}
       </div>
-
       <div className="flex md:flex fixed top-[9rem] z-[100] left-0 bg-white p-2 shadow-lg rounded-lg items-center space-x-4">
         <div className="text-xl font-bold">Total: ${totalPrice.toFixed(2)}</div>
         <button
@@ -339,11 +341,12 @@ const MonogramCustomizer = () => {
           Next
         </button>
       </div>
-
       {isModalOpen && (
         <div className="z-[100] fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
           <div className="bg-white p-6 rounded-lg shadow-xl w-96 space-y-4">
-            <h2 className="text-2xl font-bold mb-4">Confirm Shirt Details</h2>
+            <h2 className="text-2xl font-bold mb-4">
+              Confirm Monogram Details
+            </h2>
 
             <div className="space-y-2">
               {Object.entries(mono).map(
@@ -395,8 +398,7 @@ const MonogramCustomizer = () => {
           </div>
         </div>
       )}
-
-      <div className="p-4 mt-[2rem] mb-6 w-full md:w-[40%] xl:w-[30%] bg-white h-full flex flex-col justify-start items-center shadow-lg rounded-xl">
+      <div className="p-4 mt-0 md:mt-[2rem] w-full md:w-[40%] xl:w-[30%] bg-white h-full flex flex-col justify-start items-center shadow-lg rounded-xl">
         <h2 className="text-2xl font-bold text-gray-800 mb-4">
           Monogram Customizer
         </h2>
@@ -448,11 +450,10 @@ const MonogramCustomizer = () => {
           </div>
         </div>
       </div>
-
       {activeSection && (
-        <div className="mt-[4rem] fixed right-0 top-0 h-full lg:w-[30%] w-[80%] md:w-[50%] bg-white shadow-2xl overflow-y-auto transition-transform transform translate-x-0 z-[100] border-l border-gray-200">
+        <div className="pb-[10rem] mt-[8rem] fixed right-0 top-0 h-full lg:w-[30%] w-[80%] md:w-[50%] bg-white shadow-2xl flex flex-col z-[100] border-l border-gray-200">
           {/* Header */}
-          <div className="p-4 border-b flex justify-between items-center bg-gray-50">
+          <div className="sticky top-0 p-4 border-b flex justify-between items-center bg-gray-50">
             <h3 className="text-xl font-bold capitalize text-gray-800">
               {activeSection}
             </h3>
@@ -465,40 +466,42 @@ const MonogramCustomizer = () => {
           </div>
 
           {/* Content */}
-          <div className="p-4 space-y-4">
-            {data[activeSection]?.length === 0 ? (
-              <p className="text-center text-gray-500">
-                No items available in {activeSection}.
-              </p>
-            ) : (
-              <div className="grid grid-cols-2 gap-4">
-                {data[activeSection]?.map((item) => (
-                  <div
-                    key={item._id}
-                    onClick={() => handleSelect(activeSection, item)}
-                    className={`p-4 border rounded-lg cursor-pointer transition shadow-sm ${
-                      selectedItems[activeSection]?._id === item._id
-                        ? "bg-blue-100 border-blue-500 ring-2 ring-blue-400"
-                        : "hover:bg-gray-100"
-                    }`}
-                  >
-                    {/* {item.icon?.url && (
+          <div className="flex-grow overflow-y-auto">
+            <div className="p-4 space-y-4">
+              {data[activeSection]?.length === 0 ? (
+                <p className="text-center text-gray-500">
+                  No items available in {activeSection}.
+                </p>
+              ) : (
+                <div className="grid grid-cols-2 gap-4">
+                  {data[activeSection]?.map((item) => (
+                    <div
+                      key={item._id}
+                      onClick={() => handleSelect(activeSection, item)}
+                      className={`p-4 border rounded-lg cursor-pointer transition shadow-sm ${
+                        selectedItems[activeSection]?._id === item._id
+                          ? "bg-blue-100 border-blue-500 ring-2 ring-blue-400"
+                          : "hover:bg-gray-100"
+                      }`}
+                    >
+                      {/* {item.icon?.url && (
                       <img
                         src={item.icon.url}
                         alt={item.name}
                         className="w-20 h-20 object-cover mx-auto rounded-md"
                       />
                     )} */}
-                    <p className="text-center font-semibold text-gray-800 mt-2">
-                      {item.name}
-                    </p>
-                    <p className="text-center text-sm text-gray-600">
-                      {item.price}$
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
+                      <p className="text-center font-semibold text-gray-800 mt-2">
+                        {item.name}
+                      </p>
+                      <p className="text-center text-sm text-gray-600">
+                        {item.price}$
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Footer Buttons */}
