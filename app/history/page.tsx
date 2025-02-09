@@ -108,7 +108,7 @@ const PaymentMethodBadge = ({ method }: { method: Order["paymentMethod"] }) => {
 // First, add the ShirtCompositeImage component
 const ShirtCompositeImage = ({ details }: { details: any }) => {
   return (
-    <div className="relative w-[250px] h-[350px]">
+    <div className="relative w-[200px] h-[250px] sm:w-[250px] sm:h-[350px]">
       {/* Layer 1 - Fit */}
       {details.fitImage && (
         <Image
@@ -265,12 +265,12 @@ const OrderCard = ({ order }: { order: Order }) => {
 
           return (
             <div key={index} className="border-t pt-4 mb-4">
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 {/* Left Column - Images and Material */}
                 <div className="space-y-6">
                   {/* Shirt Images */}
                   <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="flex gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {/* Front View */}
                       <div className="flex-1">
                         <h4 className="font-medium mb-2">Front View</h4>
@@ -279,9 +279,9 @@ const OrderCard = ({ order }: { order: Order }) => {
 
                       {/* Back View */}
                       {shirtDetails[item.product._id].backImage && (
-                        <div className="w-[120px]">
+                        <div className="w-full sm:w-[120px]">
                           <h4 className="font-medium mb-2">Back View</h4>
-                          <div className="relative w-[120px] h-[170px]">
+                          <div className="relative w-full sm:w-[120px] h-[170px]">
                             <Image
                               src={shirtDetails[item.product._id].backImage}
                               alt="Shirt Back"

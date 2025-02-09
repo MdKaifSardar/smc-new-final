@@ -291,7 +291,7 @@ const CartDrawer = () => {
         >
           <SheetHeader className="sticky top-0 bg-white z-50 w-full">
             <SheetTitle className="subHeading text-xl sm:text-2xl px-4 py-6 border-b">
-              WISH LIST
+             CART LIST
             </SheetTitle>
             <button
               onClick={handleClose}
@@ -323,7 +323,7 @@ const CartDrawer = () => {
                     
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-sm sm:text-base truncate">
-                        Custom Shirt
+                        Custom Shirt (ID: {productId})
                       </h3>
                       
                       {item.shirt && (

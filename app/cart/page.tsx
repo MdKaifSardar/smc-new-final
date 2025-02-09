@@ -638,7 +638,7 @@ export default function CartPage() {
   if (!cart?.products?.length) {
     return (
       <div className="min-h-screen pt-16 flex flex-col items-center justify-center">
-        <p className="text-lg text-gray-600 mb-4">Your cart is empty</p>
+        <p className="text-lg text-gray-600 mb-4">Your wish list is empty</p>
         <Link href="/customize">
           <Button>Start Shopping</Button>
         </Link>
@@ -649,8 +649,8 @@ export default function CartPage() {
   return (
     <div className="min-h-screen pt-16 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       <ToastContainer /> {/* Add ToastContainer here */}
-      <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-8 text-center">
-        Shopping Cart
+      <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-8 text-center mt-10">
+        Shopping Wish list
       </h1>
       <div className="space-y-4 sm:space-y-6">
         {cart.products.map((item) => (
