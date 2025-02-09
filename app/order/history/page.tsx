@@ -97,26 +97,26 @@ const OrderCard = ({ order }: { order: Order }) => {
   };
 
   return (
-    <Card className="w-full">
-      <CardContent className="p-6">
+    <Card key={order._id} className="w-full">
+      <CardContent className="p-4 sm:p-6">
         {/* Order Header */}
-        <div className="flex flex-col md:flex-row justify-between mb-6">
+        <div className="flex flex-col sm:flex-row justify-between mb-4 sm:mb-6">
           <div>
-            <Link href={`/order/${order._id}`} className="font-medium hover:underline">
+            <Link href={`/order/${order._id}`} className="font-medium hover:underline text-sm sm:text-base">
               Order ID: {order._id}
             </Link>
-            <p className="text-sm text-gray-500">
+            <p className="text-xs sm:text-sm text-gray-500">
               Placed on {formatDate(order.createdAt)}
             </p>
             <div className="mt-2">
               <DeliveryStatusBadge status={order.deliveryStatus} />
             </div>
           </div>
-          <div className="mt-4 md:mt-0 text-right">
-            <p className="font-medium">Total: ₹{order.cartTotal.toFixed(2)}</p>
+          <div className="mt-3 sm:mt-0 text-left sm:text-right">
+            <p className="font-medium text-sm sm:text-base">Total: ${order.cartTotal.toFixed(2)}</p>
             {order.totalAfterDiscount < order.cartTotal && (
-              <p className="text-sm text-green-600">
-                Discounted: ₹{order.totalAfterDiscount.toFixed(2)}
+              <p className="text-xs sm:text-sm text-green-600">
+                Discounted: ${order.totalAfterDiscount.toFixed(2)}
               </p>
             )}
             <div className="mt-2">
@@ -129,46 +129,102 @@ const OrderCard = ({ order }: { order: Order }) => {
         {order.products.map((item, index) => (
           item.product && (
             <div key={index} className="border-t pt-4 mb-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <h3 className="font-medium mb-2">Product Details</h3>
-                  <div className="space-y-1 text-sm">
-                    <p>Name: {item.product.name || 'Custom Shirt'}</p>
-                    <p>Quantity: {item.qty}</p>
-                    <p>Price per item: ₹{item.price}</p>
-                    {item.product.fabricId && (
-                      <p>Fabric: {item.product.fabricId.name} ({item.product.fabricId.type})</p>
-                    )}
-                    {item.product.colorId && (
-                      <p>Color: {item.product.colorId.name}</p>
-                    )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                {/* Left Column - Product & Material Details */}
+                <div className="space-y-4">
+                  {/* Product Details Card */}
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h3 className="font-medium text-base md:text-lg mb-3">Product Details</h3>
+                    <div className="grid grid-cols-2 gap-2 text-sm md:text-base">
+                      <div className="space-y-2">
+                        <p className="text-gray-600">Name:</p>
+                        <p className="text-gray-600">Quantity:</p>
+                        <p className="text-gray-600">Price:</p>
+                      </div>
+                      <div className="space-y-2 text-right">
+                        <p className="font-medium">{item.product.name || 'Custom Shirt'}</p>
+                        <p className="font-medium">{item.qty}</p>
+                        <p className="font-medium">₹{item.price}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Material Details Card */}
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h3 className="font-medium text-base md:text-lg mb-3">Material Details</h3>
+                    <div className="grid grid-cols-2 gap-2 text-sm md:text-base">
+                      {item.product.fabricId && (
+                        <>
+                          <p className="text-gray-600">Fabric:</p>
+                          <p className="text-right font-medium">
+                            {item.product.fabricId.name} ({item.product.fabricId.type})
+                          </p>
+                        </>
+                      )}
+                      {item.product.colorId && (
+                        <>
+                          <p className="text-gray-600">Color:</p>
+                          <p className="text-right font-medium">{item.product.colorId.name}</p>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
 
-                {/* Measurements & Shipping Details */}
-                <div>
+                {/* Right Column - Measurements */}
+                <div className="space-y-4">
+                  {/* Measurements Card */}
                   {item.product.measurementId && (
-                    <div className="mb-4">
-                      <h4 className="font-medium mb-1">Measurements</h4>
-                      <div className="text-sm grid grid-cols-2 gap-2">
-                        <p>Collar: {item.product.measurementId.collar}″</p>
-                        <p>Chest: {item.product.measurementId.chest}″</p>
-                        <p>Waist: {item.product.measurementId.waist}″</p>
-                        <p>Sleeves: {item.product.measurementId.sleevesLength}″</p>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <h4 className="font-medium text-base md:text-lg mb-3">Measurements</h4>
+                      <div className="grid grid-cols-2 gap-x-8 gap-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-600 text-sm md:text-base">Collar:</span>
+                          <span className="font-medium text-sm md:text-base">
+                            {item.product.measurementId.collar}″
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-600 text-sm md:text-base">Chest:</span>
+                          <span className="font-medium text-sm md:text-base">
+                            {item.product.measurementId.chest}″
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-600 text-sm md:text-base">Waist:</span>
+                          <span className="font-medium text-sm md:text-base">
+                            {item.product.measurementId.waist}″
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-600 text-sm md:text-base">Sleeves:</span>
+                          <span className="font-medium text-sm md:text-base">
+                            {item.product.measurementId.sleevesLength}″
+                          </span>
+                        </div>
                       </div>
                     </div>
                   )}
+
+                  {/* Additional Notes Card */}
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h4 className="font-medium text-base md:text-lg mb-3">Order Notes</h4>
+                    <div className="text-sm md:text-base text-gray-600 space-y-1">
+                      <p>• All measurements are in inches</p>
+                      <p>• Custom alterations available upon request</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           )
         ))}
 
-        {/* Shipping Address */}
-        <div className="border-t pt-4 grid md:grid-cols-2 gap-6">
+        {/* Shipping & Payment Details */}
+        <div className="border-t pt-4 grid sm:grid-cols-2 gap-4 sm:gap-6">
           <div>
-            <h3 className="font-medium mb-2">Shipping Address</h3>
-            <div className="text-sm space-y-1">
+            <h3 className="font-medium mb-2 text-sm sm:text-base">Shipping Address</h3>
+            <div className="text-xs sm:text-sm space-y-1">
               <p>{order.orderAddress.address1}</p>
               {order.orderAddress.address2 && <p>{order.orderAddress.address2}</p>}
               <p>{order.orderAddress.city}, {order.orderAddress.state} {order.orderAddress.zipCode}</p>
@@ -177,12 +233,11 @@ const OrderCard = ({ order }: { order: Order }) => {
             </div>
           </div>
 
-          {/* Payment Details */}
           <div>
-            <h3 className="font-medium mb-2">Payment Details</h3>
-            <div className="text-sm space-y-1">
+            <h3 className="font-medium mb-2 text-sm sm:text-base">Payment Details</h3>
+            <div className="text-xs sm:text-sm space-y-1">
               <p>Payment Date: {formatDate(order.paymentTime)}</p>
-              <p>Delivery Cost: ₹{order.deliveryCost.toFixed(2)}</p>
+              <p>Delivery Cost: ${order.deliveryCost.toFixed(2)}</p>
               {order.receipt && <p>Receipt Number: {order.receipt}</p>}
             </div>
           </div>
@@ -250,9 +305,9 @@ export default function OrderHistory() {
   }
 
   return (
-    <div className="min-h-screen pt-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-      <h1 className="text-3xl font-bold mb-8">Order History</h1>
-      <div className="space-y-6">
+    <div className="min-h-screen pt-16 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-8">Order History</h1>
+      <div className="space-y-4 sm:space-y-6">
         {orders.map((order) => (
           <OrderCard key={order._id} order={order} />
         ))}
