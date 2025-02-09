@@ -52,7 +52,7 @@ export const OrderSchema = new Schema<Order>({
   userid: String,
   cartTotal: Number,
   totalAfterDiscount: Number,
-  orderConfirmation: { type: Boolean, required: true },
+  orderConfirmation: { type: Boolean, required: true, default: false },
   deliveryStatus: {
     type: String,
     enum: ["pending", "shipped", "delivered"],
