@@ -806,6 +806,10 @@ const CheckoutPage = () => {
                           <div className="mt-4 text-sm text-gray-600">
                             Quantity: {item.qty}
                           </div>
+                          {/* Product ID */}
+                          <div className="mt-4 text-sm text-gray-600">
+                            Product ID: {productId}
+                          </div>
                         </div>
                       );
                     })
