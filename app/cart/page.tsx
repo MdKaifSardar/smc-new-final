@@ -423,7 +423,7 @@ const CartItem = ({
         </div>
 
         {/* Quantity Update */}
-        <div className="flex items-center gap-2">
+        {/* <div className="flex items-center gap-2">
           <button
             onClick={() => {
               const currentQty = parseInt(item.qty);
@@ -444,7 +444,7 @@ const CartItem = ({
           >
             <FaPlus className="w-4 h-4" />
           </button>
-        </div>
+        </div> */}
 
         {/* Delete Button */}
         <div className="flex justify-end items-center gap-2 sm:gap-4 pt-2 sm:pt-0">
