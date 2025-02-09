@@ -268,8 +268,8 @@ const MonogramCustomizer = () => {
   // };
 
   const getZIndex = (section: string, index: number) => {
-    if (section === "monogramStyle") return 60;
-    if (section === "monogramPosition") return 50;
+    if (section === "monogramStyle") return 6;
+    if (section === "monogramPosition") return 5;
     // if (section === "cuffStyle") return 70;
     // if (section === "cuffLinks") return 80;
     // if (section === "placket" || section === "pocket") return 40;
