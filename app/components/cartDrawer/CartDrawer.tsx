@@ -168,10 +168,8 @@ const CartDrawer = () => {
       const stored = localStorage.getItem("selectedCartItems");
       if (stored) {
         const items = JSON.parse(stored);
-        // If items already contain enriched shirt details, reuse them
         const updatedItems = items.map((item: any) => {
           if (item.shirt && item.shirt.frontImage) {
-            // Preload image for smooth display
             const img = new window.Image();
             img.src = item.shirt.frontImage as string;
           }
@@ -179,12 +177,11 @@ const CartDrawer = () => {
         });
         setCartItems(updatedItems);
       } else {
-        setCartItems([]); // Set cart items to empty if no items are selected
+        setCartItems([]);
       }
     }
   }, [cartMenuOpen]);
 
-  // NEW: Auto-refresh cart items details 1 sec after cart drawer opens
   useEffect(() => {
     if (cartMenuOpen) {
       const timer = setTimeout(() => {
@@ -238,7 +235,6 @@ const CartDrawer = () => {
           )
         );
         setIsShirtEnriched(false);
-        // Update localStorage to reflect the new quantity
         const updatedItems = JSON.parse(localStorage.getItem("selectedCartItems") || "[]").map((item: any) =>
           getProductId(item) === productId ? { ...item, qty: newQuantity.toString() } : item
         );
@@ -257,9 +253,8 @@ const CartDrawer = () => {
     setTimeout(() => {
       setCartMenuOpen(false);
       setIsClosing(false);
-      // Navigate to checkout after the drawer is closed
       window.location.href = "/checkout";
-    }, 500); // Delay before moving right
+    }, 500);
   };
 
   const handleClose = () => {
@@ -268,12 +263,22 @@ const CartDrawer = () => {
     setTimeout(() => {
       setCartMenuOpen(false);
       setIsClosing(false);
-    }, 500); // Delay before moving right
+    }, 500);
   };
 
   return (
     <div className="relative flex items-center">
-      <Sheet open={cartMenuOpen} onOpenChange={setCartMenuOpen}>
+      <Sheet open={cartMenuOpen} onOpenChange={(open) => {
+        if (!open) {
+          setIsClosing(true);
+          setTimeout(() => {
+            setCartMenuOpen(false);
+            setIsClosing(false);
+          }, 500);
+        } else {
+          setCartMenuOpen(true);
+        }
+      }}>
         <SheetTrigger asChild>
           <button onClick={handleOnClickCartMenu}>
             <FaShoppingCart className="text-[#4a2b2b] w-6 h-6 sm:w-7 sm:h-7" />
@@ -284,9 +289,9 @@ const CartDrawer = () => {
             isClosing ? "translate-x-full opacity-0" : "translate-x-0 opacity-100"
           }`}
         >
-          <SheetHeader className="sticky top-0 bg-white z-50">
+          <SheetHeader className="sticky top-0 bg-white z-50 w-full">
             <SheetTitle className="subHeading text-xl sm:text-2xl px-4 py-6 border-b">
-              SHOPPING CART
+              WISH LIST
             </SheetTitle>
             <button
               onClick={handleClose}
@@ -296,7 +301,7 @@ const CartDrawer = () => {
             </button>
           </SheetHeader>
           
-          <div className="px-4 pb-24"> {/* Added padding-bottom for checkout section */}
+          <div className="px-4 pb-24">
             {!user ? (
               <div className="p-4 text-center">
                 <p>Please log in to view your cart.</p>
