@@ -8,7 +8,7 @@ import mongoose from "mongoose";
 import { getShirtById } from "./admin/ShirtArea/Shirt/shirt.actions";
 import { getUserById } from "@/lib/database/actions/user.actions"; // Import the function to get user by ID
 
-export async function addShirtToCart(shirtId: string, clerkId: string) {
+export async function addShirtToCart(shirtId: string, clerkId: string, p0?: number) {
   try {
     await connectToDatabase();
 

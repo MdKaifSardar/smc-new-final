@@ -11,6 +11,9 @@ import { FaMapPin, FaCreditCard } from "react-icons/fa";
 import { GiTicket } from "react-icons/gi";
 import { useUser } from "@clerk/nextjs";
 import { createOrder } from "@/lib/database/actions/order.actions";
+import Image from "next/image";
+import { AiOutlineLoading3Quarters } from "react-icons/ai";
+import { getShirtByIdInDetails } from "@/lib/database/actions/admin/ShirtArea/Shirt/shirt.actions";
 
 type Steps = {
   title: string;
@@ -62,10 +65,36 @@ const CheckoutPage = () => {
   const [cartLoading, setCartLoading] = useState<boolean>(true);
   const [cartError, setCartError] = useState<string | null>(null);
 
+  // Add state for enriched cart items
+  const [enrichedCart, setEnrichedCart] = useState<any>(null);
+
+  // NEW: Load selected orders from localStorage if available
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const selected = localStorage.getItem("selectedCartItems");
+      if (selected) {
+        const products = JSON.parse(selected).map((item: any) => ({
+          ...item,
+          qty: "1" // Ensure quantity is set to 1 by default
+        }));
+        const cartTotal = products.reduce(
+          (sum: number, item: any) => sum + item.price * Number(item.qty),
+          0
+        );
+        setCart({ products, cartTotal });
+        setCartLoading(false);
+        // Optionally remove the selected items if they should be used only once:
+        // localStorage.removeItem("selectedCartItems");
+      }
+    }
+  }, [isLoaded, user]);
+
   // Fetch cart on mount if user available
   useEffect(() => {
     async function fetchCart() {
       if (!isLoaded || !user) return;
+      // Only fetch full cart if no selected items exist
+      if (localStorage.getItem("selectedCartItems")) return;
       try {
         setCartLoading(true);
         const res = await fetch(`/api/cart?clerkId=${user.id}`);
@@ -83,6 +112,86 @@ const CheckoutPage = () => {
       }
     }
     fetchCart();
+  }, [isLoaded, user]);
+
+  // After fetching the cart (existing useEffect), add a new useEffect to enrich items:
+  useEffect(() => {
+    const enrichCartItems = async () => {
+      if (!cart?.products) return;
+      const enrichedProducts = await Promise.all(
+        cart.products.map(async (item: any) => {
+          const productId = item?.product?._id?.toString() || item?.product;
+          if (!productId) return item;
+          try {
+            const response = await getShirtByIdInDetails(productId);
+            return {
+              ...item,
+              shirt: response?.success ? response.shirt : null
+            };
+          } catch (error) {
+            console.error("Error fetching shirt details:", error);
+            return item;
+          }
+        })
+      );
+      setEnrichedCart({
+        ...cart,
+        products: enrichedProducts
+      });
+    };
+    if (cart) enrichCartItems();
+  }, [cart]);
+
+  // NEW: Refresh cart state on window focus to immediately update selected orders
+  useEffect(() => {
+    const handleFocus = () => {
+      if (typeof window !== "undefined") {
+        const selected = localStorage.getItem("selectedCartItems");
+        if (selected) {
+          const products = JSON.parse(selected);
+          const cartTotal = products.reduce(
+            (sum: number, item: any) => sum + item.price * Number(item.qty),
+            0
+          );
+          setCart({ products, cartTotal });
+        }
+      }
+    };
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
+  }, []);
+
+  // Add this useEffect to sync cart changes from localStorage:
+  useEffect(() => {
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === "selectedCartItems") {
+        if (event.newValue) {
+          const products = JSON.parse(event.newValue);
+          const cartTotal = products.reduce(
+            (sum: number, item: any) => sum + item.price * Number(item.qty),
+            0
+          );
+          setCart({ products, cartTotal });
+        }
+      }
+    };
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const selected = localStorage.getItem("selectedCartItems");
+      if (selected) {
+        const products = JSON.parse(selected);
+        const cartTotal = products.reduce(
+          (sum: number, item: any) => sum + item.price * Number(item.qty),
+          0
+        );
+        setCart({ products, cartTotal });
+        setCartLoading(false);
+      }
+    }
   }, [isLoaded, user]);
 
   if (!isSignedIn) return <div>Sign in to view this page</div>;
@@ -138,11 +247,8 @@ const CheckoutPage = () => {
       );
 
       if (orderResponse.success) {
-        // Clear the cart after successful order creation
-        await fetch(`/api/cart?clerkId=${user.id}`, {
-          method: "DELETE",
-        });
-
+        // Instead of clearing the entire cart, remove only temporary selections.
+        localStorage.removeItem("selectedCartItems");
         router.push(`/order/${orderResponse.orderId}`);
       } else {
         console.error(orderResponse.message);
@@ -239,8 +345,7 @@ const CheckoutPage = () => {
                         id="country"
                         placeholder="Country"
                         defaultValue="India"
-                        value={deliveryAddress.country} required onChange={(e) => setDeliveryAddress({ ...deliveryAddress, country: e.target.value })}
-                      />
+                        value={deliveryAddress.country} required onChange={(e) => setDeliveryAddress({ ...deliveryAddress, country: e.target.value })} />
                     </div>
                   </div>
                   <div>
@@ -343,44 +448,136 @@ const CheckoutPage = () => {
             </CardHeader>
             <CardContent>
               {cartLoading ? (
-                <p>Loading order summary...</p>
+                <div className="flex justify-center">
+                  <AiOutlineLoading3Quarters className="h-6 w-6 animate-spin" />
+                </div>
               ) : cartError ? (
-                <p>Error: {cartError}</p>
+                <p className="text-red-500">Error: {cartError}</p>
               ) : (
-                <div className="space-y-4">
-                  {cart?.products?.length > 0 ? (
-                    cart.products.map((item: any, index: number) => {
-                      // Safely access product id
+                <div className="space-y-6">
+                  {enrichedCart?.products?.length > 0 ? (
+                    enrichedCart.products.map((item: any, index: number) => {
                       const productId = item?.product?._id?.toString() || item?.product;
                       if (!productId) return null;
-
                       return (
-                        <div key={index} className="flex justify-between">
-                          <div>
-                            <p className="font-semibold">ID: {productId}</p>
-                            <p>Qty: {item.qty || 0}</p>
+                        <div key={index} className="border-b pb-6 last:border-b-0">
+                          {/* Product Header */}
+                          <div className="flex justify-between mb-4">
+                            <h3 className="font-semibold">Custom Shirt</h3>
+                            <p className="font-semibold">
+                              ₹{((item.price || 0) * Number(item.qty || 0)).toFixed(2)}
+                            </p>
                           </div>
-                          <p className="font-semibold">
-                            ₹{((item.price || 0) * Number(item.qty || 0)).toFixed(2)}
-                          </p>
+
+                          {/* Shirt Images */}
+                          <div className="bg-white p-4 rounded-lg mb-4">
+                            <div className="flex flex-col md:flex-row gap-4">
+                              <div>
+                                <ShirtCompositeImage details={item.shirt} />
+                              </div>
+                              {item.shirt?.backImage && (
+                                <div className="w-full max-w-[150px]">
+                                  <h4 className="font-medium mb-2">Back View</h4>
+                                  <div className="relative w-full aspect-[3/4]">
+                                    <Image
+                                      src={item.shirt.backImage}
+                                      alt="Shirt Back"
+                                      fill
+                                      className="object-contain"
+                                    />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Material & Color */}
+                          <div className="bg-white p-4 rounded-lg mb-4">
+                            <h4 className="text-sm font-medium mb-2">Material & Color</h4>
+                            <div className="flex items-center gap-4">
+                              {item.shirt?.fabricImage && (
+                                <Image
+                                  src={item.shirt.fabricImage}
+                                  alt={item.shirt.fabricName || "Fabric"}
+                                  width={50}
+                                  height={50}
+                                  className="rounded-md object-cover"
+                                />
+                              )}
+                              <div>
+                                <p className="text-sm">{item.shirt?.fabricName}</p>
+                                {item.shirt?.colorName && (
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <div
+                                      className="w-4 h-4 rounded-full border"
+                                      style={{ backgroundColor: item.shirt.colorHexCode }}
+                                    />
+                                    <span className="text-sm">
+                                      {item.shirt.colorName}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Measurements */}
+                          <div className="bg-white p-4 rounded-lg">
+                            <h4 className="text-sm font-medium mb-2">Measurements</h4>
+                            <div className="grid grid-cols-2 gap-4 text-xs">
+                              <div>
+                                <h5 className="font-medium mb-1">Shirt Measurements</h5>
+                                <div className="space-y-2">
+                                  <p>Collar: {item.shirt?.measurementCollar}″</p>
+                                  <p>Half Chest: {item.shirt?.measurementHalfChest}″</p>
+                                  <p>Half Waist: {item.shirt?.measurementHalfWaist}″</p>
+                                  <p>Half Hips: {item.shirt?.measurementHalfHips}″</p>
+                                  <p>Sleeve Length: {item.shirt?.measurementSleeveLength}″</p>
+                                  <p>Elbow: {item.shirt?.measurementElbow}″</p>
+                                  <p>Forearm: {item.shirt?.measurementForearm}″</p>
+                                  <p>Cuff: {item.shirt?.measurementCuff}″</p>
+                                </div>
+                              </div>
+                              <div>
+                                <h5 className="font-medium mb-1">Body Measurements</h5>
+                                <div className="space-y-2">
+                                  <p>Neck: {item.shirt?.measurementNeck}″</p>
+                                  <p>Chest: {item.shirt?.measurementChest}″</p>
+                                  <p>Waist: {item.shirt?.measurementWaist}″</p>
+                                  <p>Hips: {item.shirt?.measurementHips}″</p>
+                                  <p>Elbow Width: {item.shirt?.measurementElbowWidth}″</p>
+                                  <p>Upper Arm: {item.shirt?.measurementUpperArm}″</p>
+                                  <p>Shoulder: {item.shirt?.measurementShoulder}″</p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Quantity */}
+                          <div className="mt-4 text-sm text-gray-600">
+                            Quantity: {item.qty}
+                          </div>
                         </div>
                       );
                     })
                   ) : (
                     <p>No items in your cart.</p>
                   )}
-                  <hr className="border-t border-border" />
-                  <div className="flex justify-between">
-                    <p>Subtotal:</p>
-                    <p>₹{(subtotal || 0).toFixed(2)}</p>
-                  </div>
-                  <div className="flex justify-between">
-                    <p>Discount:</p>
-                    <p>₹{(discount || 0).toFixed(2)}</p>
-                  </div>
-                  <div className="flex justify-between font-bold">
-                    <p>Total:</p>
-                    <p>₹{(total).toFixed(2)}</p>
+
+                  {/* Order Totals */}
+                  <div className="space-y-2 pt-4 border-t">
+                    <div className="flex justify-between">
+                      <p>Subtotal:</p>
+                      <p>₹{(subtotal || 0).toFixed(2)}</p>
+                    </div>
+                    <div className="flex justify-between">
+                      <p>Discount:</p>
+                      <p>₹{(discount || 0).toFixed(2)}</p>
+                    </div>
+                    <div className="flex justify-between font-bold">
+                      <p>Total:</p>
+                      <p>₹{(total).toFixed(2)}</p>
+                    </div>
                   </div>
                 </div>
               )}
@@ -388,6 +585,67 @@ const CheckoutPage = () => {
           </Card>
         </div>
       </div>
+    </div>
+  );
+};
+
+const ShirtCompositeImage = ({ details }: { details: any }) => {
+  return (
+    <div className="relative w-full md:w-[300px] aspect-[2/3]"> {/* Changed: fixed width for desktop via md:w-[300px] */}
+      {/* Layer 1 - Front View */}
+      {(details.frontImage || details.fitImage) && (
+        <Image
+          src={details.frontImage || details.fitImage}
+          alt="Front View"
+          fill
+          className="object-contain"
+        />
+      )}
+      {/* Layer 2 - Bottom */}
+      {details.bottomImage && (
+        <Image
+          src={details.bottomImage}
+          alt="Bottom Style"
+          fill
+          className="object-contain"
+        />
+      )}
+      {/* Layer 3 - Placket */}
+      {details.placketImage && (
+        <Image
+          src={details.placketImage}
+          alt="Placket"
+          fill
+          className="object-contain"
+        />
+      )}
+      {/* Layer 4 - Pocket */}
+      {details.pocketImage && (
+        <Image
+          src={details.pocketImage}
+          alt="Pocket"
+          fill
+          className="object-contain"
+        />
+      )}
+      {/* Layer 5 - Sleeves */}
+      {details.sleevesImage && (
+        <Image
+          src={details.sleevesImage}
+          alt="Sleeves"
+          fill
+          className="object-contain"
+        />
+      )}
+      {/* Layer 6 - Collar */}
+      {details.collarImage && (
+        <Image
+          src={details.collarImage}
+          alt="Collar"
+          fill
+          className="object-contain"
+        />
+      )}
     </div>
   );
 };

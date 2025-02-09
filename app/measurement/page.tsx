@@ -1,30 +1,27 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { toast } from "sonner";
+import { useAtom } from "jotai";
 import ShirtMeasurementsForm from "../components/shirtMeasurement/ShirtMeasurementsForm";
 import BodyMeasurementsForm from "../components/bodyMeasurement/BodyMeasurementsForm";
 import {
-  Measurement,
   ShirtMeasurements,
   BodyMeasurements,
 } from "@/app/utils/data/measurement";
 import { createMeasurement } from "@/lib/database/actions/measurement.actions";
 import { updateShirtIds } from "@/lib/database/actions/admin/ShirtArea/Shirt/shirt.actions";
 import { addShirtToCart } from "@/lib/database/actions/cart.actions";
+import { savedShirtMeasurementsState, savedBodyMeasurementsState } from "@/app/utils/data/store";
 
 const Page = () => {
   const router = useRouter();
   const { user } = useUser();
-  const [shirtMeasurements, setShirtMeasurements] = useState<
-    ShirtMeasurements | undefined
-  >();
-  const [bodyMeasurements, setBodyMeasurements] = useState<
-    BodyMeasurements | undefined
-  >();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [shirtMeasurements, setShirtMeasurements] = useAtom(savedShirtMeasurementsState);
+  const [bodyMeasurements, setBodyMeasurements] = useAtom(savedBodyMeasurementsState);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const handleShirtMeasurementsChange = (measurements: ShirtMeasurements) => {
     setShirtMeasurements(measurements);
@@ -34,7 +31,6 @@ const Page = () => {
     setBodyMeasurements(measurements);
   };
 
-  // Removed the event parameter since submission is now triggered only on button click.
   const handleSubmit = async () => {
     if (isSubmitting || !user) return;
     setIsSubmitting(true);
@@ -65,15 +61,23 @@ const Page = () => {
         throw new Error(updateResponse.message);
       }
 
-      // 4. Add shirt to cart
-      // console.log("user ID", user.id);
-      const cartResponse = await addShirtToCart(shirtId, user.id);
-
+      // 4. Add shirt to cart with quantity 1
+      const cartResponse = await addShirtToCart(shirtId, user.id, -1);
       if (!cartResponse.success) {
         throw new Error(cartResponse.message);
       }
 
-      // 5. Success - clean up and redirect
+      // 5. Update cart items in localStorage
+      const cartItems = JSON.parse(localStorage.getItem("selectedCartItems") || "[]");
+      const updatedCartItems = cartItems.map((item: any) => {
+        if (item.product._id === shirtId) {
+          return { ...item, qty: "-1" };
+        }
+        return item;
+      });
+      localStorage.setItem("selectedCartItems", JSON.stringify(updatedCartItems));
+
+      // 6. Success - clean up and redirect
       toast.success("Measurements saved and shirt added to cart!");
       localStorage.removeItem("shirtId");
       router.push("/cart");
@@ -93,24 +97,48 @@ const Page = () => {
   }
 
   return (
-    <div className="pt-28 px-4 py-2 font-play">
-      <div>
-        <ShirtMeasurementsForm onChange={handleShirtMeasurementsChange} />
-      </div>
+    <div className="container mx-auto pt-20 px-4 sm:px-6 md:px-8 pb-10">
+      <div className="max-w-7xl mx-auto space-y-12">
+        {/* Page Title */}
+        <h1 className="text-3xl sm:text-4xl font-bold text-center mb-10 text-gray-800">
+          Custom Measurements
+        </h1>
+        
+        {/* Shirt Measurements Section */}
+        <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-200">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-6">
+            Shirt Measurements
+          </h2>
+          <ShirtMeasurementsForm
+            initialMeasurements={shirtMeasurements || undefined}
+            onChange={handleShirtMeasurementsChange}
+          />
+        </div>
 
-      <div>
-        <BodyMeasurementsForm onChange={handleBodyMeasurementsChange} />
-      </div>
+        {/* Body Measurements Section */}
+        <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-200">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-6">
+            Body Measurements
+          </h2>
+          <BodyMeasurementsForm
+            initialMeasurements={bodyMeasurements || undefined}
+            onChange={handleBodyMeasurementsChange}
+          />
+        </div>
 
-      <div className="flex items-center justify-center">
-        <button
-          type="button"
-          onClick={handleSubmit}
-          className="bg-[#c40600] px-4 py-2 text-white rounded-lg font-semibold"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? "Saving..." : "Save Measurements"}
-        </button>
+        {/* Submit Button */}
+        <div className="flex justify-center pt-8">
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            className="px-8 py-3 bg-red-600 text-white rounded-lg font-semibold 
+                     hover:bg-red-700 transition-colors disabled:opacity-50
+                     disabled:cursor-not-allowed text-lg w-full md:w-auto"
+          >
+            {isSubmitting ? "Saving..." : "Save Measurements"}
+          </button>
+        </div>
       </div>
     </div>
   );

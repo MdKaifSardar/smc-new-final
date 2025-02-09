@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/app/components/ui/button";
 import { FaArrowLeft, FaSpinner } from "react-icons/fa";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { getOrderDetailsById } from "@/lib/database/actions/order.actions";
 import { format } from "date-fns";
 // Import downloadPDF from the checkout folder
@@ -43,6 +43,15 @@ const OrderPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [fabrics, setFabrics] = useState<{ [key: string]: any }>({});
+  const router = useRouter();
+
+  const handleContinueShopping = () => {
+    // Remove selected (checked-out) orders only
+    localStorage.removeItem("selectedCartItems");
+    // Dispatch event so that CartDrawer clears its selected items state
+    window.dispatchEvent(new Event("clearSelectedCartItems"));
+    router.push("/customize"); // change path as needed
+  };
 
   useEffect(() => {
     async function fetchOrderDetails() {
@@ -218,6 +227,9 @@ const OrderPage = () => {
             >
               Download Receipt
             </Button>
+            {/* <Button onClick={handleContinueShopping} className="w-full mt-3 mb-3">
+              Continue Shopping
+            </Button> */}
             <Link href={"/"}>
               <Button className="w-full mt-3">CONTINUE SHOPPING</Button>
             </Link>

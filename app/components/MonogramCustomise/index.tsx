@@ -1,7 +1,7 @@
 "use client";
 import { updateShirtIds, updateShirtPrice } from "@/lib/database/actions/admin/ShirtArea/Shirt/shirt.actions";
 import { useEffect, useState } from "react";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify"; // Add ToastContainer import
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createMonogram } from "@/lib/database/actions/admin/ShirtArea/MonogramUser/monogramuser.actions";
@@ -284,8 +284,18 @@ const MonogramCustomizer = () => {
     setSelectedBackImage(null);
   };
 
+  const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value.length <= 8) {
+      setText(value);
+    } else {
+      toast.error("Monogram text can only be up to 8 characters long.");
+    }
+  };
+
   return (
     <div className="mt-[6.5rem] flex-col md:flex-row justify-between items-start flex w-full h-fit">
+      <ToastContainer /> {/* Add ToastContainer here */}
       <div className="relative flex justify-center items-center w-full h-[87vh]">
         {Object.entries(selectedItems).map(([section, item], index) =>
           item.image?.url ? (
@@ -416,7 +426,7 @@ const MonogramCustomizer = () => {
               type="text"
               id="text"
               value={text}
-              onChange={(e) => setText(e.target.value)}
+              onChange={handleTextChange}
               className="mt-1 p-2 w-full border rounded-md"
             />
           </div>
