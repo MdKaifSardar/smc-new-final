@@ -61,58 +61,56 @@ const ShirtMeasurementsForm: React.FC<ShirtMeasurementsFormProps> = ({ initialMe
     onChange(updatedMeasurements);
   };
 
-  const renderMeasurementFields = () => {
-    return Object.keys(shirtMeasurements).map((field) => {
-      const typedField = field as keyof ShirtMeasurements;
-      const measurementField = shirtMeasurements[typedField];
-      return (
-        <div key={field} className="flex flex-col md:flex-row items-center gap-4 mb-6">
-          {/* Label */}
-          <label className="block text-gray-700 text-sm font-bold md:w-1/3 capitalize">
-            {field.replace(/([A-Z])/g, " $1")}
-          </label>
-
-          {/* Input and Dropdown */}
-          <div className="flex gap-2 w-full md:w-2/3">
-            <input
-              type="number"
-              placeholder="Enter measurement"
-              value={measurementField?.value?.value ?? ""}
-              onChange={(e) => handleChange(typedField, "value", e.target.value)}
-              onFocus={() => setActiveField(typedField)}
-              className="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all"
-            />
-            <select
-              value={measurementField?.value?.unit || "inch"}
-              onChange={(e) => handleChange(typedField, "unit", e.target.value)}
-              onFocus={() => setActiveField(typedField)}
-              className="w-24 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-white"
-            >
-              <option value="inch">inches</option>
-              <option value="cm">cm</option>
-            </select>
-          </div>
-        </div>
-      );
-    });
-  };
-
   return (
-    <div className="w-full p-4">
-      <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 text-gray-800">
+    <div className="w-full p-2 sm:p-4">
+      <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-center mb-6 sm:mb-8 text-gray-800">
         Shirt Measurements
       </h2>
-      <div className="flex flex-col md:flex-row gap-8">
+      <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
         {/* Left side - Form */}
-        <div className="w-full md:w-1/2 bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+        <div className="w-full lg:w-1/2 bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-200">
           <div className="space-y-4">
-            {renderMeasurementFields()}
+            {Object.keys(shirtMeasurements).map((field) => {
+              const typedField = field as keyof ShirtMeasurements;
+              const measurementField = shirtMeasurements[typedField];
+              return (
+                <div key={field} className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+                  <label className="block text-gray-700 text-sm font-bold w-full sm:w-1/3 capitalize">
+                    {field.replace(/([A-Z])/g, " $1")}
+                  </label>
+                  <div className="flex gap-2 w-full sm:w-2/3">
+                    <input
+                      type="number"
+                      placeholder="Enter measurement"
+                      value={measurementField?.value?.value ?? ""}
+                      onChange={(e) => handleChange(typedField, "value", e.target.value)}
+                      onFocus={() => setActiveField(typedField)}
+                      className="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none 
+                               focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all
+                               text-sm sm:text-base"
+                    />
+                    <select
+                      value={measurementField?.value?.unit || "inch"}
+                      onChange={(e) => handleChange(typedField, "unit", e.target.value)}
+                      onFocus={() => setActiveField(typedField)}
+                      className="w-20 sm:w-24 p-2 border border-gray-300 rounded-lg focus:outline-none
+                               focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-white
+                               text-sm sm:text-base"
+                    >
+                      <option value="inch">inches</option>
+                      <option value="cm">cm</option>
+                    </select>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
         
         {/* Right side - Image */}
-        <div className="w-full md:w-1/2 flex flex-col items-center justify-center bg-gray-50 p-6 rounded-xl border border-gray-200">
-          <div className="relative w-full h-64 sm:h-80 md:h-96">
+        <div className="w-full lg:w-1/2 flex flex-col items-center justify-center 
+                      bg-gray-50 p-4 sm:p-6 rounded-xl border border-gray-200">
+          <div className="relative w-full h-48 sm:h-64 lg:h-96">
             <Image
               src={imageMapping[activeField]}
               alt="Measurement Guide"
@@ -121,7 +119,7 @@ const ShirtMeasurementsForm: React.FC<ShirtMeasurementsFormProps> = ({ initialMe
               priority
             />
           </div>
-          <p className="mt-4 text-sm text-gray-600 text-center max-w-md">
+          <p className="mt-3 sm:mt-4 text-xs sm:text-sm text-gray-600 text-center max-w-md px-2">
             Click on any measurement field to see the corresponding guide image
           </p>
         </div>
