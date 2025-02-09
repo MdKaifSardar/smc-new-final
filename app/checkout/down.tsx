@@ -216,8 +216,8 @@ export const downloadPDF = async (order: Order, user:any) => {
           doc.setFont("helvetica", "normal");
 
           const monogramInfo = [
-            ["Style", `${product.monogramDetails.style.name} ($${product.monogramDetails.style.price})`],
-            ["Position", `${product.monogramDetails.position.name} ($${product.monogramDetails.position.price})`],
+            ["Style", `${product.monogramDetails.style?.name} ($${product.monogramDetails.style?.price})`],
+            ["Position", `${product.monogramDetails.position?.name} ($${product.monogramDetails.position?.price})`],
             ["Text", product.monogramDetails.text],
             ["Color", product.monogramDetails.color],
             ["Total Monogram Price", `$${product.monogramDetails.price}`]

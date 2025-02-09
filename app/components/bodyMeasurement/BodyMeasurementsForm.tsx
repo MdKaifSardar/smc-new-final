@@ -1,6 +1,8 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { useAtom } from "jotai";
 import { BodyMeasurements, MeasurementField } from "@/app/utils/data/measurement";
+import { savedBodyMeasurementsState } from "@/app/utils/data/store";
 import Image from "next/image";
 
 interface BodyMeasurementsFormProps {
@@ -9,12 +11,13 @@ interface BodyMeasurementsFormProps {
 }
 
 const createDefaultMeasurementField = (): MeasurementField => ({
-  value: { value: null, unit: "inch" }, // Ensure this is structured as expected
+  value: { value: null, unit: "inch" },
   description: "",
 });
 
 const BodyMeasurementsForm: React.FC<BodyMeasurementsFormProps> = ({ initialMeasurements, onChange }) => {
-  const initialBodyMeasurements = initialMeasurements || {
+  const [savedMeasurements, setSavedMeasurements] = useAtom(savedBodyMeasurementsState);
+  const initialBodyMeasurements = initialMeasurements || savedMeasurements || {
     neck: createDefaultMeasurementField(),
     chest: createDefaultMeasurementField(),
     waist: createDefaultMeasurementField(),
@@ -25,7 +28,10 @@ const BodyMeasurementsForm: React.FC<BodyMeasurementsFormProps> = ({ initialMeas
     shoulder: createDefaultMeasurementField(),
   };
 
-  const imageMapping: { [key in keyof BodyMeasurements]: string } = {
+  const [bodyMeasurements, setBodyMeasurements] = useState<BodyMeasurements>(initialBodyMeasurements);
+  const [activeField, setActiveField] = useState<keyof BodyMeasurements>("neck");
+
+  const imageMapping: Record<keyof BodyMeasurements, string> = {
     neck: 'https://res.cloudinary.com/dlxpcyiin/image/upload/v1738778881/cloud1_wqszqi.png',
     chest: 'https://res.cloudinary.com/dlxpcyiin/image/upload/v1738778882/cloud3_wlv17l.png',
     waist: 'https://res.cloudinary.com/dlxpcyiin/image/upload/v1738778881/cloud1_wqszqi.png',
@@ -36,99 +42,88 @@ const BodyMeasurementsForm: React.FC<BodyMeasurementsFormProps> = ({ initialMeas
     shoulder: 'https://res.cloudinary.com/dlxpcyiin/image/upload/v1738778881/cloud1_wqszqi.png',
   };
 
-  const descriptionMapping: { [key in keyof BodyMeasurements]: string } = {
-    neck: "Measure around the base of the neck where the neck sits.",
-    chest: "Measure across the chest from armpit to armpit.",
-    waist: "Measure around the natural waist, which is usually the narrowest point of the torso.",
-    hips: "Measure around the fullest part of the hips.",
-    sleeveLength: "Measure from the shoulder seam to the desired cuff length.",
-    elbowWidth: "Measure around the elbow joint.",
-    upperArm: "Measure around the fullest part of the forearm.",
-    shoulder: "Measure from the lower left corner of the shoulder"
-  };
-
-  const [BodyMeasurements, setBodyMeasurements] = useState<BodyMeasurements>(initialBodyMeasurements);
-  const [activeField, setActiveField] = useState<keyof BodyMeasurements>("neck"); // Default to 'neck'
-  const [currentImage, setCurrentImage] = useState<string | null>(imageMapping.neck);
-  const [currentDescription, setCurrentDescription] = useState<string | null>(descriptionMapping.neck);
-
-  // Update image and description when activeField changes
   useEffect(() => {
-    if (activeField) {
-      setCurrentImage(imageMapping[activeField] || null);
-      setCurrentDescription(descriptionMapping[activeField] || null);
-    }
-  }, [activeField]);
+    setSavedMeasurements(bodyMeasurements);
+  }, [bodyMeasurements, setSavedMeasurements]);
 
   const handleChange = (typedField: keyof BodyMeasurements, key: string, value: string) => {
-    // Update only the relevant field
     const updatedMeasurements = {
-      ...BodyMeasurements,
+      ...bodyMeasurements,
       [typedField]: {
-        ...BodyMeasurements[typedField],
+        ...bodyMeasurements[typedField],
         value: {
-          ...BodyMeasurements[typedField].value,
-          [key]: value, // Update the 'value' or 'unit' depending on the key
+          ...bodyMeasurements[typedField].value,
+          [key]: value,
         },
       },
     };
-
     setBodyMeasurements(updatedMeasurements);
-    onChange(updatedMeasurements);  // Propagate the change
+    onChange(updatedMeasurements);
   };
 
   const renderMeasurementFields = () => {
-    return Object.keys(BodyMeasurements).map((field) => {
+    return Object.keys(bodyMeasurements).map((field) => {
       const typedField = field as keyof BodyMeasurements;
-      const measurementField = BodyMeasurements[typedField] as MeasurementField;
-
+      const measurementField = bodyMeasurements[typedField];
       return (
-        <div key={field} className="space-y-2">
-          <button
-            onClick={() => setActiveField(typedField)}  // Change active field on button click
-            className="block bg-[#f5f5f0] w-full text-black px-4 py-2 rounded-lg shadow-md border text-sm md:text-lg font-semibold"
-          >
+        <div key={field} className="flex flex-col md:flex-row items-center gap-4 mb-6">
+          {/* Label */}
+          <label className="block text-gray-700 text-sm font-bold md:w-1/3 capitalize">
             {field.replace(/([A-Z])/g, " $1")}
-          </button>
+          </label>
 
-          {/* Show fields when they are active */}
-          {activeField === typedField && (
-            <div className="flex flex-col pb-6">
-              <div className="flex items-center justify-between space-x-2">
-                <input
-                  type="number"
-                  className="rounded-md sm:w-full w-2/3 shadow-sm sm:text-sm outline-none p-2"
-                  placeholder="Enter Value"
-                  value={measurementField?.value?.value ?? ""}  // Correctly reference 'value'
-                  onChange={(e) => handleChange(typedField, "value", e.target.value)}  // Update 'value'
-                />
-
-                <select
-                  className="outline-none p-2 w-1/3 rounded-md shadow-sm sm:text-sm"
-                  value={measurementField?.value?.unit || "inch"}
-                  onChange={(e) => handleChange(typedField, "unit", e.target.value)}
-                >
-                  <option value="inch" className="outline-none">inches</option>
-                  <option value="cm" className="outline-none">cm</option>
-                </select>
-              </div>
-            </div>
-          )}
+          {/* Input and Dropdown */}
+          <div className="flex gap-2 w-full md:w-2/3">
+            <input
+              type="number"
+              placeholder="Enter measurement"
+              value={measurementField?.value?.value ?? ""}
+              onChange={(e) => handleChange(typedField, "value", e.target.value)}
+              onFocus={() => setActiveField(typedField)}
+              className="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all"
+            />
+            <select
+              value={measurementField?.value?.unit || "inch"}
+              onChange={(e) => handleChange(typedField, "unit", e.target.value)}
+              onFocus={() => setActiveField(typedField)}
+              className="w-24 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-white"
+            >
+              <option value="inch">inches</option>
+              <option value="cm">cm</option>
+            </select>
+          </div>
         </div>
       );
     });
   };
 
   return (
-    <div className="rounded-lg p-8 space-y-14">
-      <h2 className="text-4xl text-center font-bold">Body Measurements</h2>
-      <div className="flex gap-x-10">
-        <div className="flex flex-col w-1/2 space-y-2">
-          {renderMeasurementFields()}
+    <div className="w-full p-4">
+      <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 text-gray-800">
+        Body Measurements
+      </h2>
+      <div className="flex flex-col md:flex-row gap-8">
+        {/* Left side - Form */}
+        <div className="w-full md:w-1/2 bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+          <div className="space-y-4">
+            {renderMeasurementFields()}
+          </div>
         </div>
-        <div className="sm:w-1/2 w-1/3 flex flex-col items-center space-y-10">
-          <Image src={currentImage || imageMapping.neck} alt="" width={500} height={500} className="object-cover" />
-          <p className="sm:max-w-lg w-full font-semibold sm:text-lg text-sm text-center">{currentDescription || descriptionMapping.neck}</p>
+        
+        {/* Right side - Image */}
+        <div className="w-full md:w-1/2 flex flex-col items-center justify-center bg-gray-50 p-6 rounded-xl border border-gray-200">
+          <div className="relative w-full h-64 sm:h-80 md:h-96">
+            <Image
+              src={imageMapping[activeField]}
+              alt="Measurement Guide"
+              fill
+              className="object-contain"
+              priority
+            />
+          </div>
+          <p className="mt-4 text-sm text-gray-600 text-center max-w-md">
+            Click on any measurement field to see the corresponding guide image
+          </p>
         </div>
       </div>
     </div>

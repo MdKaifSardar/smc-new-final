@@ -1,5 +1,5 @@
 "use client";
-
+import { ToastContainer } from "react-toastify";
 import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { Card, CardContent } from "@/app/components/ui/card";
@@ -15,6 +15,12 @@ import { getShirtByIdInDetails } from "@/lib/database/actions/admin/ShirtArea/Sh
 import Image from "next/image";
 import { FaMinus, FaPlus, FaTrashAlt } from "react-icons/fa";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
+import { openCartDrawer } from "@/app/components/cartDrawer/CartDrawer"; // new import
+import { useRouter } from "next/navigation"; // updated import
+import React, { Suspense } from "react"; // new import
+import { useAtom } from "jotai";
+import { wishlistCountState, cartItemsState } from "@/app/utils/data/store"; // Import wishlist count state and cart items state
+import { FaHeart } from "react-icons/fa";
 
 interface ShirtDetails {
   _id: string;
@@ -68,6 +74,23 @@ interface ShirtDetails {
   measurementUpperArm?: number;
   measurementShoulder?: number;
 
+  cuffName?: string;
+  cuffImage?: string;
+  cuffPrice?: number;
+  collarStandName?: string;
+  collarStandImage?: string;
+  collarStandPrice?: number;
+  patternName?: string;
+  patternImage?: string;
+  patternPrice?: number;
+  monogramName?: string;
+  monogramImage?: string;
+  monogramPrice?: number;
+  contrastFabricName?: string;
+  contrastFabricImage?: string;
+  contrastFabricPrice?: number;
+  shirtCategory?: string;
+  shirtDescription?: string;
 }
 
 interface CartItem {
@@ -186,21 +209,22 @@ const ShirtCompositeImage = ({ details }: { details: ShirtDetails }) => {
 
 const CartItem = ({
   item,
-  onUpdateQuantity,
   onDelete,
   isUpdating,
+  user,
+  selectedItems,
+  handleSelect,
 }: {
   item: CartItem;
-  onUpdateQuantity: (
-    id: string,
-    qty: number,
-    event: React.MouseEvent
-  ) => Promise<void>;
   onDelete: (id: string, event: React.MouseEvent) => Promise<void>;
   isUpdating: boolean;
+  user: any;
+  selectedItems: string[];
+  handleSelect: (id: string, checked: boolean) => void;
 }) => {
   const [details, setDetails] = useState<ShirtDetails>(item.product);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter(); // updated hook
 
   useEffect(() => {
     async function fetchDetails() {
@@ -218,6 +242,43 @@ const CartItem = ({
     fetchDetails();
   }, [item.product]);
 
+  const handleUpdateQuantity = async (user: any, productId: string, newQuantity: number) => {
+    if (!user?.id) return;
+  
+    setUpdatingItem(productId);
+    try {
+      const response = await updateCartItemQuantity(user.id, productId, newQuantity);
+      if (response.success) {
+        toast.success("Quantity updated");
+        setCart((prevCart) => {
+          if (!prevCart) return prevCart;
+            const updatedProducts: CartItem[] = prevCart.products.map((item: CartItem) =>
+            item.product._id === productId ? { ...item, qty: newQuantity.toString() } : item
+            );
+          // Update localStorage to reflect the new quantity
+          const updatedSelectedItems = updatedProducts.filter((item) =>
+            selectedItems.includes(item.product._id)
+          );
+          localStorage.setItem("selectedCartItems", JSON.stringify(updatedSelectedItems));
+          return { ...prevCart, products: updatedProducts, cartTotal: response.cart.cartTotal };
+        });
+      }
+    } catch (error) {
+      console.error("Error updating quantity:", error);
+      toast.error("Failed to update quantity");
+    } finally {
+      setUpdatingItem(null);
+    }
+  };
+
+  const handleEdit = () => {
+    const url = new URL('/form-new', window.location.origin);
+    url.searchParams.append('fabricName', details.fabricName || '');
+    url.searchParams.append('colorHexCode', details.colorHexCode || '');
+    url.searchParams.append('colorName', details.colorName || '');
+    router.push(url.toString());
+  };
+
   if (isLoading) {
     return (
       <Card className="w-full p-6 flex justify-center">
@@ -226,25 +287,40 @@ const CartItem = ({
     );
   }
 
+  function handleDelete(_id: string, event: Event | undefined) {
+    throw new Error("Function not implemented.");
+  }
+
   return (
     <Card className="w-full">
       <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="font-semibold text-lg">
+            {/* Custom Shirt (ID: {item.product._id}) */}
+          </h3>
+          <input
+            type="checkbox"
+            className="w-5 h-5 mt-1"
+            checked={selectedItems.includes(item.product._id)}
+            onChange={(e) => handleSelect(item.product._id, e.target.checked)}
+          />
+        </div>
         {/* Header with Price */}
         <div className="flex flex-col sm:flex-row sm:justify-between gap-2 sm:gap-0">
-          <h3 className="font-semibold text-base sm:text-lg">Custom Shirt</h3>
+          <h3 className="font-semibold text-lg">Custom Shirt (ID: {item.product._id})</h3>
           <div className="text-right">
-            <p className="font-bold text-base sm:text-lg">
+            {/* <p className="font-bold text-lg">
               ${(item.price * parseInt(item.qty)).toFixed(2)}
-            </p>
-            <p className="text-xs sm:text-sm text-gray-500">${item.price.toFixed(2)} each</p>
+            </p> */}
+            <p className="text-xl text-gray-700">${item.price.toFixed(2)} each</p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-          {/* Left Column - Images and Material */}
-          <div className="space-y-4 sm:space-y-6">
+          {/* Left Column - Composite Image and Material */}
+          <div className="space-y-6">
             {/* Shirt Images Container */}
-            <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
+            <div className="bg-gray-50 p-4 rounded-lg">
               <div className="flex flex-col sm:flex-row gap-4">
                 {/* Main Front View */}
                 <div className="flex-1">
@@ -258,9 +334,9 @@ const CartItem = ({
                 
                 {/* Back View */}
                 {details.backImage && (
-                  <div className="w-full sm:w-[120px] lg:w-[150px]">
-                    <h4 className="font-medium mb-2 text-sm sm:text-base">Back View</h4>
-                    <div className="relative w-full sm:w-[120px] lg:w-[150px] h-[150px] sm:h-[170px] lg:h-[200px]">
+                  <div className="w-full sm:w-[150px]">
+                    <h4 className="font-medium mb-2">Back View</h4>
+                    <div className="relative w-full sm:w-[150px] h-[200px]">
                       <Image
                         src={details.backImage}
                         alt="Shirt Back"
@@ -317,6 +393,16 @@ const CartItem = ({
                   <p>Elbow: {details.measurementElbow}″</p>
                   <p>Forearm: {details.measurementForearm}″</p>
                   <p>Cuff: {details.measurementCuff}″</p>
+                  <p>Monogram Name: {details.monogramName}</p>
+                  <p>Cuff Name: {details.cuffName}</p>
+                  <p>Collar Button Name: {details.collarButtonName}</p>
+                  <p>Bottom Name: {details.bottomName}</p>
+                  <p>Back Name: {details.backName}</p>
+                  <p>Pocket Name: {details.pocketName}</p>
+                  <p>Placket Name: {details.placketName}</p>
+                  <p>Sleeves Name: {details.sleevesName}</p>
+                  <p>Fit Name: {details.fitName}</p>
+                  <p>Fabric Name: {details.fabricName}</p>
                 </div>
               </div>
               <div>
@@ -329,45 +415,39 @@ const CartItem = ({
                   <p>Elbow Width: {details.measurementElbowWidth}″</p>
                   <p>Upper Arm: {details.measurementUpperArm}″</p>
                   <p>Shoulder: {details.measurementShoulder}″</p>
+
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Quantity Controls */}
+        {/* Quantity Update */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              const currentQty = parseInt(item.qty);
+              if (currentQty <= 1) {
+                handleDelete(item.product._id, event);
+              } else {
+                handleUpdateQuantity(user, item.product._id, currentQty - 1);
+              }
+            }}
+            className="p-1 hover:bg-gray-100 rounded"
+          >
+            <FaMinus className="w-4 h-4" />
+          </button>
+          <span className="w-8 text-center">{item.qty}</span>
+          <button
+            onClick={() => handleUpdateQuantity(user, item.product._id, parseInt(item.qty) + 1)}
+            className="p-1 hover:bg-gray-100 rounded"
+          >
+            <FaPlus className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Delete Button */}
         <div className="flex justify-end items-center gap-2 sm:gap-4 pt-2 sm:pt-0">
-          <div className="flex items-center gap-1 sm:gap-2">
-            <Button
-              size="icon"
-              variant="outline"
-              className="h-8 w-8 sm:h-10 sm:w-10"
-              onClick={handleButtonClick((event) =>
-                onUpdateQuantity(item.product._id, parseInt(item.qty) - 1, event)
-              )}
-              disabled={isUpdating || parseInt(item.qty) <= 1}
-            >
-              <FaMinus className="h-3 w-3 sm:h-4 sm:w-4" />
-            </Button>
-            <span className="w-6 sm:w-8 text-center text-sm sm:text-base">
-              {isUpdating ? (
-                <AiOutlineLoading3Quarters className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
-              ) : (
-                item.qty
-              )}
-            </span>
-            <Button
-              size="icon"
-              variant="outline"
-              className="h-8 w-8 sm:h-10 sm:w-10"
-              onClick={handleButtonClick((event) =>
-                onUpdateQuantity(item.product._id, parseInt(item.qty) + 1, event)
-              )}
-              disabled={isUpdating}
-            >
-              <FaPlus className="h-3 w-3 sm:h-4 sm:w-4" />
-            </Button>
-          </div>
           <Button
             size="icon"
             variant="destructive"
@@ -376,6 +456,14 @@ const CartItem = ({
             disabled={isUpdating}
           >
             <FaTrashAlt className="h-3 w-3 sm:h-4 sm:w-4" />
+          </Button>
+          <Button
+            size="icon"
+            variant="default"
+            onClick={handleEdit}
+            className="play px-10 font-play "
+          >
+            Edit
           </Button>
         </div>
       </CardContent>
@@ -388,6 +476,9 @@ export default function CartPage() {
   const [cart, setCart] = useState<CartData["cart"]>(undefined);
   const [loading, setLoading] = useState(true);
   const [updatingItem, setUpdatingItem] = useState<string | null>(null);
+  const [selectedItems, setSelectedItems] = useState<string[]>([]); // new state
+  const [, setWishlistCount] = useAtom(wishlistCountState); // Use wishlist count state
+  const [, setCartItems] = useAtom(cartItemsState); // Use cart items state
 
   useEffect(() => {
     fetchCart();
@@ -398,11 +489,21 @@ export default function CartPage() {
       setLoading(false);
       return;
     }
-
     try {
       const response = await getSavedCartForUser(user.id);
       if (response.success && response.cart) {
         setCart(response.cart);
+        setCartItems(response.cart.products); // Update cart items state
+        
+        // Calculate total product count using quantity sums
+        const totalCount = response.cart.products.reduce(
+          (sum: number, item: { qty: any; }) => sum + Number(item.qty),
+          0
+        );
+        setWishlistCount(totalCount);
+        
+        localStorage.setItem("wishlistCount", totalCount.toString());
+        localStorage.setItem("cartItems", JSON.stringify(response.cart.products));
       }
     } catch (error) {
       console.error("Error fetching cart:", error);
@@ -412,6 +513,31 @@ export default function CartPage() {
     }
   };
 
+  // Update counts on initial load
+  useEffect(() => {
+    const storedWishlistCount = localStorage.getItem("wishlistCount");
+    const storedCartItems = localStorage.getItem("cartItems");
+
+    if (storedWishlistCount) {
+      setWishlistCount(parseInt(storedWishlistCount, 10));
+    }
+
+    if (storedCartItems) {
+      setCartItems(JSON.parse(storedCartItems));
+    }
+  }, [setWishlistCount, setCartItems]);
+
+  // Refresh wishlist count every 1 sec
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const storedWishlistCount = localStorage.getItem("wishlistCount");
+      if (storedWishlistCount) {
+        setWishlistCount(parseInt(storedWishlistCount, 10));
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [setWishlistCount]);
+
   const handleButtonClick =
     (callback: (event: React.MouseEvent) => void) =>
       (event: React.MouseEvent) => {
@@ -419,39 +545,6 @@ export default function CartPage() {
         event.stopPropagation();
         callback(event);
       };
-
-  const updateQuantity = async (
-    productId: string,
-    newQty: number,
-    event: React.MouseEvent
-  ) => {
-    if (!user?.id) return;
-
-    setUpdatingItem(productId);
-    try {
-      const response = await updateCartItemQuantity(user.id, productId, newQty);
-      if (response.success && response.cart) {
-        setCart((prevCart) => {
-          if (!prevCart) return prevCart;
-          const updatedProducts = prevCart.products.map((item) =>
-            item.product._id === productId
-              ? { ...item, qty: newQty.toString() }
-              : item
-          );
-          return {
-            ...prevCart,
-            products: updatedProducts,
-            cartTotal: response.cart.cartTotal,
-          };
-        });
-      }
-    } catch (error) {
-      console.error("Error updating quantity:", error);
-      toast.error("Failed to update quantity");
-    } finally {
-      setUpdatingItem(null);
-    }
-  };
 
   const handleDelete = async (productId: string, event: React.MouseEvent) => {
     if (!user?.id) return;
@@ -466,11 +559,20 @@ export default function CartPage() {
           const updatedProducts = prevCart.products.filter(
             (item) => item.product._id !== productId
           );
-          return {
+          const updatedCart = {
             ...prevCart,
             products: updatedProducts,
             cartTotal: response.cart.cartTotal,
           };
+          // Update localStorage to remove deleted items if they are selected
+          const updatedSelectedItems = updatedCart.products.filter((item) =>
+            selectedItems.includes(item.product._id)
+          );
+          localStorage.setItem(
+            "selectedCartItems",
+            JSON.stringify(updatedSelectedItems)
+          );
+          return updatedCart;
         });
       }
     } catch (error) {
@@ -480,6 +582,50 @@ export default function CartPage() {
       setUpdatingItem(null);
     }
   };
+
+  const handleSelect = (productId: string, checked: boolean) => {
+    setSelectedItems((prev) =>
+      checked ? [...prev, productId] : prev.filter((id) => id !== productId)
+    );
+  };
+
+  const handleProceedToCheckout = () => {
+    if (selectedItems.length === 0) {
+      toast.error("Please select at least one order to proceed."); // Use toast for the alert message
+      localStorage.removeItem("selectedCartItems"); // Clear selected items if none are selected
+    } else {
+      const filteredItems = cart?.products?.filter((item) =>
+        selectedItems.includes(item.product._id)
+      ).map((item) => ({
+        ...item,
+        qty: "1" // Set quantity to 1 by default
+      }));
+
+      // Retrieve existing items from localStorage
+      const existingItems = JSON.parse(localStorage.getItem("selectedCartItems") || "[]");
+
+      // Merge new selected items with existing items, incrementing quantity if product ID is the same
+      const updatedItems = [...existingItems];
+      filteredItems?.forEach((newItem) => {
+        const existingItemIndex = updatedItems.findIndex(item => item.product._id === newItem.product._id);
+        if (existingItemIndex !== -1) {
+          updatedItems[existingItemIndex].qty = (parseInt(updatedItems[existingItemIndex].qty) + 1).toString();
+        } else {
+          updatedItems.push(newItem);
+        }
+      });
+
+      localStorage.setItem(
+        "selectedCartItems",
+        JSON.stringify(updatedItems)
+      );
+      setWishlistCount(updatedItems.length); // Update wishlist count
+      openCartDrawer();
+    }
+  };
+  const subtotal = cart?.cartTotal || 0;
+  const tax = subtotal * 0.1; // Assuming a 10% tax rate
+  const totalWithTax = subtotal + tax;
 
   if (loading) {
     return (
@@ -502,31 +648,43 @@ export default function CartPage() {
 
   return (
     <div className="min-h-screen pt-16 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-      <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-8">Shopping Cart</h1>
+      <ToastContainer /> {/* Add ToastContainer here */}
+      <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-8 text-center">
+        Shopping Cart
+      </h1>
       <div className="space-y-4 sm:space-y-6">
         {cart.products.map((item) => (
-          <CartItem
-            key={item.product._id}
-            item={item}
-            onUpdateQuantity={updateQuantity}
-            onDelete={handleDelete}
-            isUpdating={updatingItem === item.product._id}
-          />
+          <Suspense key={item.product._id} fallback={<AiOutlineLoading3Quarters className="h-8 w-8 animate-spin" />}>
+            <CartItem
+              item={item}
+              onDelete={handleDelete}
+              isUpdating={updatingItem === item.product._id}
+              user={user}
+              selectedItems={selectedItems}
+              handleSelect={handleSelect}
+            />
+          </Suspense>
         ))}
-
         <div className="mt-6 sm:mt-8 border-t pt-4 sm:pt-6">
           <div className="flex flex-col items-end gap-2">
             <p className="text-xl sm:text-2xl font-bold">
               Total: ${cart.cartTotal.toFixed(2)}
             </p>
-            {cart.totalAfterDiscount !== undefined && (
+            {/* {cart.totalAfterDiscount !== undefined && (
               <p className="text-lg sm:text-xl text-green-600">
                 Discounted Total: ${cart.totalAfterDiscount.toFixed(2)}
               </p>
-            )}
-            <Link href="/checkout" className="w-full sm:w-auto">
-              <Button size="lg" className="mt-4 w-full sm:w-auto">
-                Proceed to Checkout
+            )} */}
+            <Link
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                handleProceedToCheckout();
+              }}
+              className="w-full sm:w-auto"
+            >
+              <Button size="lg" className="mt-4 w-full font-play px-10 font-bold bg-red-700  sm:w-auto">
+                Proceed to cartDrawer
               </Button>
             </Link>
           </div>
@@ -535,3 +693,11 @@ export default function CartPage() {
     </div>
   );
 }
+
+function setUpdatingItem(arg0: string | null) {
+  throw new Error("Function not implemented.");
+}
+function setCart(arg0: (prevCart: any) => any) {
+  throw new Error("Function not implemented.");
+}
+

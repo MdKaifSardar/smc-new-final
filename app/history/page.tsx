@@ -10,6 +10,8 @@ import Image from "next/image";
 import { useUser } from "@clerk/nextjs";
 import { getUserOrders } from "@/lib/database/actions/order.actions";
 import { getShirtByIdInDetails } from "@/lib/database/actions/admin/ShirtArea/Shirt/shirt.actions";
+import { useRouter } from "next/navigation"; // Change import to next/navigation
+import { Button } from "@/components/ui/button"; // Add this import
 
 import { getMeasurementById } from "@/lib/database/actions/measurement.actions";
 
@@ -170,6 +172,7 @@ const OrderCard = ({ order }: { order: Order }) => {
 
   const [shirtDetails, setShirtDetails] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
+  const router = useRouter(); // Add useRouter hook from next/navigation
 
   useEffect(() => {
     const fetchShirtDetails = async () => {
@@ -201,6 +204,14 @@ const OrderCard = ({ order }: { order: Order }) => {
 
     fetchShirtDetails();
   }, [order.products]);
+
+  const handleEdit = (details: any) => {
+    const url = new URL('/fabric-new', window.location.origin); // Change the URL to /fabric-new
+    url.searchParams.append('fabricName', details.fabricName || '');
+    url.searchParams.append('colorHexCode', details.colorHexCode || '');
+    url.searchParams.append('colorName', details.colorName || '');
+    router.push(url.toString());
+  };
 
   if (loading) {
     return (
@@ -356,6 +367,16 @@ const OrderCard = ({ order }: { order: Order }) => {
                   </div>
                 </div>
               </div>
+              <div className="flex justify-end items-center gap-2 sm:gap-4 pt-2 sm:pt-0">
+                {/* <Button
+                  size="icon"
+                  variant="default"
+                  onClick={() => handleEdit(shirtDetails[item.product._id])}
+                  className="play px-10 font-play"
+                >
+                  Edit
+                </Button> */}
+              </div>
             </div>
           );
         })}
@@ -384,6 +405,13 @@ const OrderCard = ({ order }: { order: Order }) => {
               {order.receipt && <p>Receipt Number: {order.receipt}</p>}
             </div>
           </div>
+        </div>
+        <div className="mt-4 flex justify-end">
+          <Link href="/fabric-new">
+            <button className="px-4 py-2 bg-red-700 text-white rounded hover:bg-red-600 transition-colors">
+              Customize Again
+            </button>
+          </Link>
         </div>
       </CardContent>
     </Card>

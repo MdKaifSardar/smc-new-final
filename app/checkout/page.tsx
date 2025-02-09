@@ -189,13 +189,36 @@ const CheckoutPage = () => {
   const [cartLoading, setCartLoading] = useState<boolean>(true);
   const [cartError, setCartError] = useState<string | null>(null);
 
-  // Add this state at the top of your component
+  // Add state for enriched cart items
   const [enrichedCart, setEnrichedCart] = useState<any>(null);
+
+  // NEW: Load selected orders from localStorage if available
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const selected = localStorage.getItem("selectedCartItems");
+      if (selected) {
+        const products = JSON.parse(selected).map((item: any) => ({
+          ...item,
+          qty: "1" // Ensure quantity is set to 1 by default
+        }));
+        const cartTotal = products.reduce(
+          (sum: number, item: any) => sum + item.price * Number(item.qty),
+          0
+        );
+        setCart({ products, cartTotal });
+        setCartLoading(false);
+        // Optionally remove the selected items if they should be used only once:
+        // localStorage.removeItem("selectedCartItems");
+      }
+    }
+  }, [isLoaded, user]);
 
   // Fetch cart on mount if user available
   useEffect(() => {
     async function fetchCart() {
       if (!isLoaded || !user) return;
+      // Only fetch full cart if no selected items exist
+      if (localStorage.getItem("selectedCartItems")) return;
       try {
         setCartLoading(true);
         const res = await fetch(`/api/cart?clerkId=${user.id}`);
@@ -215,16 +238,14 @@ const CheckoutPage = () => {
     fetchCart();
   }, [isLoaded, user]);
 
-  // Add this useEffect after your existing cart fetching useEffect
+  // After fetching the cart (existing useEffect), add a new useEffect to enrich items:
   useEffect(() => {
     const enrichCartItems = async () => {
       if (!cart?.products) return;
-      
       const enrichedProducts = await Promise.all(
         cart.products.map(async (item: any) => {
           const productId = item?.product?._id?.toString() || item?.product;
           if (!productId) return item;
-          
           try {
             const response = await getShirtByIdInDetails(productId);
             return {
@@ -237,17 +258,65 @@ const CheckoutPage = () => {
           }
         })
       );
-
       setEnrichedCart({
         ...cart,
         products: enrichedProducts
       });
     };
-
-    if (cart) {
-      enrichCartItems();
-    }
+    if (cart) enrichCartItems();
   }, [cart]);
+
+  // NEW: Refresh cart state on window focus to immediately update selected orders
+  useEffect(() => {
+    const handleFocus = () => {
+      if (typeof window !== "undefined") {
+        const selected = localStorage.getItem("selectedCartItems");
+        if (selected) {
+          const products = JSON.parse(selected);
+          const cartTotal = products.reduce(
+            (sum: number, item: any) => sum + item.price * Number(item.qty),
+            0
+          );
+          setCart({ products, cartTotal });
+        }
+      }
+    };
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
+  }, []);
+
+  // Add this useEffect to sync cart changes from localStorage:
+  useEffect(() => {
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === "selectedCartItems") {
+        if (event.newValue) {
+          const products = JSON.parse(event.newValue);
+          const cartTotal = products.reduce(
+            (sum: number, item: any) => sum + item.price * Number(item.qty),
+            0
+          );
+          setCart({ products, cartTotal });
+        }
+      }
+    };
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const selected = localStorage.getItem("selectedCartItems");
+      if (selected) {
+        const products = JSON.parse(selected);
+        const cartTotal = products.reduce(
+          (sum: number, item: any) => sum + item.price * Number(item.qty),
+          0
+        );
+        setCart({ products, cartTotal });
+        setCartLoading(false);
+      }
+    }
+  }, [isLoaded, user]);
 
   if (!isSignedIn) return <div>Sign in to view this page</div>;
 
@@ -324,11 +393,8 @@ const CheckoutPage = () => {
       );
 
       if (orderResponse.success) {
-        // Clear the cart after successful order creation
-        await fetch(`/api/cart?clerkId=${user.id}`, {
-          method: "DELETE",
-        });
-
+        // Instead of clearing the entire cart, remove only temporary selections.
+        localStorage.removeItem("selectedCartItems");
         router.push(`/order/${orderResponse.orderId}`);
       } else {
         console.error(orderResponse.message);
@@ -490,15 +556,7 @@ const CheckoutPage = () => {
                         id="country"
                         placeholder="Country"
                         defaultValue="India"
-                        value={deliveryAddress.country}
-                        required
-                        onChange={(e) =>
-                          setDeliveryAddress({
-                            ...deliveryAddress,
-                            country: e.target.value,
-                          })
-                        }
-                      />
+                        value={deliveryAddress.country} required onChange={(e) => setDeliveryAddress({ ...deliveryAddress, country: e.target.value })} />
                     </div>
                   </div>
                   <div>
@@ -645,14 +703,11 @@ const CheckoutPage = () => {
               ) : cartError ? (
                 <p className="text-red-500">Error: {cartError}</p>
               ) : (
-                <div className="space-y-4">
-                  {cart?.products?.length > 0 ? (
-                    cart.products.map((item: any, index: number) => {
-                      // Safely access product id
-                      const productId =
-                        item?.product?._id?.toString() || item?.product;
+                <div className="space-y-6">
+                  {enrichedCart?.products?.length > 0 ? (
+                    enrichedCart.products.map((item: any, index: number) => {
+                      const productId = item?.product?._id?.toString() || item?.product;
                       if (!productId) return null;
-
                       return (
                         <div key={index} className="border-b pb-6 last:border-b-0">
                           {/* Product Header */}
@@ -665,21 +720,17 @@ const CheckoutPage = () => {
 
                           {/* Shirt Images */}
                           <div className="bg-white p-4 rounded-lg mb-4">
-                            <div className="flex gap-4">
-                              {/* Front View */}
-                              <div className="flex-1">
-                                <h4 className="text-sm font-medium mb-2">Front View</h4>
+                            <div className="flex flex-col md:flex-row gap-4">
+                              <div>
                                 <ShirtCompositeImage details={item.shirt} />
                               </div>
-                              
-                              {/* Back View */}
                               {item.shirt?.backImage && (
-                                <div className="w-[100px]">
-                                  <h4 className="text-sm font-medium mb-2">Back View</h4>
-                                  <div className="relative w-[100px] h-[150px]">
+                                <div className="w-full max-w-[150px]">
+                                  <h4 className="font-medium mb-2">Back View</h4>
+                                  <div className="relative w-full aspect-[3/4]">
                                     <Image
                                       src={item.shirt.backImage}
-                                      alt="Back View"
+                                      alt="Shirt Back"
                                       fill
                                       className="object-contain"
                                     />
@@ -710,7 +761,9 @@ const CheckoutPage = () => {
                                       className="w-4 h-4 rounded-full border"
                                       style={{ backgroundColor: item.shirt.colorHexCode }}
                                     />
-                                    <span className="text-sm">{item.shirt.colorName}</span>
+                                    <span className="text-sm">
+                                      {item.shirt.colorName}
+                                    </span>
                                   </div>
                                 )}
                               </div>
@@ -719,64 +772,61 @@ const CheckoutPage = () => {
 
                           {/* Measurements */}
                           <div className="bg-white p-4 rounded-lg">
-                          <h4 className="text-sm font-medium mb-2">Measurements</h4>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <h5 className="text-xs font-medium mb-1">Shirt Measurements</h5>
-                              <div className="space-y-2 text-xs">
-                                <p>Collar: {item.shirt?.measurementCollar}″</p>
-                                <p>Half Chest: {item.shirt?.measurementHalfChest}″</p>
-                                <p>Half Waist: {item.shirt?.measurementHalfWaist}″</p>
-                                <p>Half Hips: {item.shirt?.measurementHalfHips}″</p>
-                                <p>Sleeve Length: {item.shirt?.measurementSleeveLength}″</p>
-                                <p>Elbow: {item.shirt?.measurementElbow}″</p>
-                                <p>Forearm: {item.shirt?.measurementForearm}″</p>
-                                <p>Cuff: {item.shirt?.measurementCuff}″</p>
+                            <h4 className="text-sm font-medium mb-2">Measurements</h4>
+                            <div className="grid grid-cols-2 gap-4 text-xs">
+                              <div>
+                                <h5 className="font-medium mb-1">Shirt Measurements</h5>
+                                <div className="space-y-2">
+                                  <p>Collar: {item.shirt?.measurementCollar}″</p>
+                                  <p>Half Chest: {item.shirt?.measurementHalfChest}″</p>
+                                  <p>Half Waist: {item.shirt?.measurementHalfWaist}″</p>
+                                  <p>Half Hips: {item.shirt?.measurementHalfHips}″</p>
+                                  <p>Sleeve Length: {item.shirt?.measurementSleeveLength}″</p>
+                                  <p>Elbow: {item.shirt?.measurementElbow}″</p>
+                                  <p>Forearm: {item.shirt?.measurementForearm}″</p>
+                                  <p>Cuff: {item.shirt?.measurementCuff}″</p>
+                                </div>
                               </div>
-                            </div>
-                            <div>
-                              <h5 className="text-xs font-medium mb-1">Body Measurements</h5>
-                              <div className="space-y-2 text-xs">
-                                <p>Neck: {item.shirt?.measurementNeck}″</p>
-                                <p>Chest: {item.shirt?.measurementChest}″</p>
-                                <p>Waist: {item.shirt?.measurementWaist}″</p>
-                                <p>Hips: {item.shirt?.measurementHips}″</p>
-                                <p>Elbow Width: {item.shirt?.measurementElbowWidth}″</p>
-                                <p>Upper Arm: {item.shirt?.measurementUpperArm}″</p>
-                                <p>Shoulder: {item.shirt?.measurementShoulder}″</p>
+                              <div>
+                                <h5 className="font-medium mb-1">Body Measurements</h5>
+                                <div className="space-y-2">
+                                  <p>Neck: {item.shirt?.measurementNeck}″</p>
+                                  <p>Chest: {item.shirt?.measurementChest}″</p>
+                                  <p>Waist: {item.shirt?.measurementWaist}″</p>
+                                  <p>Hips: {item.shirt?.measurementHips}″</p>
+                                  <p>Elbow Width: {item.shirt?.measurementElbowWidth}″</p>
+                                  <p>Upper Arm: {item.shirt?.measurementUpperArm}″</p>
+                                  <p>Shoulder: {item.shirt?.measurementShoulder}″</p>
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
 
                           {/* Quantity */}
                           <div className="mt-4 text-sm text-gray-600">
                             Quantity: {item.qty}
                           </div>
-                          <p className="font-semibold">
-                            ₹
-                            {(
-                              (item.price || 0) * Number(item.qty || 0)
-                            ).toFixed(2)}
-                          </p>
                         </div>
                       );
                     })
                   ) : (
                     <p>No items in your cart.</p>
                   )}
-                  <hr className="border-t border-border" />
-                  <div className="flex justify-between">
-                    <p>Subtotal:</p>
-                    <p>₹{(subtotal || 0).toFixed(2)}</p>
-                  </div>
-                  <div className="flex justify-between">
-                    <p>Discount:</p>
-                    <p>₹{(discount || 0).toFixed(2)}</p>
-                  </div>
-                  <div className="flex justify-between font-bold">
-                    <p>Total:</p>
-                    <p>₹{total.toFixed(2)}</p>
+
+                  {/* Order Totals */}
+                  <div className="space-y-2 pt-4 border-t">
+                    <div className="flex justify-between">
+                      <p>Subtotal:</p>
+                      <p>₹{(subtotal || 0).toFixed(2)}</p>
+                    </div>
+                    <div className="flex justify-between">
+                      <p>Discount:</p>
+                      <p>₹{(discount || 0).toFixed(2)}</p>
+                    </div>
+                    <div className="flex justify-between font-bold">
+                      <p>Total:</p>
+                      <p>₹{(total).toFixed(2)}</p>
+                    </div>
                   </div>
                 </div>
               )}
@@ -787,6 +837,7 @@ const CheckoutPage = () => {
     </div>
   );
 };
+
 
 async function saveAddress(deliveryAddress: any, userId: string) {
   try {

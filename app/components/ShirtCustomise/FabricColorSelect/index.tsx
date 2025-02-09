@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { getAllFabrics } from "@/lib/database/actions/admin/ShirtArea/Fabric/fabric.actions";
 import { getColorByFabric } from "@/lib/database/actions/admin/ShirtArea/Color/color.actions";
+import { FaSpinner } from "react-icons/fa";
 
 interface Color {
   _id: string;
@@ -27,6 +28,7 @@ const FabricsWithColors = () => {
   }>({});
   const [isNextEnabled, setIsNextEnabled] = useState(false);
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchFabrics = async () => {
@@ -47,6 +49,8 @@ const FabricsWithColors = () => {
           }));
         }
       });
+
+      setLoading(false);
     };
 
     fetchFabrics();
@@ -66,7 +70,6 @@ const FabricsWithColors = () => {
     setIsNextEnabled(!!selectedFabric && !!selectedColor);
   }, [selectedFabric, selectedColor]);
 
-  // New effect to set the default fabric and color if none is selected
   useEffect(() => {
     if (!selectedFabric && fabrics.length > 0) {
       const firstFabricId = fabrics[0]._id;
@@ -137,13 +140,12 @@ const FabricsWithColors = () => {
                 <div className="p-4">
                   <h3 className="text-lg font-medium mb-2">Colors</h3>
                   <div className="flex flex-wrap gap-2">
-                    <div className="w-full mb-4">
+                    <div className="w-full mb-4 relative">
                       <img
-                        src={
-                          selectedColorImages[fabric._id] || "defaultImage.jpg"
-                        }
+                        src={selectedColorImages[fabric._id] || "/loading.gif"}
                         alt="Selected Color"
-                        className="w-full max-w-xs rounded-lg shadow-lg"
+                        className="w-full max-w-xs rounded-lg shadow-lg transition-opacity duration-500 ease-in-out"
+                        style={{ opacity: selectedColorImages[fabric._id] ? 1 : 0.5 }}
                       />
                     </div>
                     {colors[fabric._id]?.map((color) => (
