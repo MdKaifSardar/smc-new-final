@@ -323,7 +323,7 @@ const CartDrawer = () => {
                     
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-sm sm:text-base truncate">
-                        Custom Shirt
+                        Custom Shirt (ID: {productId})
                       </h3>
                       
                       {item.shirt && (
