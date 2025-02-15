@@ -49,7 +49,6 @@ const AccountPopUp = () => {
   });
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isSignup, setIsSignup] = useState(true);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [hasShownPopup, setHasShownPopup] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [pendingVerification, setPendingVerification] = useState(false);
@@ -81,18 +80,11 @@ const AccountPopUp = () => {
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
 
   useEffect(() => {
-    let intervalId: NodeJS.Timeout;
-    if (isLoaded && !isSignedIn && !pendingVerification) {
-      // Trigger the pop-up every 20 seconds only if no email verification is pending.
-      intervalId = setInterval(() => {
-        setAccountMenuOpen(true);
-      }, 20000);
+    if (isLoaded && !isSignedIn && !pendingVerification && !hasShownPopup) {
+      setAccountMenuOpen(true);
+      setHasShownPopup(true);
     }
-
-    return () => {
-      clearInterval(intervalId);
-    };
-  }, [isLoaded, isSignedIn, pendingVerification, setAccountMenuOpen]);
+  }, [isLoaded, isSignedIn, pendingVerification, hasShownPopup, setAccountMenuOpen]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
