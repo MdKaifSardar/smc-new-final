@@ -308,7 +308,7 @@ const ShirtCustomizer = () => {
       if (section === "cuffStyle" || section === "cuffLinks") return;
 
       if (data && data[section as keyof ProductData]?.length) {
-        const defaultItem = data[section as keyof ProductData]![0];
+        let defaultItem = data[section as keyof ProductData]![0];
 
         // Skip assigning pocket if the default placket is pleat
         if (section === "pocket") {
@@ -318,6 +318,23 @@ const ShirtCustomizer = () => {
             defaultPlacket.name.toLowerCase().includes("pleat")
           ) {
             return;
+          }
+        }
+
+        if (section === "collarStyle") {
+          const regularCollar = data.collarStyle?.find((item) =>
+            item.name.toLowerCase().includes("regular")
+          );
+  
+          if (regularCollar) {
+            defaultItem = regularCollar;
+  
+            // Assign and set selected items similar to 'sleeves'
+            assignItemToSection("collarStyle", regularCollar);
+            setSelectedItems((prev) => ({
+              ...prev,
+              collarStyle: regularCollar,
+            }));
           }
         }
 
