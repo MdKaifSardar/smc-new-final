@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { useState } from "react";
 import Image from "next/image";
@@ -95,7 +95,8 @@ const DiscountPopup: React.FC = () => {
             </div>
           </form>
           <p className="text-xs text-gray-500 mt-2 text-center">
-            Lorem ipsum dolor sit amet, consectetur adipiscing dolore magna aliqua.
+            Lorem ipsum dolor sit amet, consectetur adipiscing dolore magna
+            aliqua.
             <br />
             <a href="#" className="text-blue-500">
               Disclaimer
@@ -112,7 +113,7 @@ const DiscountPopup: React.FC = () => {
         </div>
         <div className="w-1/3 h-fit hidden md:block">
           <Image
-            src="/popupImage.jfif"
+            src="https://res.cloudinary.com/djndrffon/image/upload/v1739918326/popupImage_cmd44q.jpg"
             alt="Person"
             width={300}
             height={400}
