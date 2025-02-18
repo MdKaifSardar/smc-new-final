@@ -51,30 +51,27 @@ export const createMonogram = async (
   }
 };
 
-// Add this new function
 export const getMonogramById = async (monogramId: string) => {
   try {
-    await connectToDatabase();
+    await connectToDatabase(); // Ensure DB connection
 
-    const monogram = await MonogramUserModel.findById(monogramId);
+    if (!mongoose.Types.ObjectId.isValid(monogramId)) {
+      return { message: "Invalid monogram ID.", success: false };
+    }
+
+    const monogram = await MonogramUserModel.findById(monogramId).lean();
 
     if (!monogram) {
-      return {
-        message: "Monogram not found",
-        success: false,
-      };
+      return { message: "Monogram not found.", success: false };
     }
 
     return {
-      message: "Monogram found successfully",
+      message: "Monogram fetched successfully.",
       success: true,
-      monogram: monogram.toObject(),
+      monogram: JSON.parse(JSON.stringify(monogram)),
     };
   } catch (error: any) {
     console.log(error);
-    return {
-      message: "Error fetching monogram",
-      success: false,
-    };
+    return { message: "Error fetching monogram.", success: false };
   }
 };

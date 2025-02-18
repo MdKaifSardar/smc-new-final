@@ -111,10 +111,10 @@ const FabricsWithColors = () => {
   );
 
   return (
-    <div className="min-h-screen pt-28 font-play">
+    <div className="min-h-screen pt-[2rem] font-play">
       <div className="container mx-auto p-8">
         <div className="flex flex-col items-center justify-center space-y-6">
-          <h2 className="text-4xl font-semibold mb-4 text-[#646464]">
+          <h2 className="text-4xl font-semibold text-[#646464]">
             Fabrics
           </h2>
           <input
@@ -167,7 +167,7 @@ const FabricsWithColors = () => {
 
           <div className="fixed bottom-[1rem] right-[1rem]">
             <button
-              onClick={() => (window.location.href = "/form-new")}
+              onClick={() => (window.location.href = "/gender")}
               className="hover:bg-[#530e0c] bg-[#C40600] mt-10 text-white py-3 px-6 rounded-lg font-medium transition duration-300"
             >
               Next

@@ -1,6 +1,6 @@
 "use server";
 
-import {connectToDatabase} from "@/lib/database/connect";
+import { connectToDatabase } from "@/lib/database/connect";
 import CollarModel from "@/lib/database/models/shirtModel/CollarModel";
 import cloudinary from "cloudinary";
 import mongoose from "mongoose";
@@ -38,7 +38,8 @@ export const createCollar = async (
     price?: number;
   },
   fabricId: string, // Fabric ID as a string
-  colorId: string // Fabric ID as a string
+  colorId: string, // Fabric ID as a string
+  gender: string // Added gender parameter
 ) => {
   try {
     await connectToDatabase();
@@ -126,7 +127,7 @@ export const createCollar = async (
     if (
       collarButton &&
       collarButton.name &&
-      collarButton.name && collarButton.name.trim() !== "" &&
+      collarButton.name.trim() !== "" &&
       (collarButton.price || collarButton.price === 0)
     ) {
       if (collarButton.image) {
@@ -168,7 +169,7 @@ export const createCollar = async (
     // Save the collar with the uploaded images and other data
     const collar = new CollarModel({
       style:
-        style && style.name && style.name.trim() !== "" && style.price !== undefined
+        style?.name?.trim() !== "" && style?.price !== undefined
           ? {
               name: style.name,
               image: style.image
@@ -187,7 +188,7 @@ export const createCollar = async (
             }
           : undefined,
       height:
-        height && height.name && height.name.trim() !== "" && height.price !== undefined
+        height?.name?.trim() !== "" && height?.price !== undefined
           ? {
               name: height.name,
               icon: height.icon
@@ -200,9 +201,7 @@ export const createCollar = async (
             }
           : undefined,
       collar_button:
-        collarButton &&
-        collarButton.name && collarButton.name.trim() !== "" &&
-        collarButton.price !== undefined
+        collarButton?.name?.trim() !== "" && collarButton?.price !== undefined
           ? {
               name: collarButton.name,
               image: collarButton.image
@@ -220,8 +219,9 @@ export const createCollar = async (
               price: collarButton.price,
             }
           : undefined,
-      fabricId: fabricObjectId, // Store the ObjectId for fabricId
-      colorId: colorObjectId, // Store the ObjectId for fabricId
+      fabricId: fabricObjectId,
+      colorId: colorObjectId,
+      gender: gender // New field
     });
 
     await collar.save();
@@ -287,29 +287,14 @@ export const deleteCollar = async (collarId: string) => {
 // Update Collar details (style, height, and collar button)
 export const updateCollar = async (
   collarId: string,
-  newStyle: {
-    name: string;
-    image: string; // Base64 string for style image upload (if updated)
-    icon: string; // Base64 string for style icon upload (if updated)
-    price: number;
-  },
-  newHeight: {
-    name: string;
-    icon: string; // Base64 string for height icon upload (if updated)
-    price: number;
-  },
-  newCollarButton: {
-    name: string;
-    image: string; // Base64 string for button image upload (if updated)
-    icon: string; // Base64 string for button icon upload (if updated)
-    price: number;
-  }
+  newStyle: { name: string; image: string; icon: string; price: number; },
+  newHeight: { name: string; icon: string; price: number; },
+  newCollarButton: { name: string; image: string; icon: string; price: number; }
 ) => {
   try {
     await connectToDatabase();
 
     const collar = await CollarModel.findById(collarId);
-
     if (!collar) {
       return {
         message: "Collar not found with this Id!",
@@ -317,92 +302,67 @@ export const updateCollar = async (
       };
     }
 
-    // Update Style
-    if (newStyle.name) {
+    // Update Style only if new values are not 0, "" or undefined
+    if (newStyle.name !== undefined && newStyle.name.trim() !== "") {
       collar.style.name = newStyle.name;
     }
-
-    if (newStyle.price !== undefined) {
+    if (newStyle.price !== undefined && newStyle.price !== 0) {
       collar.style.price = newStyle.price;
     }
+    if (newStyle.image !== undefined && newStyle.image.trim() !== "") {
+      // Upload new style image to Cloudinary
+      const styleImageBuffer = base64ToBuffer(newStyle.image);
+      const styleImageFormData = new FormData();
+      styleImageFormData.append("file", new Blob([styleImageBuffer], { type: "image/jpeg" }));
+      styleImageFormData.append("upload_preset", "collar_style_images");
 
-    if (newStyle.image || newStyle.icon) {
-      // Upload new style image and icon to Cloudinary if updated
-      if (newStyle.image) {
-        const styleImageBuffer = base64ToBuffer(newStyle.image);
-        const styleImageFormData = new FormData();
-        styleImageFormData.append(
-          "file",
-          new Blob([styleImageBuffer], { type: "image/jpeg" })
-        );
-        styleImageFormData.append("upload_preset", "collar_style_images");
+      const styleImageResponse = await fetch(
+        `https://api.cloudinary.com/v1_1/${process.env.CLOUDINARY_NAME}/image/upload`,
+        { method: "POST", body: styleImageFormData }
+      );
+      const uploadedStyleImage = await styleImageResponse.json();
+      collar.style.image = {
+        url: uploadedStyleImage.secure_url,
+        public_id: uploadedStyleImage.public_id,
+      };
+    }
+    
+    if (newStyle.icon !== undefined && newStyle.icon.trim() !== "") {
+      // Upload new style icon to Cloudinary
+      const styleIconBuffer = base64ToBuffer(newStyle.icon);
+      const styleIconFormData = new FormData();
+      styleIconFormData.append("file", new Blob([styleIconBuffer], { type: "image/jpeg" }));
+      styleIconFormData.append("upload_preset", "collar_style_icons");
 
-        const styleImageResponse = await fetch(
-          `https://api.cloudinary.com/v1_1/${process.env.CLOUDINARY_NAME}/image/upload`,
-          {
-            method: "POST",
-            body: styleImageFormData,
-          }
-        );
-
-        const uploadedStyleImage = await styleImageResponse.json();
-        collar.style.image = {
-          url: uploadedStyleImage.secure_url,
-          public_id: uploadedStyleImage.public_id,
-        };
-      }
-
-      if (newStyle.icon) {
-        const styleIconBuffer = base64ToBuffer(newStyle.icon);
-        const styleIconFormData = new FormData();
-        styleIconFormData.append(
-          "file",
-          new Blob([styleIconBuffer], { type: "image/jpeg" })
-        );
-        styleIconFormData.append("upload_preset", "collar_style_icons");
-
-        const styleIconResponse = await fetch(
-          `https://api.cloudinary.com/v1_1/${process.env.CLOUDINARY_NAME}/image/upload`,
-          {
-            method: "POST",
-            body: styleIconFormData,
-          }
-        );
-
-        const uploadedStyleIcon = await styleIconResponse.json();
-        collar.style.icon = {
-          url: uploadedStyleIcon.secure_url,
-          public_id: uploadedStyleIcon.public_id,
-        };
-      }
+      const styleIconResponse = await fetch(
+        `https://api.cloudinary.com/v1_1/${process.env.CLOUDINARY_NAME}/image/upload`,
+        { method: "POST", body: styleIconFormData }
+      );
+      const uploadedStyleIcon = await styleIconResponse.json();
+      collar.style.icon = {
+        url: uploadedStyleIcon.secure_url,
+        public_id: uploadedStyleIcon.public_id,
+      };
     }
 
-    // Update Height
-    if (newHeight.name) {
+    // Update Height only if new values are valid
+    if (newHeight.name !== undefined && newHeight.name.trim() !== "") {
       collar.height.name = newHeight.name;
     }
-
-    if (newHeight.price !== undefined) {
+    if (newHeight.price !== undefined && newHeight.price !== 0) {
       collar.height.price = newHeight.price;
     }
-
-    if (newHeight.icon) {
+    if (newHeight.icon !== undefined && newHeight.icon.trim() !== "") {
+      // Upload new height icon to Cloudinary
       const heightIconBuffer = base64ToBuffer(newHeight.icon);
       const heightIconFormData = new FormData();
-      heightIconFormData.append(
-        "file",
-        new Blob([heightIconBuffer], { type: "image/jpeg" })
-      );
+      heightIconFormData.append("file", new Blob([heightIconBuffer], { type: "image/jpeg" }));
       heightIconFormData.append("upload_preset", "collar_height_icons");
 
       const heightIconResponse = await fetch(
         `https://api.cloudinary.com/v1_1/${process.env.CLOUDINARY_NAME}/image/upload`,
-        {
-          method: "POST",
-          body: heightIconFormData,
-        }
+        { method: "POST", body: heightIconFormData }
       );
-
       const uploadedHeightIcon = await heightIconResponse.json();
       collar.height.icon = {
         url: uploadedHeightIcon.secure_url,
@@ -410,67 +370,46 @@ export const updateCollar = async (
       };
     }
 
-    // Update Collar Button
-    if (newCollarButton.name) {
+    // Update Collar Button only if valid values are provided
+    if (newCollarButton.name !== undefined && newCollarButton.name.trim() !== "") {
       collar.collar_button.name = newCollarButton.name;
     }
-
-    if (newCollarButton.price !== undefined) {
+    if (newCollarButton.price !== undefined && newCollarButton.price !== 0) {
       collar.collar_button.price = newCollarButton.price;
     }
+    if (newCollarButton.image !== undefined && newCollarButton.image.trim() !== "") {
+      // Upload new collar button image to Cloudinary
+      const collarButtonImageBuffer = base64ToBuffer(newCollarButton.image);
+      const collarButtonImageFormData = new FormData();
+      collarButtonImageFormData.append("file", new Blob([collarButtonImageBuffer], { type: "image/jpeg" }));
+      collarButtonImageFormData.append("upload_preset", "collar_button_images");
 
-    if (newCollarButton.image || newCollarButton.icon) {
-      if (newCollarButton.image) {
-        const collarButtonImageBuffer = base64ToBuffer(newCollarButton.image);
-        const collarButtonImageFormData = new FormData();
-        collarButtonImageFormData.append(
-          "file",
-          new Blob([collarButtonImageBuffer], { type: "image/jpeg" })
-        );
-        collarButtonImageFormData.append(
-          "upload_preset",
-          "collar_button_images"
-        );
+      const collarButtonImageResponse = await fetch(
+        `https://api.cloudinary.com/v1_1/${process.env.CLOUDINARY_NAME}/image/upload`,
+        { method: "POST", body: collarButtonImageFormData }
+      );
+      const uploadedCollarButtonImage = await collarButtonImageResponse.json();
+      collar.collar_button.image = {
+        url: uploadedCollarButtonImage.secure_url,
+        public_id: uploadedCollarButtonImage.public_id,
+      };
+    }
+    if (newCollarButton.icon !== undefined && newCollarButton.icon.trim() !== "") {
+      // Upload new collar button icon to Cloudinary
+      const collarButtonIconBuffer = base64ToBuffer(newCollarButton.icon);
+      const collarButtonIconFormData = new FormData();
+      collarButtonIconFormData.append("file", new Blob([collarButtonIconBuffer], { type: "image/jpeg" }));
+      collarButtonIconFormData.append("upload_preset", "collar_button_icons");
 
-        const collarButtonImageResponse = await fetch(
-          `https://api.cloudinary.com/v1_1/${process.env.CLOUDINARY_NAME}/image/upload`,
-          {
-            method: "POST",
-            body: collarButtonImageFormData,
-          }
-        );
-
-        const uploadedCollarButtonImage =
-          await collarButtonImageResponse.json();
-        collar.collar_button.image = {
-          url: uploadedCollarButtonImage.secure_url,
-          public_id: uploadedCollarButtonImage.public_id,
-        };
-      }
-
-      if (newCollarButton.icon) {
-        const collarButtonIconBuffer = base64ToBuffer(newCollarButton.icon);
-        const collarButtonIconFormData = new FormData();
-        collarButtonIconFormData.append(
-          "file",
-          new Blob([collarButtonIconBuffer], { type: "image/jpeg" })
-        );
-        collarButtonIconFormData.append("upload_preset", "collar_button_icons");
-
-        const collarButtonIconResponse = await fetch(
-          `https://api.cloudinary.com/v1_1/${process.env.CLOUDINARY_NAME}/image/upload`,
-          {
-            method: "POST",
-            body: collarButtonIconFormData,
-          }
-        );
-
-        const uploadedCollarButtonIcon = await collarButtonIconResponse.json();
-        collar.collar_button.icon = {
-          url: uploadedCollarButtonIcon.secure_url,
-          public_id: uploadedCollarButtonIcon.public_id,
-        };
-      }
+      const collarButtonIconResponse = await fetch(
+        `https://api.cloudinary.com/v1_1/${process.env.CLOUDINARY_NAME}/image/upload`,
+        { method: "POST", body: collarButtonIconFormData }
+      );
+      const uploadedCollarButtonIcon = await collarButtonIconResponse.json();
+      collar.collar_button.icon = {
+        url: uploadedCollarButtonIcon.secure_url,
+        public_id: uploadedCollarButtonIcon.public_id,
+      };
     }
 
     await collar.save();
@@ -503,14 +442,22 @@ export const getAllCollars = async () => {
   }
 };
 
-export const getCollarsByColorAndFabric = async (fabricId: string, colorId: string) => {
+export const getCollarsByColorAndFabric = async (
+  fabricId: string,
+  colorId: string,
+  gender: string
+) => {
   try {
     await connectToDatabase();
 
     const fabricObjectId = new mongoose.Types.ObjectId(fabricId); // Convert fabricId to ObjectId
     const colorObjectId = new mongoose.Types.ObjectId(colorId); // Convert fabricId to ObjectId
 
-    const collars = await CollarModel.find({ fabricId: fabricObjectId, colorId: colorObjectId })
+    const collars = await CollarModel.find({
+      fabricId: fabricObjectId,
+      colorId: colorObjectId,
+      gender: gender
+    })
       .sort({ updatedAt: -1 }) // Sorting by latest updated
       .lean();
 

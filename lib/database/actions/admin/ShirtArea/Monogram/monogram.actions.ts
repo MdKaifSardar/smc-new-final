@@ -124,24 +124,26 @@ export const createMonogram = async (
 
 export const getMonogramsByColorAndFabric = async (
   fabricId: string,
-  colorId: string
+  colorId: string,
+  gender: string
 ) => {
   try {
     await connectToDatabase();
 
-    const fabricObjectId = new mongoose.Types.ObjectId(fabricId); // Convert string to ObjectId
-    const colorObjectId = new mongoose.Types.ObjectId(colorId); // Convert string to ObjectId
+    const fabricObjectId = new mongoose.Types.ObjectId(fabricId);
+    const colorObjectId = new mongoose.Types.ObjectId(colorId);
 
     const Monograms = await MonogramModel.find({
       fabricId: fabricObjectId,
       colorId: colorObjectId,
-    }) // Correct field name
-      .sort({ updatedAt: -1 }) // Sorting by latest updated
+      gender: gender,
+    })
+      .sort({ updatedAt: -1 })
       .lean();
 
     return JSON.parse(JSON.stringify(Monograms));
   } catch (error: any) {
-    console.log(error);
+    console.error("Error fetching monograms:", error);
     return [];
   }
 };

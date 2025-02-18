@@ -1,6 +1,6 @@
 "use server";
 
-import {connectToDatabase} from "@/lib/database/connect";
+import { connectToDatabase } from "@/lib/database/connect";
 import PlacketModel from "@/lib/database/models/shirtModel/PlacketModel";
 import cloudinary from "cloudinary";
 import mongoose from "mongoose";
@@ -25,7 +25,8 @@ export const createPlacket = async (
   price: number,
   icon: string,
   fabricId: string, // Fabric ID
-  colorId: string // Fabric ID
+  colorId: string, // Fabric ID
+  gender: string // Added gender parameter
 ) => {
   try {
     await connectToDatabase();
@@ -80,6 +81,7 @@ export const createPlacket = async (
       },
       fabricId: fabricObjectId, // Store fabric ID
       colorId: colorObjectId, // Store fabric ID
+      gender: gender // New field
     }).save();
 
     return {
@@ -223,14 +225,18 @@ export const updatePlacket = async (
   }
 };
 
-export const getPlacketsByColorAndFabric = async (fabricId: string, colorId: string) => {
+export const getPlacketsByColorAndFabric = async (fabricId: string, colorId: string, gender: string) => {
   try {
     await connectToDatabase();
 
     const fabricObjectId = new mongoose.Types.ObjectId(fabricId);
     const colorObjectId = new mongoose.Types.ObjectId(colorId);
 
-    const plackets = await PlacketModel.find({ fabricId: fabricObjectId, colorId: colorObjectId })
+    const plackets = await PlacketModel.find({ 
+      fabricId: fabricObjectId, 
+      colorId: colorObjectId,
+      gender: gender 
+    })
       .sort({ updatedAt: -1 }) // Sorting by latest updated
       .lean();
 

@@ -35,6 +35,7 @@ export interface Collar extends Document {
   };
   fabricId: mongoose.Types.ObjectId;
   colorId: mongoose.Types.ObjectId;
+  gender: string;
 }
 
 export const CollarSchema = new Schema<Collar>({
@@ -82,16 +83,17 @@ export const CollarSchema = new Schema<Collar>({
     required: false,
     default: undefined,
   },
+  gender: { type: String, required: true },
   fabricId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Fabric",
     required: true,
-  }, // Updated field name
+  },
   colorId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Color",
     required: true,
-  }, // Updated field name
+  },
 });
 
 const CollarModel =

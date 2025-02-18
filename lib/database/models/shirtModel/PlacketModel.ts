@@ -13,6 +13,7 @@ export interface Placket extends Document {
   };
   fabricId: mongoose.Types.ObjectId;
   colorId: mongoose.Types.ObjectId;
+  gender: string;
 }
 
 export const PlacketSchema = new Schema<Placket>({
@@ -26,16 +27,17 @@ export const PlacketSchema = new Schema<Placket>({
     url: { type: String, required: true },
     public_id: { type: String, required: true },
   },
+  gender: { type: String, required: true },
   fabricId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Fabric",
     required: true,
-  }, // Updated field name
+  },
   colorId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Color",
     required: true,
-  }, // Updated field name
+  },
 });
 
 const PlacketModel =

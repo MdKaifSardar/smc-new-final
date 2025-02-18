@@ -160,16 +160,20 @@ export const updateFabric = async (
 
       const response = await fetch(
         `https://api.cloudinary.com/v1_1/${process.env.CLOUDINARY_NAME}/image/upload`,
-        {
-          method: "POST",
-          body: formData,
-        }
+        { method: "POST", body: formData }
       );
 
       const uploadedImage = await response.json();
+      // Check for valid Cloudinary response
+      if (!uploadedImage.secure_url || !uploadedImage.public_id) {
+        return {
+          message: `Error uploading new image: ${JSON.stringify(uploadedImage)}`,
+          success: false,
+        };
+      }
       fabric.image = {
-        url: uploadedImage.secure_url, // Update the image URL
-        public_id: uploadedImage.public_id, // Update the public_id
+        url: uploadedImage.secure_url,
+        public_id: uploadedImage.public_id,
       };
     }
 

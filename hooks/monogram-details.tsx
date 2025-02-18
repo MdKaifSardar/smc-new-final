@@ -42,34 +42,23 @@ const useMonogramData = () => {
     const fetchData = async () => {
       const fabricId = localStorage.getItem("fabricId");
       const colorId = localStorage.getItem("colorId");
+      const gender = localStorage.getItem("gender"); // New: fetch gender from localStorage
 
-      if (fabricId && colorId) {
+      if (fabricId && colorId && gender) { // Check for gender as well
         setLoading(true);
         try {
           const monograms = await getMonogramsByColorAndFabric(
             fabricId,
-            colorId
+            colorId,
+            gender
           );
 
-          // const monogramStyle = monograms?.map(
-          //   (monogram: Monogram) => monogram.style
-          // );
-          // const collarHeight = collar
-          // ?.filter((collar: Collar) => collar.height?.name)
-          // .map((collar: Collar) => ({
-          //   ...collar.height,
-          //   _id: collar._id,
-          // }));
           const monogramStyle = monograms
             ?.filter((monogram: Monogram) => monogram.style)
             .map((monogram: Monogram) => ({
               ...monogram.style,
               _id: monogram._id,
             }));
-
-          // const monogramPosition = monograms?.map(
-          //   (monogram: Monogram) => monogram.position
-          // );
 
           const monogramPosition = monograms
             ?.filter((monogram: Monogram) => monogram.position)

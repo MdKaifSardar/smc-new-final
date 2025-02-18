@@ -13,6 +13,7 @@ export interface Fit extends Document {
   price: number;
   fabricId: mongoose.Types.ObjectId;
   colorId: mongoose.Types.ObjectId;
+  gender: string;
 }
 
 export const FitSchema = new Schema<Fit>({
@@ -30,12 +31,13 @@ export const FitSchema = new Schema<Fit>({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Fabric",
     required: true,
-  }, // Updated field name
+  },
   colorId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Color",
     required: true,
-  }, // Updated field name
+  },
+  gender: { type: String, required: true },
 });
 
 const FitModel = mongoose.models.Fit || mongoose.model<Fit>("Fit", FitSchema);

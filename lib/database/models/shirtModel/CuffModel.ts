@@ -27,6 +27,7 @@ export interface Cuff extends Document {
   };
   fabricId: mongoose.Types.ObjectId;
   colorId: mongoose.Types.ObjectId;
+  gender: string;
 }
 
 export const CuffSchema = new Schema<Cuff>({
@@ -71,7 +72,8 @@ export const CuffSchema = new Schema<Cuff>({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Color",
     required: true,
-  }, // Updated field name
+  },
+  gender: { type: String, required: true },
 });
 
 const CuffModel =

@@ -127,20 +127,21 @@ const useProductData = () => {
     const fetchData = async () => {
       const fabricId = localStorage.getItem("fabricId");
       const colorId = localStorage.getItem("colorId");
+      const gender = localStorage.getItem("gender");
 
-      if (fabricId && colorId) {
+      if (fabricId && colorId && gender) {
         setLoading(true);
         try {
           const [back, bottom, collar, cuff, fit, placket, pocket, sleeves] =
             await Promise.all([
-              getBacksByColorAndFabric(fabricId, colorId),
-              getBottomsByColorAndFabric(fabricId, colorId),
-              getCollarsByColorAndFabric(fabricId, colorId),
-              getCuffsByColorAndFabric(fabricId, colorId),
-              getFitsByColorAndFabric(fabricId, colorId),
-              getPlacketsByColorAndFabric(fabricId, colorId),
-              getPocketsByColorAndFabric(fabricId, colorId),
-              getSleevesByColorAndFabric(fabricId, colorId),
+              getBacksByColorAndFabric(fabricId, colorId, gender),
+              getBottomsByColorAndFabric(fabricId, colorId, gender),
+              getCollarsByColorAndFabric(fabricId, colorId, gender),
+              getCuffsByColorAndFabric(fabricId, colorId, gender),
+              getFitsByColorAndFabric(fabricId, colorId, gender),
+              getPlacketsByColorAndFabric(fabricId, colorId, gender),
+              getPocketsByColorAndFabric(fabricId, colorId, gender),
+              getSleevesByColorAndFabric(fabricId, colorId, gender),
             ]);
 
           // Extracting different categories for Collar and Cuff

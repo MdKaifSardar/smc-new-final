@@ -1,6 +1,6 @@
 "use server";
 
-import {connectToDatabase} from "@/lib/database/connect";
+import { connectToDatabase } from "@/lib/database/connect";
 import PocketModel from "@/lib/database/models/shirtModel/PocketModel";
 import cloudinary from "cloudinary";
 import mongoose from "mongoose";
@@ -25,7 +25,8 @@ export const createPocket = async (
   price: number,
   icon: string,
   fabricId: string, // Fabric ID
-  colorId: string // Fabric ID
+  colorId: string, // Fabric ID
+  gender: string // Added gender parameter
 ) => {
   try {
     await connectToDatabase();
@@ -80,6 +81,7 @@ export const createPocket = async (
       },
       fabricId: fabricObjectId, // Store fabric ID
       colorId: colorObjectId, // Store fabric ID
+      gender: gender // New field
     }).save();
 
     return {
@@ -223,14 +225,18 @@ export const updatePocket = async (
   }
 };
 
-export const getPocketsByColorAndFabric = async (fabricId: string, colorId: string) => {
+export const getPocketsByColorAndFabric = async (fabricId: string, colorId: string, gender: string) => {
   try {
     await connectToDatabase();
 
     const fabricObjectId = new mongoose.Types.ObjectId(fabricId);
     const colorObjectId = new mongoose.Types.ObjectId(colorId);
 
-    const pockets = await PocketModel.find({ fabricId: fabricObjectId, colorId: colorObjectId })
+    const pockets = await PocketModel.find({ 
+      fabricId: fabricObjectId, 
+      colorId: colorObjectId,
+      gender: gender 
+    })
       .sort({ updatedAt: -1 }) // Sorting by latest updated
       .lean();
 

@@ -79,13 +79,6 @@ const AccountPopUp = () => {
   const { signOut } = useClerk();
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
 
-  useEffect(() => {
-    if (isLoaded && !isSignedIn && !pendingVerification && !hasShownPopup) {
-      setAccountMenuOpen(true);
-      setHasShownPopup(true);
-    }
-  }, [isLoaded, isSignedIn, pendingVerification, hasShownPopup, setAccountMenuOpen]);
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({

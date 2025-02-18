@@ -35,7 +35,7 @@ export default function RootLayout({
       <body
         className={`${play.variable} antialiased`} 
       >
-        <AccountPopUp/>
+        {/* <AccountPopUp/> */}
         <Navbar />
         {children}
         <Toaster/>

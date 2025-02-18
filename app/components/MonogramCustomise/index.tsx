@@ -398,7 +398,7 @@ const MonogramCustomizer = () => {
           </div>
         </div>
       )}
-      <div className="p-4 mt-0 md:mt-[2rem] w-full md:w-[40%] xl:w-[30%] bg-white h-full flex flex-col justify-start items-center shadow-lg rounded-xl">
+      <div className="p-4 mt-0 md:mt-[4rem] w-full md:w-[40%] xl:w-[30%] bg-white h-full flex flex-col justify-start items-center shadow-lg rounded-xl">
         <h2 className="text-2xl font-bold text-gray-800 mb-4">
           Monogram Customizer
         </h2>

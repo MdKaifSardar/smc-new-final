@@ -14,25 +14,33 @@ export interface Monogram extends Document {
   };
   fabricId: mongoose.Types.ObjectId;
   colorId: mongoose.Types.ObjectId;
+  gender: string;
 }
 
 export const MonogramSchema = new Schema<Monogram>({
   style: {
-    name: { type: String, required: true },
-    image: {
-      url: { type: String, required: true },
-      public_id: { type: String, required: true },
+    type:{
+      name: { type: String, required: true },
+      image: {
+        url: { type: String, required: true },
+        public_id: { type: String, required: true },
+      },
+      price: { type: Number, required: true },
     },
-    price: { type: Number, required: true },
+    required: false,
   },
   position: {
-    name: { type: String, required: true },
-    image: {
-      url: { type: String, required: true },
-      public_id: { type: String, required: true },
+    type: {
+      name: { type: String, required: true },
+      image: {
+        url: { type: String, required: true },
+        public_id: { type: String, required: true },
+      },
+      price: { type: Number, required: true },
     },
-    price: { type: Number, required: true },
+    required: false,
   },
+  gender: { type: String, required: true },
   fabricId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Fabric",

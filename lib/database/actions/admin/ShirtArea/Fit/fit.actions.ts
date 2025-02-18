@@ -1,6 +1,6 @@
 "use server";
 
-import {connectToDatabase} from "@/lib/database/connect";
+import { connectToDatabase } from "@/lib/database/connect";
 import FitModel from "@/lib/database/models/shirtModel/FitModel";
 import cloudinary from "cloudinary";
 import mongoose from "mongoose";
@@ -25,7 +25,8 @@ export const createFit = async (
   icon: string, // Base64 string for icon upload
   price: number,
   fabricId: string, // Fabric ID
-  colorId: string // Fabric ID
+  colorId: string, // Fabric ID
+  gender: string // Added gender parameter
 ) => {
   try {
     await connectToDatabase();
@@ -39,13 +40,13 @@ export const createFit = async (
     }
 
     // Check if fit already exists
-    const existingFit = await FitModel.findOne({ name: fitName });
-    if (existingFit) {
-      return {
-        message: "Fit with this name already exists.",
-        success: false,
-      };
-    }
+    // const existingFit = await FitModel.findOne({ name: fitName });
+    // if (existingFit) {
+    //   return {
+    //     message: "Fit with this name already exists.",
+    //     success: false,
+    //   };
+    // }
 
     // Upload image to Cloudinary
     const imageBuffer = base64ToBuffer(image);
@@ -96,6 +97,7 @@ export const createFit = async (
       price,
       fabricId: fabricObjectId, // Store fabric ID
       colorId: colorObjectId, // Store fabric ID
+      gender: gender // New field
     }).save();
 
     return {
@@ -269,14 +271,18 @@ export const deleteFit = async (fitId: string) => {
   }
 };
 
-export const getFitsByColorAndFabric = async (fabricId: string, colorId: string) => {
+export const getFitsByColorAndFabric = async (fabricId: string, colorId: string, gender: string) => {
   try {
     await connectToDatabase();
 
     const fabricObjectId = new mongoose.Types.ObjectId(fabricId); // Convert string to ObjectId
     const colorObjectId = new mongoose.Types.ObjectId(colorId); // Convert string to ObjectId
 
-    const fits = await FitModel.find({ fabricId: fabricObjectId, colorId: colorObjectId }) // Correct field name
+    const fits = await FitModel.find({
+      fabricId: fabricObjectId,
+      colorId: colorObjectId,
+      gender: gender // Filter by gender as well
+    })
       .sort({ updatedAt: -1 }) // Sorting by latest updated
       .lean();
 
@@ -286,3 +292,5 @@ export const getFitsByColorAndFabric = async (fabricId: string, colorId: string)
     return [];
   }
 };
+
+

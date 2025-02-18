@@ -1,35 +1,51 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema, Document, Model } from "mongoose";
 
-export interface Measurements extends Document {
-  unit: string;
+// Define an interface for Measurement
+export interface IMeasurement extends Document {
+  collar: number;
+  halfChest: number;
+  halfWaist: number;
+  halfHips: number;
+  sleevesLength: number;
+  elbow: number;
+  forearm: number;
+  cuff: number;
   neck: number;
   chest: number;
   waist: number;
   hips: number;
+  elbowWidth: number;
+  upperArm: number;
   shoulder: number;
-  sleeve_length: number;
-  elbow_width: number;
-  forearm_width: number;
-  wrist_cuff: number;
-  bicep: number;
-  shirt_length: number;
-  armhole: number;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
-export const MeasurementsSchema = new Schema<Measurements>({
-  unit: { type: String },
-  neck: { type: Number },
-  chest: { type: Number },
-  waist: { type: Number },
-  hips: { type: Number },
-  shoulder: { type: Number },
-  sleeve_length: { type: Number },
-  elbow_width: { type: Number },
-  forearm_width: { type: Number },
-  wrist_cuff: { type: Number },
-  bicep: { type: Number },
-  shirt_length: { type: Number },
-  armhole: { type: Number },
-});
+// Define Mongoose Schema
+const MeasurementSchema: Schema = new Schema(
+  {
+    collar: { type: Number, required: true },
+    halfChest: { type: Number, required: true },
+    halfWaist: { type: Number, required: true },
+    halfHips: { type: Number, required: true },
+    sleevesLength: { type: Number, required: true },
+    elbow: { type: Number, required: true },
+    forearm: { type: Number, required: true },
+    cuff: { type: Number, required: true },
+    neck: { type: Number, required: true },
+    chest: { type: Number, required: true },
+    waist: { type: Number, required: true },
+    hips: { type: Number, required: true },
+    elbowWidth: { type: Number, required: true },
+    upperArm: { type: Number, required: true },
+    shoulder: { type: Number, required: false },
+  },
+  { timestamps: true }
+);
 
-export default MeasurementsSchema;
+// Define the Mongoose Model
+const MeasurementModel: Model<IMeasurement> =
+  mongoose.models.Measurement ||
+  mongoose.model<IMeasurement>("Measurement", MeasurementSchema);
+
+export default MeasurementModel;

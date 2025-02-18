@@ -16,7 +16,7 @@ const page = () => {
   };
 
   return (
-    <div className="flex flex-col justify-center items-center pb-4 sm:pb-0 font-play w-full h-fit">
+    <div className="mt-[2rem] flex flex-col justify-center items-center pb-4 sm:pb-0 font-play w-full h-fit">
       <button onClick={handleReload} className="mb-4 p-2 bg-blue-500 text-white rounded">
         Reload
       </button>

@@ -13,6 +13,7 @@ export interface Back extends Document {
   price: number;
   fabricId: mongoose.Types.ObjectId; // Reference to the Fabric model
   colorId: mongoose.Types.ObjectId; // Reference to the Fabric model
+  gender: string;
 }
 
 export const BackSchema = new Schema<Back>({
@@ -26,16 +27,17 @@ export const BackSchema = new Schema<Back>({
     public_id: { type: String, required: true },
   },
   price: { type: Number, required: true },
+  gender: { type: String, required: true },
   fabricId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Fabric",
     required: true,
-  }, // Updated field name
+  },
   colorId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Color",
     required: true,
-  }, // Updated field name
+  },
 });
 
 const BackModel =

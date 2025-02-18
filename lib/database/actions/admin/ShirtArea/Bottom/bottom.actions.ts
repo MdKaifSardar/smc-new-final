@@ -1,6 +1,6 @@
 "use server";
 
-import {connectToDatabase} from "@/lib/database/connect";
+import { connectToDatabase } from "@/lib/database/connect";
 import BottomModel from "@/lib/database/models/shirtModel/BottomModel";
 import cloudinary from "cloudinary";
 import mongoose from "mongoose";
@@ -24,7 +24,8 @@ export const createBottom = async (
   icon: string, // Base64 string for icon upload
   price: number,
   fabricId: string, // Fabric ID as a string
-  colorId: string // Fabric ID as a string
+  colorId: string, // Fabric ID as a string
+  gender: string // Added gender parameter
 ) => {
   try {
     await connectToDatabase();
@@ -45,13 +46,13 @@ export const createBottom = async (
     }
 
     // Check if bottom entry already exists
-    const existingBottom = await BottomModel.findOne({ name });
-    if (existingBottom) {
-      return {
-        message: "Bottom with this name already exists.",
-        success: false,
-      };
-    }
+    // const existingBottom = await BottomModel.findOne({ name });
+    // if (existingBottom) {
+    //   return {
+    //     message: "Bottom with this name already exists.",
+    //     success: false,
+    //   };
+    // }
 
     // Upload image to Cloudinary
     const imageBuffer = base64ToBuffer(image);
@@ -91,7 +92,7 @@ export const createBottom = async (
     const fabricObjectId = new mongoose.Types.ObjectId(fabricId);
     const colorObjectId = new mongoose.Types.ObjectId(colorId);
 
-    // Create a new bottom entry in the database
+    // Create a new bottom entry in the database with gender field added
     await new BottomModel({
       name,
       image: {
@@ -105,6 +106,7 @@ export const createBottom = async (
       price,
       fabricId: fabricObjectId, // Store the ObjectId for fabricId
       colorId: colorObjectId, // Store the ObjectId for fabricId
+      gender: gender // New field
     }).save();
 
     return {
@@ -266,10 +268,7 @@ export const getAllBottoms = async () => {
     return [];
   }
 };
-export const getBottomsByColorAndFabric = async (
-  fabricId: string,
-  colorId: string
-) => {
+export const getBottomsByColorAndFabric = async (fabricId: string, colorId: string, gender: string) => {
   try {
     await connectToDatabase();
 
@@ -279,6 +278,7 @@ export const getBottomsByColorAndFabric = async (
     const bottoms = await BottomModel.find({
       fabricId: fabObjectId,
       colorId: colObjectId,
+      gender: gender
     })
       .sort({ updatedAt: -1 }) // Sorting by latest updated
       .lean();
