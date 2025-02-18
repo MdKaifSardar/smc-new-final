@@ -33,7 +33,7 @@ const DiscountPopup: React.FC = () => {
           ✕
         </button>
         <div className="w-full md:w-2/3 p-6">
-          <h2 className="text-4xl font-bold">25% OFF</h2>
+          <h2 className="text-4xl md:text-6xl font-bold">25% OFF</h2>
           <form onSubmit={handleSubmit} className="mt-4 space-y-2">
             <div className="flex space-x-2">
               <select
