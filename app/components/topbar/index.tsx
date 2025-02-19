@@ -41,14 +41,14 @@ export default function Topbar() {
   if (!topbar) return null;
 
   return (
-    <div className="mt-[8rem] bg-blue-100 py-2">
+    <div className="mt-[8rem] text-white font-play bg-black py-2">
       {topbar.type === "marquee" ? (
         <div className="overflow-hidden whitespace-nowrap relative">
           <motion.div
-            className="inline-block px-10 text-lg font-medium"
+            className="inline-block px-10 text-xl font-bold"
             initial={{ x: "100%" }}
             animate={{ x: "-100%" }}
-            transition={{ repeat: Infinity, duration: 10, ease: "linear" }}
+            transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
           >
             {topbar.text}
           </motion.div>

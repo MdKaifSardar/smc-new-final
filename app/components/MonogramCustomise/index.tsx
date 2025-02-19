@@ -336,7 +336,7 @@ const MonogramCustomizer = () => {
         <div className="text-xl font-bold">Total: ${totalPrice.toFixed(2)}</div>
         <button
           onClick={handleOpenModal}
-          className="bg-[#C40600] text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition duration-300"
+          className="bg-[#C40600] text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-200 hover:text-black text-semibold transition duration-300"
         >
           Next
         </button>
@@ -368,13 +368,13 @@ const MonogramCustomizer = () => {
               <div className="flex justify-between space-x-4">
                 <button
                   onClick={handleCreateMonogram}
-                  className="bg-[#C40600] text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition duration-300"
+                  className="bg-[#C40600] text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-200 hover:text-black text-semibold transition duration-300"
                 >
                   Submit
                 </button>
                 <button
                   onClick={() => setIsModalOpen(false)}
-                  className="bg-[#C40600] text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition duration-300"
+                  className="bg-[#C40600] text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-200 hover:text-black text-semibold transition duration-300"
                 >
                   Cancel
                 </button>
@@ -383,7 +383,7 @@ const MonogramCustomizer = () => {
               <div className="flex justify-between space-x-4">
                 <Link
                   href="/measurement"
-                  className="bg-[#C40600] text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition duration-300"
+                  className="bg-[#C40600] text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-200 hover:text-black text-semibold transition duration-300"
                 >
                   Go to Measurement
                 </Link>
@@ -508,13 +508,13 @@ const MonogramCustomizer = () => {
           <div className="p-4 border-t bg-gray-50 flex justify-between items-center space-x-4">
             <button
               onClick={() => setActiveSection(null)}
-              className="bg-[#C40600] text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition duration-300"
+              className="bg-[#C40600] text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-200 hover:text-black text-semibold transition duration-300"
             >
               Cancel
             </button>
             <button
               onClick={() => handleConfirmAndProceed()}
-              className="bg-[#C40600] text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition duration-300"
+              className="bg-[#C40600] text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-200 hover:text-black text-semibold transition duration-300"
               disabled={!selectedItems[activeSection]}
             >
               Confirm & Proceed

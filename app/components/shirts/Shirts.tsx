@@ -76,7 +76,7 @@ const Shirts = () => {
           interface and start designing your custom shirt today. Experience the
           satisfaction of wearing a garment that is uniquely yours.{" "}
         </p>
-        <button className="bg-[#c40600] text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition duration-300">
+        <button className="bg-[#c40600] text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-200 hover:text-black text-semibold transition duration-300">
           Buy
         </button>
       </div>

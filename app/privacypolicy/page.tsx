@@ -1,12 +1,12 @@
-export default function PrivacyPolicy() {
+import React from "react";
+import PrivacyPolicy from "../components/PrivacyPolicy";
+
+const page = () => {
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold mb-4">Privacy Policy</h1>
-      <p>
-        {/* ...existing privacy policy instructions... */}
-        Please read our privacy policy carefully. Your privacy is important to us.
-      </p>
-      {/* ...additional policy content... */}
+    <div className="w-full flex flx-col justify-center items-center">
+      <PrivacyPolicy />
     </div>
   );
-}
+};
+
+export default page;

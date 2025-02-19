@@ -71,29 +71,45 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="w-full bg-[#f5f5f0] shadow-md px-4 py-2 flex justify-between items-center fixed top-0 z-[10]">
+    <nav className="font-play w-full bg-[#f5f5f0] shadow-md px-4 py-2 flex justify-between items-center fixed top-0 z-[10]">
       {/* Logo */}
-      <div className="flex items-center cursor-pointer" onClick={() => (window.location.href = "/")}>
+      <div
+        className="flex items-center cursor-pointer"
+        onClick={() => (window.location.href = "/")}
+      >
         <Image src={"/logo.png"} alt="logo" width={130} height={80} />
       </div>
 
       {/* Desktop Menu and Icons */}
       <div className="flex items-center space-x-4">
         {/* Desktop Menu */}
-        <div className="hidden md:flex items-center space-x-6 text-[#4a2b2b] font-bold text-lg">
-          <a href="#about" onClick={scrollToAbout} className="hover:text-red-600 transition-colors">
+        <div className="hidden md:flex items-center space-x-2 text-[#4a2b2b] font-bold text-lg">
+          <a
+            href="#about"
+            onClick={scrollToAbout}
+            className="hover:text-black hover:bg-gray-200 p-[.5rem] rounded-lg transition-colors"
+          >
             About
           </a>
-          <Link href="/history" className="hover:text-red-600 transition-colors">
+          <Link
+            href="/history"
+            className="hover:text-black hover:bg-gray-200 p-[.5rem] rounded-lg transition-colors"
+          >
             History
           </Link>
-          <Link href="/fabric-new" className="hover:text-red-600 transition-colors">
+          <Link
+            href="/fabric-new"
+            className="hover:text-black hover:bg-gray-200 p-[.5rem] rounded-lg transition-colors"
+          >
             Customise
           </Link>
         </div>
 
         {/* Wishlist Icon */}
-        <div className="relative mr-4 cursor-pointer" onClick={handleWishlistClick}>
+        <div
+          className="relative mr-4 cursor-pointer"
+          onClick={handleWishlistClick}
+        >
           <div className="h-10 w-10 rounded-full bg-[#e8e6da] shadow-lg flex items-center justify-center hover:bg-[#d4d2c6] transition-colors">
             <AiOutlineHeart className="text-[#4a2b2b] h-6 w-6" />
             {wishlistCount > 0 && (
@@ -108,7 +124,7 @@ export default function Navbar() {
         <div className="relative mr-4 cursor-pointer" onClick={handleCartClick}>
           <div className="h-10 w-10 rounded-full bg-[#e8e6da] shadow-lg flex items-center justify-center hover:bg-[#d4d2c6] transition-colors">
             {/* <FaShoppingCart className="text-[#4a2b2b] h-6 w-6" /> Add cart icon */}
-            <CartDrawer/> 
+            <CartDrawer />
             {cartItems.length > 0 && (
               <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full px-1.5 py-0.5">
                 {cartItems.length}
@@ -137,7 +153,9 @@ export default function Navbar() {
       {/* Mobile Menu */}
       <div
         className={`absolute top-full left-0 w-full bg-[#f5f5f0] shadow-md rounded-b-md z-10 md:hidden transition-all duration-300 ease-in-out ${
-          isMobileMenuOpen ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2 pointer-events-none"
+          isMobileMenuOpen
+            ? "opacity-100 translate-y-0"
+            : "opacity-0 -translate-y-2 pointer-events-none"
         }`}
         ref={mobileMenuRef}
       >
@@ -148,21 +166,21 @@ export default function Navbar() {
               scrollToAbout(e);
               closeMenu();
             }}
-            className="hover:text-red-600 transition-colors"
+            className="hover:text-black hover:bg-gray-200 p-[.5rem] rounded-lg transition-colors"
           >
             About
           </a>
           <Link
             href="/history"
             onClick={closeMenu}
-            className="hover:text-red-600 transition-colors"
+            className="hover:text-black hover:bg-gray-200 p-[.5rem] rounded-lg transition-colors"
           >
             History
           </Link>
           <Link
             href="/form-new"
             onClick={closeMenu}
-            className="hover:text-red-600 transition-colors"
+            className="hover:text-black hover:bg-gray-200 p-[.5rem] rounded-lg transition-colors"
           >
             Customise
           </Link>

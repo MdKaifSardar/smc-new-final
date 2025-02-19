@@ -528,7 +528,7 @@ const ShirtCustomizer = () => {
         <div className="text-xl font-bold">Total: ${totalPrice.toFixed(2)}</div>
         <button
           onClick={handleOpenModal}
-          className="bg-[#C40600] text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition duration-300"
+          className="bg-[#C40600] text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-200 hover:text-black text-semibold transition duration-300"
         >
           Next
         </button>
@@ -569,13 +569,13 @@ const ShirtCustomizer = () => {
               <div className="flex justify-between space-x-4">
                 <button
                   onClick={handleCreateShirt}
-                  className="bg-[#C40600] text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition duration-300"
+                  className="bg-[#C40600] text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-200 hover:text-black text-semibold transition duration-300"
                 >
                   Submit
                 </button>
                 <button
                   onClick={() => setIsModalOpen(false)}
-                  className="bg-[#C40600] text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition duration-300"
+                  className="bg-[#C40600] text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-200 hover:text-black text-semibold transition duration-300"
                 >
                   Cancel
                 </button>
@@ -586,12 +586,12 @@ const ShirtCustomizer = () => {
                   <div className="w-full gap-[.4rem] flex flex-row items-center justify-center">
                     <Link
                       href="/measurement"
-                      className="bg-[#C40600] text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition duration-300"
+                      className="bg-[#C40600] text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-200 hover:text-black text-semibold transition duration-300"
                     >
                       Add Measurement
                     </Link>
                     <button
-                      className="bg-[#C40600] text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition duration-300"
+                      className="bg-[#C40600] text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-200 hover:text-black text-semibold transition duration-300"
                       onClick={() => setShowMonogramOptions(true)} // Show monogram options on click
                     >
                       Don't Add
@@ -603,14 +603,14 @@ const ShirtCustomizer = () => {
                 {!showMonogramOptions && (
                   <div className="w-full gap-[.4rem] flex flex-row items-center justify-center">
                     <Link
-                      className="bg-[#C40600] text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition duration-300"
+                      className="bg-[#C40600] text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-200 hover:text-black text-semibold transition duration-300"
                       href="/monogram"
                     >
                       Add Monogram
                     </Link>
                     <Link
                       href="/measurement"
-                      className="bg-[#C40600] text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition duration-300"
+                      className="bg-[#C40600] text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-200 hover:text-black text-semibold transition duration-300"
                     >
                       No Monogram
                     </Link>
@@ -757,7 +757,7 @@ const ShirtCustomizer = () => {
                 setActiveSection(null);
                 setIsBackPopupOpen(false);
               }}
-              className="bg-[#C40600] text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition duration-300"
+              className="bg-[#C40600] text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-200 hover:text-black text-semibold transition duration-300"
             >
               ✕
             </button>
@@ -809,7 +809,7 @@ const ShirtCustomizer = () => {
                 setActiveSection(null);
                 setIsBackPopupOpen(false);
               }}
-              className="bg-[#C40600] text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition duration-300"
+              className="bg-[#C40600] text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-200 hover:text-black text-semibold transition duration-300"
             >
               Cancel
             </button>
@@ -818,7 +818,7 @@ const ShirtCustomizer = () => {
                 handleConfirmAndProceed();
                 setIsBackPopupOpen(false);
               }}
-              className="bg-[#C40600] text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition duration-300"
+              className="bg-[#C40600] text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-200 hover:text-black text-semibold transition duration-300"
               // disabled={!selectedItems[activeSection]}
             >
               Confirm & Proceed

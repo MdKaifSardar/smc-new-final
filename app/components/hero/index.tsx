@@ -36,7 +36,7 @@ export default function Hero() {
             garment that is uniquely yours.{" "}
           </p>
           <Link href={'/fabric-new'}>
-          <button className="bg-[#C40600] mt-6 text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition duration-300">
+          <button className="bg-[#C40600] mt-6 text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-200 hover:text-black text-semibold transition duration-300">
             
             Start Designing
            
