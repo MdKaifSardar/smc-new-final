@@ -195,8 +195,6 @@ export async function updateOrderPaymentStatus(
 export async function getUserOrders(userid: string) {
   try {
     await connectToDatabase();
-    
-    console.log("Fetching orders for user:", userid); // Debug log
 
     const orders = await OrderModel.find({ userid })
       .populate({
@@ -210,8 +208,6 @@ export async function getUserOrders(userid: string) {
       })
       .sort({ createdAt: -1 })
       .lean();
-
-    console.log("Found orders:", orders); // Debug log
 
     return {
       orders: JSON.parse(JSON.stringify(orders)),
@@ -232,7 +228,6 @@ export const fetchOrders = async () => {
   try {
     // Connect to the database
     await connectToDatabase();
-    console.log("Connected to database");
 
     // Fetch orders from the database, populate the 'products' field
     const orders = await OrderModel.find()

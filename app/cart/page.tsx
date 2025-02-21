@@ -35,7 +35,6 @@ interface ShirtDetails {
   collarHeightImage?: string;
   collarHeightPrice?: number;
   watchCompatible?: string;
-
   bottomName?: string;
   bottomImage?: string;
   bottomPrice?: number;
@@ -58,22 +57,28 @@ interface ShirtDetails {
   colorHexCode?: string;
   fabricName?: string;
   fabricImage?: string;
+  // Shirt Measurements:
   measurementCollar?: number;
   measurementHalfChest?: number;
   measurementHalfWaist?: number;
   measurementHalfHips?: number;
-  measurementSleeveLength?: number;
-  measurementElbow?: number;
-  measurementForearm?: number;
+  measurementYoke?: number;
+  measurementHalfArmhole?: number;
+  measurementHalfBicep?: number;
   measurementCuff?: number;
+  measurementSleeveLength?: number;
+  measurementShirtLength?: number;
+  // Body Measurements:
   measurementNeck?: number;
   measurementChest?: number;
   measurementWaist?: number;
   measurementHips?: number;
-  measurementElbowWidth?: number;
-  measurementUpperArm?: number;
   measurementShoulder?: number;
-
+  measurementArmhole?: number;
+  measurementBicep?: number;
+  measurementWrist?: number;
+  measurementBreastPoint?: number;
+  measurementWaistPoint?: number;
   cuffName?: string;
   cuffImage?: string;
   cuffPrice?: number;
@@ -139,11 +144,11 @@ const ShirtFeatures = ({ details }: { details: ShirtDetails }) => {
 
 const handleButtonClick =
   (callback: (event: React.MouseEvent) => void) =>
-    (event: React.MouseEvent) => {
-      event.preventDefault();
-      event.stopPropagation();
-      callback(event);
-    };
+  (event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    callback(event);
+  };
 
 // First, update the ShirtCompositeImage component to remove back image
 const ShirtCompositeImage = ({ details }: { details: ShirtDetails }) => {
@@ -242,25 +247,43 @@ const CartItem = ({
     fetchDetails();
   }, [item.product]);
 
-  const handleUpdateQuantity = async (user: any, productId: string, newQuantity: number) => {
+  const handleUpdateQuantity = async (
+    user: any,
+    productId: string,
+    newQuantity: number
+  ) => {
     if (!user?.id) return;
-  
+
     setUpdatingItem(productId);
     try {
-      const response = await updateCartItemQuantity(user.id, productId, newQuantity);
+      const response = await updateCartItemQuantity(
+        user.id,
+        productId,
+        newQuantity
+      );
       if (response.success) {
         toast.success("Quantity updated");
         setCart((prevCart) => {
           if (!prevCart) return prevCart;
-            const updatedProducts: CartItem[] = prevCart.products.map((item: CartItem) =>
-            item.product._id === productId ? { ...item, qty: newQuantity.toString() } : item
-            );
+          const updatedProducts: CartItem[] = prevCart.products.map(
+            (item: CartItem) =>
+              item.product._id === productId
+                ? { ...item, qty: newQuantity.toString() }
+                : item
+          );
           // Update localStorage to reflect the new quantity
           const updatedSelectedItems = updatedProducts.filter((item) =>
             selectedItems.includes(item.product._id)
           );
-          localStorage.setItem("selectedCartItems", JSON.stringify(updatedSelectedItems));
-          return { ...prevCart, products: updatedProducts, cartTotal: response.cart.cartTotal };
+          localStorage.setItem(
+            "selectedCartItems",
+            JSON.stringify(updatedSelectedItems)
+          );
+          return {
+            ...prevCart,
+            products: updatedProducts,
+            cartTotal: response.cart.cartTotal,
+          };
         });
       }
     } catch (error) {
@@ -272,10 +295,10 @@ const CartItem = ({
   };
 
   const handleEdit = () => {
-    const url = new URL('/form-new', window.location.origin);
-    url.searchParams.append('fabricName', details.fabricName || '');
-    url.searchParams.append('colorHexCode', details.colorHexCode || '');
-    url.searchParams.append('colorName', details.colorName || '');
+    const url = new URL("/form-new", window.location.origin);
+    url.searchParams.append("fabricName", details.fabricName || "");
+    url.searchParams.append("colorHexCode", details.colorHexCode || "");
+    url.searchParams.append("colorName", details.colorName || "");
     router.push(url.toString());
   };
 
@@ -307,12 +330,16 @@ const CartItem = ({
         </div>
         {/* Header with Price */}
         <div className="flex flex-col sm:flex-row sm:justify-between gap-2 sm:gap-0">
-          <h3 className="font-semibold text-lg">Custom Shirt (ID: {item.product._id})</h3>
+          <h3 className="font-semibold text-lg">
+            Custom Shirt (ID: {item.product._id})
+          </h3>
           <div className="text-right">
             {/* <p className="font-bold text-lg">
               ${(item.price * parseInt(item.qty)).toFixed(2)}
             </p> */}
-            <p className="text-xl text-gray-700">${item.price.toFixed(2)} each</p>
+            <p className="text-xl text-gray-700">
+              ${item.price.toFixed(2)} each
+            </p>
           </div>
         </div>
 
@@ -324,14 +351,16 @@ const CartItem = ({
               <div className="flex flex-col sm:flex-row gap-4">
                 {/* Main Front View */}
                 <div className="flex-1">
-                  <h4 className="font-medium mb-2 text-sm sm:text-base">Front View</h4>
+                  <h4 className="font-medium mb-2 text-sm sm:text-base">
+                    Front View
+                  </h4>
                   <div className="flex justify-center">
                     <div className="w-[200px] sm:w-[250px] lg:w-[300px] h-[300px] sm:h-[350px] lg:h-[400px] relative">
                       <ShirtCompositeImage details={details} />
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Back View */}
                 {details.backImage && (
                   <div className="w-full sm:w-[150px]">
@@ -351,7 +380,9 @@ const CartItem = ({
 
             {/* Material & Color */}
             <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
-              <h4 className="font-medium mb-2 sm:mb-4 text-sm sm:text-base">Material & Color</h4>
+              <h4 className="font-medium mb-2 sm:mb-4 text-sm sm:text-base">
+                Material & Color
+              </h4>
               <div className="flex items-center gap-3 sm:gap-4">
                 {details.fabricImage && (
                   <Image
@@ -363,7 +394,9 @@ const CartItem = ({
                   />
                 )}
                 <div>
-                  <p className="text-sm sm:text-base font-medium">{details.fabricName}</p>
+                  <p className="text-sm sm:text-base font-medium">
+                    {details.fabricName}
+                  </p>
                   {details.colorName && (
                     <div className="flex items-center gap-2 mt-1 sm:mt-2">
                       <div
@@ -380,44 +413,91 @@ const CartItem = ({
 
           {/* Right Column - Measurements */}
           <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
-            <h4 className="font-medium mb-2 sm:mb-4 text-sm sm:text-base">Measurements</h4>
+            <h4 className="font-medium mb-2 sm:mb-4 text-sm sm:text-base">
+              Measurements
+            </h4>
             <div className="grid grid-cols-2 gap-3 sm:gap-4">
               <div>
-                <h5 className="font-medium mb-1 sm:mb-2 text-xs sm:text-sm">Shirt Measurements</h5>
+                <h5 className="font-medium mb-1 sm:mb-2 text-xs sm:text-sm">
+                  Shirt Measurements
+                </h5>
                 <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm">
-                  <p>Collar: {details.measurementCollar}″</p>
-                  <p>Half Chest: {details.measurementHalfChest}″</p>
-                  <p>Half Waist: {details.measurementHalfWaist}″</p>
-                  <p>Half Hips: {details.measurementHalfHips}″</p>
-                  <p>Sleeve Length: {details.measurementSleeveLength}″</p>
-                  <p>Elbow: {details.measurementElbow}″</p>
-                  <p>Forearm: {details.measurementForearm}″</p>
-                  <p>Cuff: {details.measurementCuff}″</p>
-                  <p>Monogram Name: {details.monogramName}</p>
-                  <p>Cuff Name: {details.cuffName}</p>
-                  <p>Collar Button Name: {details.collarButtonName}</p>
-                  <p>Bottom Name: {details.bottomName}</p>
-                  <p>Back Name: {details.backName}</p>
-                  <p>Pocket Name: {details.pocketName}</p>
-                  <p>Placket Name: {details.placketName}</p>
-                  <p>Sleeves Name: {details.sleevesName}</p>
-                  <p>Fit Name: {details.fitName}</p>
-                  <p>Fabric Name: {details.fabricName}</p>
+                  {[
+                    { label: "Collar", value: details.measurementCollar },
+                    {
+                      label: "Half Chest",
+                      value: details.measurementHalfChest,
+                    },
+                    {
+                      label: "Half Waist",
+                      value: details.measurementHalfWaist,
+                    },
+                    { label: "Half Hips", value: details.measurementHalfHips },
+                    { label: "Yoke", value: details.measurementYoke },
+                    {
+                      label: "Half Armhole",
+                      value: details.measurementHalfArmhole,
+                    },
+                    {
+                      label: "Half Bicep",
+                      value: details.measurementHalfBicep,
+                    },
+                    { label: "Cuff", value: details.measurementCuff },
+                    {
+                      label: "Sleeve Length",
+                      value: details.measurementSleeveLength,
+                    },
+                    {
+                      label: "Shirt Length",
+                      value: details.measurementShirtLength,
+                    },
+                  ]
+                    .filter((m) => m.value != null)
+                    .map((m, i) => (
+                      <p key={i}>
+                        {m.label}: {m.value}″
+                      </p>
+                    ))}
                 </div>
               </div>
               <div>
-                <h5 className="font-medium mb-1 sm:mb-2 text-xs sm:text-sm">Body Measurements</h5>
+                <h5 className="font-medium mb-1 sm:mb-2 text-xs sm:text-sm">
+                  Body Measurements
+                </h5>
                 <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm">
-                  <p>Neck: {details.measurementNeck}″</p>
-                  <p>Chest: {details.measurementChest}″</p>
-                  <p>Waist: {details.measurementWaist}″</p>
-                  <p>Hips: {details.measurementHips}″</p>
-                  <p>Elbow Width: {details.measurementElbowWidth}″</p>
-                  <p>Upper Arm: {details.measurementUpperArm}″</p>
-                  <p>Shoulder: {details.measurementShoulder}″</p>
-
+                  {[
+                    { label: "Neck", value: details.measurementNeck },
+                    { label: "Chest", value: details.measurementChest },
+                    { label: "Waist", value: details.measurementWaist },
+                    { label: "Hips", value: details.measurementHips },
+                    { label: "Shoulder", value: details.measurementShoulder },
+                    { label: "Armhole", value: details.measurementArmhole }, // added
+                    { label: "Bicep", value: details.measurementBicep }, // added
+                    { label: "Wrist", value: details.measurementWrist },
+                    {
+                      label: "Breast Point",
+                      value: details.measurementBreastPoint,
+                    },
+                    {
+                      label: "Waist Point",
+                      value: details.measurementWaistPoint,
+                    },
+                  ]
+                    .filter((m) => m.value != null)
+                    .map((m, i) => (
+                      <p key={i}>
+                        {m.label}: {m.value}″
+                      </p>
+                    ))}
                 </div>
               </div>
+            </div>
+            {/* Shirt Style Details */}
+            <div className="bg-gray-50 mt-[1rem] rounded-lg">
+              <h4 className="font-medium mb-[.5rem] text-sm sm:text-base">
+                Shirt Style Details
+              </h4>
+              <ShirtFeatures details={details} />
             </div>
           </div>
         </div>
@@ -452,7 +532,9 @@ const CartItem = ({
             size="icon"
             variant="destructive"
             className="h-8 w-8 sm:h-10 sm:w-10"
-            onClick={handleButtonClick((event) => onDelete(item.product._id, event))}
+            onClick={handleButtonClick((event) =>
+              onDelete(item.product._id, event)
+            )}
             disabled={isUpdating}
           >
             <FaTrashAlt className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -494,16 +576,19 @@ export default function CartPage() {
       if (response.success && response.cart) {
         setCart(response.cart);
         setCartItems(response.cart.products); // Update cart items state
-        
+
         // Calculate total product count using quantity sums
         const totalCount = response.cart.products.reduce(
-          (sum: number, item: { qty: any; }) => sum + Number(item.qty),
+          (sum: number, item: { qty: any }) => sum + Number(item.qty),
           0
         );
         setWishlistCount(totalCount);
-        
+
         localStorage.setItem("wishlistCount", totalCount.toString());
-        localStorage.setItem("cartItems", JSON.stringify(response.cart.products));
+        localStorage.setItem(
+          "cartItems",
+          JSON.stringify(response.cart.products)
+        );
       }
     } catch (error) {
       console.error("Error fetching cart:", error);
@@ -540,11 +625,11 @@ export default function CartPage() {
 
   const handleButtonClick =
     (callback: (event: React.MouseEvent) => void) =>
-      (event: React.MouseEvent) => {
-        event.preventDefault();
-        event.stopPropagation();
-        callback(event);
-      };
+    (event: React.MouseEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
+      callback(event);
+    };
 
   const handleDelete = async (productId: string, event: React.MouseEvent) => {
     if (!user?.id) return;
@@ -594,31 +679,34 @@ export default function CartPage() {
       toast.error("Please select at least one order to proceed."); // Use toast for the alert message
       localStorage.removeItem("selectedCartItems"); // Clear selected items if none are selected
     } else {
-      const filteredItems = cart?.products?.filter((item) =>
-        selectedItems.includes(item.product._id)
-      ).map((item) => ({
-        ...item,
-        qty: "1" // Set quantity to 1 by default
-      }));
+      const filteredItems = cart?.products
+        ?.filter((item) => selectedItems.includes(item.product._id))
+        .map((item) => ({
+          ...item,
+          qty: "1", // Set quantity to 1 by default
+        }));
 
       // Retrieve existing items from localStorage
-      const existingItems = JSON.parse(localStorage.getItem("selectedCartItems") || "[]");
+      const existingItems = JSON.parse(
+        localStorage.getItem("selectedCartItems") || "[]"
+      );
 
       // Merge new selected items with existing items, incrementing quantity if product ID is the same
       const updatedItems = [...existingItems];
       filteredItems?.forEach((newItem) => {
-        const existingItemIndex = updatedItems.findIndex(item => item.product._id === newItem.product._id);
+        const existingItemIndex = updatedItems.findIndex(
+          (item) => item.product._id === newItem.product._id
+        );
         if (existingItemIndex !== -1) {
-          updatedItems[existingItemIndex].qty = (parseInt(updatedItems[existingItemIndex].qty) + 1).toString();
+          updatedItems[existingItemIndex].qty = (
+            parseInt(updatedItems[existingItemIndex].qty) + 1
+          ).toString();
         } else {
           updatedItems.push(newItem);
         }
       });
 
-      localStorage.setItem(
-        "selectedCartItems",
-        JSON.stringify(updatedItems)
-      );
+      localStorage.setItem("selectedCartItems", JSON.stringify(updatedItems));
       setWishlistCount(updatedItems.length); // Update wishlist count
       openCartDrawer();
     }
@@ -654,7 +742,12 @@ export default function CartPage() {
       </h1>
       <div className="space-y-4 sm:space-y-6">
         {cart.products.map((item) => (
-          <Suspense key={item.product._id} fallback={<AiOutlineLoading3Quarters className="h-8 w-8 animate-spin" />}>
+          <Suspense
+            key={item.product._id}
+            fallback={
+              <AiOutlineLoading3Quarters className="h-8 w-8 animate-spin" />
+            }
+          >
             <CartItem
               item={item}
               onDelete={handleDelete}
@@ -683,7 +776,10 @@ export default function CartPage() {
               }}
               className="w-full sm:w-auto"
             >
-              <Button size="lg" className="mt-4 w-full font-play px-10 font-bold bg-red-700  sm:w-auto">
+              <Button
+                size="lg"
+                className="mt-4 w-full font-play px-10 font-bold bg-red-700  sm:w-auto"
+              >
                 Proceed to cartDrawer
               </Button>
             </Link>
@@ -700,4 +796,3 @@ function setUpdatingItem(arg0: string | null) {
 function setCart(arg0: (prevCart: any) => any) {
   throw new Error("Function not implemented.");
 }
-

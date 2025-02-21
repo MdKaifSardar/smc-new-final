@@ -22,10 +22,12 @@ const ShirtMeasurementsForm: React.FC<ShirtMeasurementsFormProps> = ({ initialMe
     halfChest: createDefaultMeasurementField(),
     halfWaist: createDefaultMeasurementField(),
     halfHips: createDefaultMeasurementField(),
-    sleevesLength: createDefaultMeasurementField(),
-    elbow: createDefaultMeasurementField(),
-    forearm: createDefaultMeasurementField(),
+    yoke: createDefaultMeasurementField(),
+    halfArmhole: createDefaultMeasurementField(),
+    halfBicep: createDefaultMeasurementField(),
     cuff: createDefaultMeasurementField(),
+    sleeveLength: createDefaultMeasurementField(),
+    shirtLength: createDefaultMeasurementField(),
   };
 
   const [shirtMeasurements, setShirtMeasurements] = useState(initialShirtMeasurements);
@@ -36,10 +38,12 @@ const ShirtMeasurementsForm: React.FC<ShirtMeasurementsFormProps> = ({ initialMe
     halfChest: 'https://res.cloudinary.com/dlxpcyiin/image/upload/v1738778881/cloud1_wqszqi.png',
     halfWaist: 'https://res.cloudinary.com/dlxpcyiin/image/upload/v1738778883/cloud2_rbgkik.png',
     halfHips: 'https://res.cloudinary.com/dlxpcyiin/image/upload/v1738778881/cloud1_wqszqi.png',
-    sleevesLength: 'https://res.cloudinary.com/dlxpcyiin/image/upload/v1738778882/cloud3_wlv17l.png',
-    elbow: 'https://res.cloudinary.com/dlxpcyiin/image/upload/v1738778881/cloud1_wqszqi.png',
-    forearm: 'https://res.cloudinary.com/dlxpcyiin/image/upload/v1738778883/cloud2_rbgkik.png',
+    yoke: 'https://res.cloudinary.com/dlxpcyiin/image/upload/v1738778881/cloud1_wqszqi.png',
+    halfArmhole: 'https://res.cloudinary.com/dlxpcyiin/image/upload/v1738778882/cloud3_wlv17l.png',
+    halfBicep: 'https://res.cloudinary.com/dlxpcyiin/image/upload/v1738778883/cloud2_rbgkik.png',
     cuff: 'https://res.cloudinary.com/dlxpcyiin/image/upload/v1738778881/cloud1_wqszqi.png',
+    sleeveLength: 'https://res.cloudinary.com/dlxpcyiin/image/upload/v1738778882/cloud3_wlv17l.png',
+    shirtLength: 'https://res.cloudinary.com/dlxpcyiin/image/upload/v1738778883/cloud2_rbgkik.png',
   };
 
   useEffect(() => {
@@ -63,9 +67,9 @@ const ShirtMeasurementsForm: React.FC<ShirtMeasurementsFormProps> = ({ initialMe
 
   return (
     <div className="w-full p-2 sm:p-4">
-      <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-center mb-6 sm:mb-8 text-gray-800">
+      {/* <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-center mb-6 sm:mb-8 text-gray-800">
         Shirt Measurements
-      </h2>
+      </h2> */}
       <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
         {/* Left side - Form */}
         <div className="w-full lg:w-1/2 bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-200">

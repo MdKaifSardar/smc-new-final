@@ -277,17 +277,17 @@ export const updateShirtPrice = async (shirtId: string, price: number) => {
 export const getShirtByIdInDetails = async (shirtId: string) => {
   try {
     const shirt = await ShirtModel.findById(shirtId);
-    console.log(shirt);
-    const colorId = shirt?.colorId.toString();
-    const fabricId = shirt?.fabricId.toString();
-    const measurementId = shirt?.measurementId.toString();
-    const color = await getColorById(colorId);
-    const fabric = await getFabricById(fabricId);
-    const measurement = await getMeasurementById(measurementId);
-    console.log(measurement);
-    console.log(fabric);
-    console.log(color);
-    console.log(colorId);
+    // console.log(shirt);
+    const colorId = shirt?.colorId ? shirt.colorId.toString() : null;
+    const fabricId = shirt?.fabricId ? shirt.fabricId.toString() : null;
+    const measurementId = shirt?.measurementId ? shirt.measurementId.toString() : null;
+    const color = colorId ? await getColorById(colorId) : null;
+    const fabric = fabricId ? await getFabricById(fabricId) : null;
+    const measurement = measurementId ? await getMeasurementById(measurementId) : null;
+    // console.log(measurement);
+    // console.log(fabric);
+    // console.log(color);
+    // console.log(colorId);
     const shirtDetails = {
       price: shirt?.price,
       collarName: shirt?.collarStyle?.name,
@@ -322,21 +322,28 @@ export const getShirtByIdInDetails = async (shirtId: string) => {
       colorHexCode: color?.color?.hexCode,
       fabricName: fabric?.fabric?.fabricName,
       fabricImage: fabric?.fabric?.image?.url,
+      // Shirt measurements:
       measurementCollar: measurement?.collar,
       measurementHalfChest: measurement?.halfChest,
       measurementHalfWaist: measurement?.halfWaist,
       measurementHalfHips: measurement?.halfHips,
-      measurementSleeveLength: measurement?.sleevesLength,
-      measurementElbow: measurement?.elbow,
-      measurementForearm: measurement?.forearm,
+      measurementYoke: measurement?.yoke,
+      measurementHalfArmhole: measurement?.halfArmhole,
+      measurementHalfBicep: measurement?.halfBicep,
       measurementCuff: measurement?.cuff,
+      measurementSleeveLength: measurement?.sleevesLength,
+      measurementShirtLength: measurement?.shirtLength,
+      // Body measurements:
       measurementNeck: measurement?.neck,
       measurementChest: measurement?.chest,
       measurementWaist: measurement?.waist,
       measurementHips: measurement?.hips,
-      measurementElbowWidth: measurement?.elbowWidth,
-      measurementUpperArm: measurement?.upperArm,
       measurementShoulder: measurement?.shoulder,
+      measurementArmhole: measurement?.armhole,
+      measurementBicep: measurement?.bicep,
+      measurementWrist: measurement?.wrist,
+      measurementBreastPoint: measurement?.breastPoint,
+      measurementWaistPoint: measurement?.waistPoint,
     };
     return {
       success: true,

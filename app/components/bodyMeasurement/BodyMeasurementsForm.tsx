@@ -1,7 +1,10 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useAtom } from "jotai";
-import { BodyMeasurements, MeasurementField } from "@/app/utils/data/measurement";
+import {
+  BodyMeasurements,
+  MeasurementField,
+} from "@/app/utils/data/measurement";
 import { savedBodyMeasurementsState } from "@/app/utils/data/store";
 import Image from "next/image";
 
@@ -15,38 +18,65 @@ const createDefaultMeasurementField = (): MeasurementField => ({
   description: "",
 });
 
-const BodyMeasurementsForm: React.FC<BodyMeasurementsFormProps> = ({ initialMeasurements, onChange }) => {
-  const [savedMeasurements, setSavedMeasurements] = useAtom(savedBodyMeasurementsState);
-  const initialBodyMeasurements = initialMeasurements || savedMeasurements || {
-    neck: createDefaultMeasurementField(),
-    chest: createDefaultMeasurementField(),
-    waist: createDefaultMeasurementField(),
-    hips: createDefaultMeasurementField(),
-    sleeveLength: createDefaultMeasurementField(),
-    elbowWidth: createDefaultMeasurementField(),
-    upperArm: createDefaultMeasurementField(),
-    shoulder: createDefaultMeasurementField(),
-  };
+const BodyMeasurementsForm: React.FC<BodyMeasurementsFormProps> = ({
+  initialMeasurements,
+  onChange,
+}) => {
+  const [savedMeasurements, setSavedMeasurements] = useAtom(
+    savedBodyMeasurementsState
+  );
+  // Updated fields: neck, chest, waist, hips, shoulder, armhole, bicep, wrist
+  const initialBodyMeasurements = initialMeasurements ||
+    savedMeasurements || {
+      neck: createDefaultMeasurementField(),
+      chest: createDefaultMeasurementField(),
+      waist: createDefaultMeasurementField(),
+      hips: createDefaultMeasurementField(),
+      shoulder: createDefaultMeasurementField(),
+      armhole: createDefaultMeasurementField(),
+      bicep: createDefaultMeasurementField(),
+      wrist: createDefaultMeasurementField(),
+    };
 
-  const [bodyMeasurements, setBodyMeasurements] = useState<BodyMeasurements>(initialBodyMeasurements);
-  const [activeField, setActiveField] = useState<keyof BodyMeasurements>("neck");
+  const [bodyMeasurements, setBodyMeasurements] = useState<BodyMeasurements>(
+    initialBodyMeasurements
+  );
+  const [activeField, setActiveField] =
+    useState<keyof BodyMeasurements>("neck");
 
+  // Updated image mapping for the eight fields. For new fields, reuse one of the existing Cloudinary images.
   const imageMapping: Record<keyof BodyMeasurements, string> = {
-    neck: 'https://res.cloudinary.com/dlxpcyiin/image/upload/v1738778881/cloud1_wqszqi.png',
-    chest: 'https://res.cloudinary.com/dlxpcyiin/image/upload/v1738778882/cloud3_wlv17l.png',
-    waist: 'https://res.cloudinary.com/dlxpcyiin/image/upload/v1738778881/cloud1_wqszqi.png',
-    hips: 'https://res.cloudinary.com/dlxpcyiin/image/upload/v1738778881/cloud1_wqszqi.png',
-    sleeveLength: 'https://res.cloudinary.com/dlxpcyiin/image/upload/v1738778882/cloud3_wlv17l.png',
-    elbowWidth: 'https://res.cloudinary.com/dlxpcyiin/image/upload/v1738778883/cloud2_rbgkik.png',
-    upperArm: 'https://res.cloudinary.com/dlxpcyiin/image/upload/v1738778882/cloud3_wlv17l.png',
-    shoulder: 'https://res.cloudinary.com/dlxpcyiin/image/upload/v1738778881/cloud1_wqszqi.png',
+    neck: "https://res.cloudinary.com/dlxpcyiin/image/upload/v1738778881/cloud1_wqszqi.png",
+    chest:
+      "https://res.cloudinary.com/dlxpcyiin/image/upload/v1738778882/cloud3_wlv17l.png",
+    waist:
+      "https://res.cloudinary.com/dlxpcyiin/image/upload/v1738778881/cloud1_wqszqi.png",
+    hips: "https://res.cloudinary.com/dlxpcyiin/image/upload/v1738778881/cloud1_wqszqi.png",
+    shoulder:
+      "https://res.cloudinary.com/dlxpcyiin/image/upload/v1738778881/cloud1_wqszqi.png",
+    armhole:
+      "https://res.cloudinary.com/dlxpcyiin/image/upload/v1738778882/cloud3_wlv17l.png",
+    bicep:
+      "https://res.cloudinary.com/dlxpcyiin/image/upload/v1738778883/cloud2_rbgkik.png",
+    wrist:
+      "https://res.cloudinary.com/dlxpcyiin/image/upload/v1738778883/cloud2_rbgkik.png",
+    elbowWidth:
+      "https://res.cloudinary.com/dlxpcyiin/image/upload/v1738778883/cloud2_rbgkik.png",
+    upperArm:
+      "https://res.cloudinary.com/dlxpcyiin/image/upload/v1738778883/cloud2_rbgkik.png",
+    sleeveLength:
+      "https://res.cloudinary.com/dlxpcyiin/image/upload/v1738778883/cloud2_rbgkik.png",
   };
 
   useEffect(() => {
     setSavedMeasurements(bodyMeasurements);
   }, [bodyMeasurements, setSavedMeasurements]);
 
-  const handleChange = (typedField: keyof BodyMeasurements, key: string, value: string) => {
+  const handleChange = (
+    typedField: keyof BodyMeasurements,
+    key: string,
+    value: string
+  ) => {
     const updatedMeasurements = {
       ...bodyMeasurements,
       [typedField]: {
@@ -66,8 +96,10 @@ const BodyMeasurementsForm: React.FC<BodyMeasurementsFormProps> = ({ initialMeas
       const typedField = field as keyof BodyMeasurements;
       const measurementField = bodyMeasurements[typedField];
       return (
-        <div key={field} 
-             className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 py-2">
+        <div
+          key={field}
+          className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 py-2"
+        >
           <label className="block text-gray-700 text-sm font-medium w-full sm:w-1/3 capitalize">
             {field.replace(/([A-Z])/g, " $1")}
           </label>
@@ -76,7 +108,9 @@ const BodyMeasurementsForm: React.FC<BodyMeasurementsFormProps> = ({ initialMeas
               type="number"
               placeholder="Enter measurement"
               value={measurementField?.value?.value ?? ""}
-              onChange={(e) => handleChange(typedField, "value", e.target.value)}
+              onChange={(e) =>
+                handleChange(typedField, "value", e.target.value)
+              }
               onFocus={() => setActiveField(typedField)}
               className="flex-1 px-3 py-2 border border-gray-300 rounded-lg 
                        focus:outline-none focus:ring-2 focus:ring-red-500 
@@ -111,10 +145,12 @@ const BodyMeasurementsForm: React.FC<BodyMeasurementsFormProps> = ({ initialMeas
             {renderMeasurementFields()}
           </div>
         </div>
-        
+
         {/* Right side - Image */}
-        <div className="w-full lg:w-1/2 flex flex-col items-center justify-center 
-                      bg-gray-50 p-4 sm:p-6 rounded-xl border border-gray-200">
+        <div
+          className="w-full lg:w-1/2 flex flex-col items-center justify-center 
+                      bg-gray-50 p-4 sm:p-6 rounded-xl border border-gray-200"
+        >
           <div className="relative w-full h-48 sm:h-64 lg:h-96">
             <Image
               src={imageMapping[activeField]}

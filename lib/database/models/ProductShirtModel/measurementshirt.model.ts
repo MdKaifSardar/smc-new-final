@@ -2,21 +2,33 @@ import mongoose, { Schema, Document, Model } from "mongoose";
 
 // Define an interface for Measurement
 export interface IMeasurement extends Document {
-  collar: number;
-  halfChest: number;
-  halfWaist: number;
-  halfHips: number;
-  sleevesLength: number;
-  elbow: number;
-  forearm: number;
-  cuff: number;
-  neck: number;
-  chest: number;
-  waist: number;
-  hips: number;
-  elbowWidth: number;
-  upperArm: number;
-  shoulder: number;
+  collar?: number;
+  halfChest?: number;
+  halfWaist?: number;
+  halfHips?: number;
+  sleevesLength?: number;
+  elbow?: number;
+  forearm?: number;
+  cuff?: number;
+  // Shirt measurements
+  neck?: number;
+  shoulder?: number;
+  armhole?: number;
+  bicep?: number;
+  wrist?: number;
+  shirtLength?: number;
+  // New fields
+  yoke?: number;
+  halfArmhole?: number;
+  halfBicep?: number;
+  // Body measurements
+  chest?: number;
+  waist?: number;
+  hips?: number;
+  elbowWidth?: number;
+  upperArm?: number;
+  breastPoint?: number;
+  waistPoint?: number;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -24,21 +36,33 @@ export interface IMeasurement extends Document {
 // Define Mongoose Schema
 const MeasurementSchema: Schema = new Schema(
   {
-    collar: { type: Number, required: true },
-    halfChest: { type: Number, required: true },
-    halfWaist: { type: Number, required: true },
-    halfHips: { type: Number, required: true },
-    sleevesLength: { type: Number, required: true },
-    elbow: { type: Number, required: true },
-    forearm: { type: Number, required: true },
-    cuff: { type: Number, required: true },
-    neck: { type: Number, required: true },
-    chest: { type: Number, required: true },
-    waist: { type: Number, required: true },
-    hips: { type: Number, required: true },
-    elbowWidth: { type: Number, required: true },
-    upperArm: { type: Number, required: true },
+    collar: { type: Number, required: false },
+    halfChest: { type: Number, required: false },
+    halfWaist: { type: Number, required: false },
+    halfHips: { type: Number, required: false },
+    sleevesLength: { type: Number, required: false },
+    elbow: { type: Number, required: false },
+    forearm: { type: Number, required: false },
+    cuff: { type: Number, required: false },
+    // Shirt measurements
+    neck: { type: Number, required: false },
     shoulder: { type: Number, required: false },
+    armhole: { type: Number, required: false },
+    bicep: { type: Number, required: false },
+    wrist: { type: Number, required: false },
+    shirtLength: { type: Number, required: false },
+    // New fields
+    yoke: { type: Number, required: false },
+    halfArmhole: { type: Number, required: false },
+    halfBicep: { type: Number, required: false },
+    // Body measurements
+    chest: { type: Number, required: false },
+    waist: { type: Number, required: false },
+    hips: { type: Number, required: false },
+    elbowWidth: { type: Number, required: false },
+    upperArm: { type: Number, required: false },
+    breastPoint: { type: Number, required: false },
+    waistPoint: { type: Number, required: false },
   },
   { timestamps: true }
 );

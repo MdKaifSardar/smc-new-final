@@ -1,15 +1,16 @@
 "use client";
-
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { toast } from "sonner";
 import { useAtom } from "jotai";
 import ShirtMeasurementsForm from "../components/shirtMeasurement/ShirtMeasurementsForm";
 import BodyMeasurementsForm from "../components/bodyMeasurement/BodyMeasurementsForm";
+import FemaleBodyMeasurement from "../components/femaleBodyMeasurement/FemaleBodyMeasurement";
 import {
   ShirtMeasurements,
   BodyMeasurements,
+  FemaleMeasurements,
 } from "@/app/utils/data/measurement";
 import { createMeasurement } from "@/lib/database/actions/measurement.actions";
 import { updateShirtIds } from "@/lib/database/actions/admin/ShirtArea/Shirt/shirt.actions";
@@ -21,7 +22,17 @@ const Page = () => {
   const { user } = useUser();
   const [shirtMeasurements, setShirtMeasurements] = useAtom(savedShirtMeasurementsState);
   const [bodyMeasurements, setBodyMeasurements] = useAtom(savedBodyMeasurementsState);
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [femaleBodyMeasurements, setFemalBodyMeasurements] = useAtom(savedBodyMeasurementsState);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [gender, setGender] = useState("male"); // new state for gender
+
+  // Get gender from localStorage
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedGender = localStorage.getItem("gender");
+      setGender(storedGender === "female" ? "female" : "male");
+    }
+  }, []);
 
   const handleShirtMeasurementsChange = (measurements: ShirtMeasurements) => {
     setShirtMeasurements(measurements);
@@ -29,6 +40,10 @@ const Page = () => {
 
   const handleBodyMeasurementsChange = (measurements: BodyMeasurements) => {
     setBodyMeasurements(measurements);
+  };
+
+  const handleFemaleBodyMeasurementsChange = (measurements: FemaleMeasurements) => {
+    setFemalBodyMeasurements(measurements);
   };
 
   const handleSubmit = async () => {
@@ -115,15 +130,22 @@ const Page = () => {
           />
         </div>
 
-        {/* Body Measurements Section */}
+        {/* Conditional Body Measurements Section */}
         <div className="bg-white p-4 sm:p-6 lg:p-8 rounded-xl shadow-sm border border-gray-200">
           <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-4 sm:mb-6">
-            Body Measurements
+            {gender === "female" ? "Female Body Measurements" : "Male Body Measurements"}
           </h2>
-          <BodyMeasurementsForm
-            initialMeasurements={bodyMeasurements || undefined}
-            onChange={handleBodyMeasurementsChange}
-          />
+          {gender === "female" ? (
+            <FemaleBodyMeasurement
+              initialMeasurements={femaleBodyMeasurements || undefined}
+              onChange={handleFemaleBodyMeasurementsChange}
+            />
+          ) : (
+            <BodyMeasurementsForm
+              initialMeasurements={bodyMeasurements || undefined}
+              onChange={handleBodyMeasurementsChange}
+            />
+          )}
         </div>
 
         {/* Submit Button */}
