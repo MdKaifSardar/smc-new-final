@@ -141,7 +141,9 @@ const AccountPopUp = () => {
     if (!isSignUpLoaded || !isSignInLoaded) return;
 
     try {
-      if (pendingVerification && (signUp as any).status === "needs_email_verification") {
+      if (true || pendingVerification &&
+        (signUp as any).status === "email_code"
+      ) {
         // Handle email verification
         const completeSignUp = await signUp.attemptEmailAddressVerification({
           code: verificationCode,
@@ -152,18 +154,19 @@ const AccountPopUp = () => {
           setShowVerificationDialog(false);
           toast.success("Email verified successfully!");
         }
-      } else {
-        // Handle password reset
-        const result = await signIn.attemptFirstFactor({
-          strategy: "reset_password_email_code",
-          code: verificationCode,
-        });
+      } 
+      // else {
+      //   // Handle password reset
+      //   const result = await signIn.attemptFirstFactor({
+      //     strategy: "reset_password_email_code",
+      //     code: verificationCode,
+      //   });
 
-        if (result.status === "needs_new_password") {
-          setShowVerificationDialog(false);
-          setShowResetPasswordDialog(true);
-        }
-      }
+      //   if (result.status === "needs_new_password") {
+      //     setShowVerificationDialog(false);
+      //     setShowResetPasswordDialog(true);
+      //   }
+      // }
     } catch (err: any) {
       toast.error("Error during verification: " + err.message);
     }
@@ -178,9 +181,9 @@ const AccountPopUp = () => {
   };
 
   const showUserDetailsHandler = () => {
-    console.log("clicked")
-    setUserDetailsOpen((prev) => !(prev));
-  }
+    console.log("clicked");
+    setUserDetailsOpen((prev) => !prev);
+  };
 
   const handleforgotpassword = async () => {
     if (!isSignInLoaded) return;
@@ -198,7 +201,7 @@ const AccountPopUp = () => {
     } catch (err: any) {
       toast.error("Error sending reset email: " + err.message);
     }
-  }
+  };
 
   const handleResetPassword = async () => {
     if (!isSignInLoaded) return;
@@ -223,15 +226,22 @@ const AccountPopUp = () => {
       {/* <Dialog open={accountMenuOpen} onOpenChange={setAccountMenuOpen}>
         <DialogTrigger asChild>
           <div className="relative"> */}
-      <button onClick={handleOnClickAccountMenu} className="lg:flex relative font-bold font-play">
-        {isSignedIn ? (<Image
-          src={user.imageUrl}
-          alt={`${user?.firstName || ''} ${user?.lastName || ''}`}
-          width={32}
-          height={32}
-          className="rounded-full"
-          onClick={showUserDetailsHandler}
-        />) : "Login"}
+      <button
+        onClick={handleOnClickAccountMenu}
+        className="lg:flex relative font-bold font-play"
+      >
+        {isSignedIn ? (
+          <Image
+            src={user.imageUrl}
+            alt={`${user?.firstName || ""} ${user?.lastName || ""}`}
+            width={32}
+            height={32}
+            className="rounded-full"
+            onClick={showUserDetailsHandler}
+          />
+        ) : (
+          "Login"
+        )}
       </button>
       {/* </div>
         </DialogTrigger>
@@ -239,7 +249,9 @@ const AccountPopUp = () => {
 
       <Dialog open={userDetailsOpen} onOpenChange={setUserDetailsOpen}>
         <DialogContent className="sm:max-w-[425px]">
-          <DialogTitle className="text-xl font-bold">Profile Details</DialogTitle>
+          <DialogTitle className="text-xl font-bold">
+            Profile Details
+          </DialogTitle>
           <div className="mt-4 space-y-4">
             <div className="flex items-center justify-center mb-6">
               <Image
@@ -261,27 +273,37 @@ const AccountPopUp = () => {
 
               <div>
                 <Label className="font-semibold">Email</Label>
-                <p className="text-gray-700">{user?.emailAddresses[0]?.emailAddress}</p>
+                <p className="text-gray-700">
+                  {user?.emailAddresses[0]?.emailAddress}
+                </p>
               </div>
 
               <div>
                 <Label className="font-semibold">Phone</Label>
-                <p className="text-gray-700">{(user as any)?.unsafeMetadata?.phone || 'Not provided'}</p>
+                <p className="text-gray-700">
+                  {(user as any)?.unsafeMetadata?.phone || "Not provided"}
+                </p>
               </div>
 
               <div>
                 <Label className="font-semibold">WhatsApp</Label>
-                <p className="text-gray-700">{(user as any)?.unsafeMetadata?.whatsapp || 'Not provided'}</p>
+                <p className="text-gray-700">
+                  {(user as any)?.unsafeMetadata?.whatsapp || "Not provided"}
+                </p>
               </div>
 
               <div>
                 <Label className="font-semibold">Country</Label>
-                <p className="text-gray-700">{(user as any)?.unsafeMetadata?.country || 'Not provided'}</p>
+                <p className="text-gray-700">
+                  {(user as any)?.unsafeMetadata?.country || "Not provided"}
+                </p>
               </div>
 
               <div>
                 <Label className="font-semibold">Zipcode</Label>
-                <p className="text-gray-700">{(user as any)?.unsafeMetadata?.zipCode || 'Not provided'}</p>
+                <p className="text-gray-700">
+                  {(user as any)?.unsafeMetadata?.zipCode || "Not provided"}
+                </p>
               </div>
             </div>
 
@@ -377,7 +399,6 @@ const AccountPopUp = () => {
                   >
                     Forgot Password
                   </Button>
-
                 </CardFooter>
               </TabsContent>
               <TabsContent value="signup">
@@ -565,14 +586,15 @@ const AccountPopUp = () => {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={showResetPasswordDialog} onOpenChange={setShowResetPasswordDialog}>
+      <Dialog
+        open={showResetPasswordDialog}
+        onOpenChange={setShowResetPasswordDialog}
+      >
         <DialogContent>
           <Card>
             <CardHeader>
               <CardTitle>Reset Password</CardTitle>
-              <CardDescription>
-                Enter your new password
-              </CardDescription>
+              <CardDescription>Enter your new password</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">

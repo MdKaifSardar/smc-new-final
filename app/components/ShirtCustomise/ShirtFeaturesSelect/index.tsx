@@ -476,7 +476,7 @@ const ShirtCustomizer = () => {
     if (section === "placket" || section === "pocket") return 4;
     if (section === "sleeves") return 3;
     if (section === "fit") return 2;
-    if (section === "bottom") return 2;
+    if (section === "bottom") return 3;
     return index;
   };
 
@@ -487,14 +487,14 @@ const ShirtCustomizer = () => {
 
   return (
     <div className="mt-[4rem] flex-col md:flex-row justify-between items-start mb-10 flex w-full h-fit">
-      <div className="relative mt-[1.5rem] md:mt-0 flex justify-center items-center w-full h-[87vh]">
+      <div className="relative mt-[1.5rem] md:mt-[2rem] flex justify-center items-center w-full h-[87vh]">
         {Object.entries(selectedItems).map(([section, item], index) =>
           item.image?.url ? (
             <img
               key={index}
               src={item.image.url}
               alt={item.name}
-              className="absolute top-auto bottom-auto left-auto right-auto w-[90%] md:w-[40vw] h-auto object-cover rounded-none"
+              className="absolute top-auto bottom-auto left-auto right-auto w-[80rem] sm:w-[70vw] md:w-[50vw] 2xl:w-[37vw] xl:w-[35vw] h-auto object-cover rounded-none"
               style={{
                 // transform: "translate(-50%, -50%)",
                 // left: "50%",
