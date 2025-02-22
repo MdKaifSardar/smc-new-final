@@ -22,13 +22,13 @@ const Footer = () => {
 
   return (
     <footer className="bg-[#f5f5f0] md:pt-14 md:pb-8 px-4 space-y-10 font-play">
-      <div className="flex flex-col items-center justify-between lg:flex-row ">
-        <div className="flex flex-row sm:space-x-20 space-x-5">
+      <div className="flex flex-col items-center justify-between lg:flex-row h-fit lg:h-[10rem] xl:h-[9rem]">
+        <div className="h-full flex flex-row sm:space-x-20 space-x-5">
           <div>
             <h4 className="font-bold text-2xl text-[#646464] mb-2">Shop</h4>
             <ul className="text-lg text-[#505050]">
               {shopLinks.map((link) => (
-                <li key={link.href} className="">
+                <li key={link.href} className="mb-1">
                   <Link href={link.href}>
                     <p className="hover:underline">{link.label}</p>
                   </Link>
@@ -63,11 +63,11 @@ const Footer = () => {
             </ul>
           </div>
         </div>
-        <div className="text-center md:text-left mb-4 md:mb-0 mt-10 lg:mt-0">
+        <div className="h-full text-center md:text-left mb-4 md:mb-0 mt-10 lg:mt-0">
           <h4 className="font-bold text-end text-2xl text-[#646464] mb-2">
             Subscribe to Our Newsletter
           </h4>
-          <p className="text-lg text-[#505050] mb-2">
+          <p className="text-lg text-[#505050] mb-[.2rem]">
             Stay updated with the latest fashion trends and exclusive offers
             from us.
           </p>
@@ -75,9 +75,9 @@ const Footer = () => {
             <input
               type="email"
               placeholder="Enter your email"
-              className="border border-gray-300 rounded-md px-3 py-2 text-md md:w-full"
+              className="border border-gray-300 rounded-md px-[.2rem] py-[.1rem] text-md md:w-full"
             />
-            <button className="bg-black w-1/2 text-white px-4 rounded-md ml-2 hover:bg-gray-200 hover:text-black text-semibold text-md">
+            <button className="bg-black w-1/2 text-white px-[.2rem] rounded-md ml-2 hover:bg-gray-200 hover:text-black text-semibold text-md">
               {" "}
               Subscribe
             </button>
