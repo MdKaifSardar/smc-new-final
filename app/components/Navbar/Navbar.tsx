@@ -70,12 +70,16 @@ export default function Navbar() {
     setIsMobileMenuOpen(false);
   };
 
+  const handleLogoClick = () => {
+    window.location.href = "/";
+    localStorage.setItem("visited", "true");
+  };
   return (
     <nav className="font-play w-full bg-[#f5f5f0] shadow-md px-4 py-2 flex justify-between items-center fixed top-0 z-[10]">
       {/* Logo */}
       <div
         className="flex items-center cursor-pointer"
-        onClick={() => (window.location.href = "/")}
+        onClick={handleLogoClick}
       >
         <Image src={"/logo.png"} alt="logo" width={130} height={80} />
       </div>
