@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 
 import Hero from "./components/hero";
 import DiverseShirt from "./components/diverseShirt/DiverseShirt";
@@ -12,17 +12,19 @@ import Topbar from "./components/topbar";
 import { ToastContainer } from "react-toastify";
 
 const Page = () => {
-  useEffect(() => {
-    localStorage.setItem("visited", "false");
-  }, []); // Runs on every reload
+  const [visited, setVisited] = useState<string>("");
 
-  const visited = localStorage.getItem("visited");
+  useEffect(() => {
+    const temp = localStorage.getItem("visited") ?? "false"; // Ensure it's never null
+    setVisited(temp);
+    localStorage.setItem("visited", "false"); // Reset visited on reload
+  }, []);
 
   return (
     <>
       <ToastContainer />
       <DiscountPopup />
-      {!(visited === "true") && <Preloader />}
+      {visited !== "true" && <Preloader />}
       <Topbar />
       <Hero />
       <Shirts />

@@ -67,7 +67,7 @@ const Footer = () => {
           <h4 className="font-bold text-end text-2xl text-[#646464] mb-2">
             Subscribe to Our Newsletter
           </h4>
-          <p className="text-lg text-[#505050] mb-[.2rem]">
+          <p className="text-lg text-[#505050] mb-9">
             Stay updated with the latest fashion trends and exclusive offers
             from us.
           </p>
@@ -75,9 +75,9 @@ const Footer = () => {
             <input
               type="email"
               placeholder="Enter your email"
-              className="border border-gray-300 rounded-md px-[.2rem] py-[.1rem] text-md md:w-full"
+              className="border border-gray-300 rounded-md text-md md:w-full"
             />
-            <button className="bg-black w-1/2 text-white px-[.2rem] rounded-md ml-2 hover:bg-gray-200 hover:text-black text-semibold text-md">
+            <button className="bg-black w-1/2 text-white rounded-md ml-2 hover:bg-gray-200 hover:text-black text-semibold text-md">
               {" "}
               Subscribe
             </button>
