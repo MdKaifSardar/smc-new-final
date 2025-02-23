@@ -135,9 +135,9 @@ const BodyMeasurementsForm: React.FC<BodyMeasurementsFormProps> = ({
 
   return (
     <div className="w-full p-2 sm:p-4">
-      <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-center mb-6 sm:mb-8 text-gray-800">
+      {/* <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-center mb-6 sm:mb-8 text-gray-800">
         Body Measurements
-      </h2>
+      </h2> */}
       <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
         {/* Left side - Form */}
         <div className="w-full lg:w-1/2 bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-200">
