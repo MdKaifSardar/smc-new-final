@@ -535,7 +535,7 @@ const AccountPopUp = () => {
             </div>
             <Image
               src={
-                "https://res.cloudinary.com/dlxpcyiin/image/upload/v1738748939/Screenshot_2025-02-05_151556_e5gu5z.png"
+                "https://res.cloudinary.com/djndrffon/image/upload/v1742900248/loginImage_hcarbc.jpg"
               }
               alt="login"
               className="object-cover  w-[500px] h-[560px]"
