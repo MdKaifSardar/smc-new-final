@@ -8,7 +8,7 @@ import Sponsers from "./components/sponsors/Index";
 import Shirts from "./components/shirts/Shirts";
 import Preloader from "./components/Preloader";
 import DiscountPopup from "./components/newPopup/index";
-import Topbar from "./components/topbar";
+// import Topbar from "./components/topbar";
 import { ToastContainer } from "react-toastify";
 
 const Page = () => {
@@ -25,11 +25,10 @@ const Page = () => {
       <ToastContainer />
       <DiscountPopup />
       {visited !== "true" && <Preloader />}
-      <Topbar />
       <Hero />
       <Shirts />
       <DiverseShirt />
-      <Sponsers />
+      {/* <Sponsers /> */}
     </>
   );
 };

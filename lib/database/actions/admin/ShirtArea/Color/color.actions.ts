@@ -134,7 +134,14 @@ export const getColorByFabric = async (fabricId: string) => {
       .sort({ name: 1 }) // Sorting colors by name or other preferred criteria
       .lean();
 
-    return JSON.parse(JSON.stringify(colors));
+    // Normalize color names to lowercase for case-insensitive comparison
+    const uniqueColors = Array.from(
+      new Map(
+        colors.map((color) => [color.name.toLowerCase(), color]) // Use Map to ensure uniqueness by lowercase name
+      ).values()
+    );
+
+    return JSON.parse(JSON.stringify(uniqueColors));
   } catch (error: any) {
     console.log(error);
     return [];

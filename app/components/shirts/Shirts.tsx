@@ -45,7 +45,7 @@ const Shirts = () => {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto p-4 font-play" id="about">
+    <div className="max-w-7xl mt-[2rem] mx-auto p-4 font-play" id="about">
       <h1 className="text-4xl text-[#646464] font-bold font-play mb-10 text-center">
         Discover New Shirts
       </h1>
@@ -67,7 +67,7 @@ const Shirts = () => {
           </div>
         ))}
       </div>
-      <div className="mt-12 mb-10 flex flex-col items-center justify-center">
+      {/* <div className="mt-12 mb-10 flex flex-col items-center justify-center">
         <h1 className="text-4xl font-bold text-[#646464] mb-4">
           New Shirts available
         </h1>
@@ -82,7 +82,7 @@ const Shirts = () => {
         <button className="bg-[#c40600] text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-200 hover:text-black text-semibold transition duration-300">
           Buy
         </button>
-      </div>
+      </div> */}
     </div>
   );
 };

@@ -8,6 +8,7 @@ import CartDrawer, { openCartDrawer } from "../cartDrawer/CartDrawer"; // Import
 import AccountPopUp from "../accountPopUp/AccountPopUp";
 import { AiOutlineHeart } from "react-icons/ai"; // Wishlist icon
 import { FaShoppingCart } from "react-icons/fa"; // Cart icon
+import { FaSearch } from "react-icons/fa";
 import { useAtom } from "jotai";
 import { wishlistCountState, cartItemsState } from "@/app/utils/data/store"; // Import wishlist count state and cart items state
 
@@ -62,7 +63,7 @@ export default function Navbar() {
   const handleCartClick = () => {
     const storedItems = JSON.parse(localStorage.getItem("cartItems") || "[]");
     setCartItems(storedItems);
-    openCartDrawer(); // Open the CartDrawer instantly
+    openCartDrawer(); // Ensure this function is called to open the CartDrawer
   };
 
   // Close menu when clicking any link
@@ -75,121 +76,166 @@ export default function Navbar() {
     localStorage.setItem("visited", "true");
   };
   return (
-    <nav className="font-play w-full bg-[#f5f5f0] shadow-md px-4 py-2 flex justify-between items-center fixed top-0 z-[10]">
-      {/* Logo */}
-      <div
-        className="flex items-center cursor-pointer"
-        onClick={handleLogoClick}
-      >
-        <Image src={"/logo.png"} alt="logo" width={130} height={80} />
-      </div>
+    <>
+      <nav className="font-play w-full bg-[#f5f5f0] shadow-md px-4 py-2 flex justify-between items-center fixed top-0 z-[30]">
+        {/* Logo */}
+        <div
+          className="flex items-center cursor-pointer"
+          onClick={handleLogoClick}
+        >
+          <Image src={"/logo.png"} alt="logo" width={130} height={80} />
+        </div>
 
-      {/* Desktop Menu and Icons */}
-      <div className="flex items-center space-x-4">
-        {/* Desktop Menu */}
-        <div className="hidden md:flex items-center space-x-2 text-[#4a2b2b] font-bold text-lg">
+        {/* Search Bar and Links/Icons */}
+        <div className="flex flex-col items-end ml-auto space-y-4">
+          {/* Search Bar */}
+          <div className="hidden md:flex items-center">
+            <input
+              type="text"
+              placeholder="Search..."
+              className="w-64 h-10 p-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-[#C40600]"
+            />
+            <button className="h-10 bg-[#C40600] px-4 rounded-r-md flex items-center justify-center">
+              <FaSearch className="h-5 w-5 text-white" />
+            </button>
+          </div>
+
+          {/* Links and Icons */}
+          <div className="flex items-center gap-[.3rem]">
+            {/* Links */}
+            <div className="font-semibold text-lg hidden md:flex flex-row justify-center items-center gap-[.3rem]">
+              <a
+                href="#about"
+                onClick={scrollToAbout}
+                className="hover:text-black hover:bg-gray-200 p-[.5rem] rounded-lg transition-colors"
+              >
+                About Us
+              </a>
+              <Link
+                href="/fabric-new"
+                className="hover:text-black hover:bg-gray-200 p-[.5rem] rounded-lg transition-colors"
+              >
+                Custom Shirts
+              </Link>
+              <Link
+                href="/accessories"
+                className="hover:text-black hover:bg-gray-200 p-[.5rem] rounded-lg transition-colors"
+              >
+                Accessories
+              </Link>
+              <Link
+                href="/faq"
+                className="hover:text-black hover:bg-gray-200 p-[.5rem] rounded-lg transition-colors"
+              >
+                FAQ
+              </Link>
+              {/* <Link
+                href="/history"
+                className="font-semibold text-lg hover:text-black hover:bg-gray-200 p-[.5rem] rounded-lg transition-colors"
+              >
+                History
+              </Link> */}
+              <span className="text-[#4a2b2b]">|</span>
+            </div>
+            <div className="font-semibold text-lg cursor-pointer hover:text-black hover:bg-gray-200 p-[.5rem] rounded-lg transition-colors">
+              <AccountPopUp />
+            </div>
+            <div className="p-[.5rem] relative cursor-pointer" onClick={handleCartClick}>
+              <FaShoppingCart className="text-[#4a2b2b] h-6 w-6 hover:text-[#C40600] transition-colors" />
+              {cartItems.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full">
+                  {cartItems.length}
+                </span>
+              )}
+            </div>
+            {/* <div
+              className="relative cursor-pointer"
+              onClick={handleWishlistClick}
+            >
+              <AiOutlineHeart className="text-[#4a2b2b] h-6 w-6 hover:text-[#C40600] transition-colors" />
+              {wishlistCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full px-1.5 py-0.5">
+                  {wishlistCount}
+                </span>
+              )}
+            </div> */}
+            {/* Mobile Menu Toggle */}
+            <div className="md:hidden">
+              <button
+                onClick={toggleMobileMenu}
+                className="p-2 flex items-center justify-center"
+              >
+                {isMobileMenuOpen ? (
+                  <AiOutlineClose className="text-[#4a2b2b] h-6 w-6" />
+                ) : (
+                  <GiHamburgerMenu className="text-[#4a2b2b] h-6 w-6" />
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Mobile Menu */}
+      <div
+        className={`fixed top-[7.7rem] left-0 w-full bg-[#f5f5f0] shadow-md z-[20] md:hidden transition-all duration-300 ease-in-out ${
+          isMobileMenuOpen
+            ? "opacity-100 translate-y-0"
+            : "opacity-0 -translate-y-full pointer-events-none"
+        }`}
+        ref={mobileMenuRef}
+      >
+        {/* Links in Mobile Menu */}
+        <div className="flex flex-col text-[#4a2b2b] font-medium p-4 space-y-3">
+          {/* Search Bar in Mobile Menu */}
+          <div className="p-4">
+            <div className="flex items-center">
+              <input
+                type="text"
+                placeholder="Search..."
+                className="w-full p-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-[#C40600]"
+              />
+              <button className="bg-[#C40600] p-2 rounded-r-md flex items-center justify-center">
+                <FaSearch className="h-5 w-5 text-white" />
+              </button>
+            </div>
+          </div>
           <a
             href="#about"
             onClick={scrollToAbout}
             className="hover:text-black hover:bg-gray-200 p-[.5rem] rounded-lg transition-colors"
           >
-            About
+            About Us
           </a>
-          <Link
-            href="/history"
-            className="hover:text-black hover:bg-gray-200 p-[.5rem] rounded-lg transition-colors"
-          >
-            History
-          </Link>
           <Link
             href="/fabric-new"
             className="hover:text-black hover:bg-gray-200 p-[.5rem] rounded-lg transition-colors"
           >
-            Customise
+            Custom Shirts
           </Link>
-        </div>
-
-        {/* Wishlist Icon */}
-        <div
-          className="relative mr-4 cursor-pointer"
-          onClick={handleWishlistClick}
-        >
-          <div className="h-10 w-10 rounded-full bg-[#e8e6da] shadow-lg flex items-center justify-center hover:bg-[#d4d2c6] transition-colors">
-            <AiOutlineHeart className="text-[#4a2b2b] h-6 w-6" />
-            {wishlistCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full px-1.5 py-0.5">
-                {wishlistCount}
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Cart Icon */}
-        <div className="relative mr-4 cursor-pointer" onClick={handleCartClick}>
-          <div className="h-10 w-10 rounded-full bg-[#e8e6da] shadow-lg flex items-center justify-center hover:bg-[#d4d2c6] transition-colors">
-            {/* <FaShoppingCart className="text-[#4a2b2b] h-6 w-6" /> Add cart icon */}
-            <CartDrawer />
-            {cartItems.length > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full px-1.5 py-0.5">
-                {cartItems.length}
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Account Popup */}
-        <div className="z-[600]">
-          <AccountPopUp />
-        </div>
-
-        {/* Mobile Menu Toggle */}
-        <div className="md:hidden">
-          <button onClick={toggleMobileMenu} className="p-2">
-            {isMobileMenuOpen ? (
-              <AiOutlineClose className="text-[#4a2b2b] h-8 w-8" /> // Close icon
-            ) : (
-              <GiHamburgerMenu className="text-[#4a2b2b] h-8 w-8" /> // Hamburger icon
-            )}
-          </button>
-        </div>
-      </div>
-
-      {/* Mobile Menu */}
-      <div
-        className={`absolute top-full left-0 w-full bg-[#f5f5f0] shadow-md rounded-b-md z-10 md:hidden transition-all duration-300 ease-in-out ${
-          isMobileMenuOpen
-            ? "opacity-100 translate-y-0"
-            : "opacity-0 -translate-y-2 pointer-events-none"
-        }`}
-        ref={mobileMenuRef}
-      >
-        <div className="flex flex-col text-[#4a2b2b] font-medium p-4 space-y-3">
-          <a
-            href="#about"
-            onClick={(e) => {
-              scrollToAbout(e);
-              closeMenu();
-            }}
+          <Link
+            href="/accessories"
             className="hover:text-black hover:bg-gray-200 p-[.5rem] rounded-lg transition-colors"
           >
-            About
-          </a>
+            Accessories
+          </Link>
           <Link
+            href="/faq"
+            className="hover:text-black hover:bg-gray-200 p-[.5rem] rounded-lg transition-colors"
+          >
+            FAQ
+          </Link>
+          {/* <Link
             href="/history"
-            onClick={closeMenu}
             className="hover:text-black hover:bg-gray-200 p-[.5rem] rounded-lg transition-colors"
           >
             History
-          </Link>
-          <Link
-            href="/form-new"
-            onClick={closeMenu}
-            className="hover:text-black hover:bg-gray-200 p-[.5rem] rounded-lg transition-colors"
-          >
-            Customise
-          </Link>
+          </Link> */}
         </div>
       </div>
-    </nav>
+
+      {/* Cart Drawer */}
+      <CartDrawer />
+    </>
   );
 }

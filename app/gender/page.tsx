@@ -14,7 +14,7 @@ const GenderPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center space-y-8">
+    <div className="h-fit pt-[2rem] flex flex-col items-center justify-center space-y-8">
       <ToastContainer />
       <GenderSelect
         selectedGender={selectedGender}

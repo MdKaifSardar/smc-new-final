@@ -41,7 +41,7 @@ export default function Topbar() {
   if (!topbar) return null;
 
   return (
-    <div className="mt-[8rem] text-white font-play bg-black py-2">
+    <div className="mt-[6.5rem] md:mt-[6.7rem] text-white font-play bg-black py-2">
       {topbar.type === "marquee" ? (
         <div className="overflow-hidden whitespace-nowrap relative">
           <motion.div

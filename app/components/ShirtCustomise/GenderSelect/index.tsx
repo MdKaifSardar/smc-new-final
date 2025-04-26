@@ -38,7 +38,7 @@ const GenderSelect: React.FC<GenderSelectProps> = ({ selectedGender, onChange })
 
   return (
     <div className="flex flex-col justify-center items-center">
-      <h2 className="text-3xl font-bold mt-[7rem] lg:mt-[8rem] xl:mt-[4rem] mb-4 text-center">Gender</h2>
+      <h2 className="text-3xl font-bold mb-4 text-center">Gender</h2>
       <div className="flex-col justify-center items-center md:flex-row flex gap-4">
         {loading ? (
           <p>Loading...</p>

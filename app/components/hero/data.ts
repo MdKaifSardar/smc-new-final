@@ -22,6 +22,26 @@ const galleryImages: GalleryImage[] = [
     src: "https://res.cloudinary.com/dlxpcyiin/image/upload/v1738748985/Screenshot_2025-02-05_151644_tin9jw.png",
     alt: "Gallery Image 3",
   },
+  {
+    id: 4,
+    src: "https://res.cloudinary.com/djndrffon/image/upload/v1745610368/image_3_wpqmvr.jpg",
+    alt: "Gallery Image 4",
+  },
+  {
+    id: 5,
+    src: "https://res.cloudinary.com/djndrffon/image/upload/v1745610368/image_8_ogss1v.jpg",
+    alt: "Gallery Image 5",
+  },
+  {
+    id: 6,
+    src: "https://res.cloudinary.com/djndrffon/image/upload/v1745610368/image_7_pqj6wz.jpg",
+    alt: "Gallery Image 6",
+  },
+  {
+    id: 7,
+    src: "https://res.cloudinary.com/djndrffon/image/upload/v1745610368/image_7_pqj6wz.jpg",
+    alt: "Gallery Image 7",
+  },
 ];
 
 export { galleryImages };
