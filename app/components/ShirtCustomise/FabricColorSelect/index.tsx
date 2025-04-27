@@ -415,6 +415,30 @@ const FabricsWithColors = () => {
               </button>
             )}
           </div>
+
+          {/* Next Button Container */}
+          <div className="fixed bottom-[1rem] right-[1rem] bg-white shadow-lg rounded-lg p-4 flex flex-col items-center space-y-2">
+            <div className="text-center">
+              <p className="text-sm font-bold text-gray-800">
+                Selected Fabric:{" "}
+                <span className="text-[#C40600]">
+                  {selectedFabricName || "None"}
+                </span>
+              </p>
+              <p className="text-sm font-bold text-gray-800">
+                Selected Color:{" "}
+                <span className="text-[#C40600]">
+                  {selectedColorName || "None"}
+                </span>
+              </p>
+            </div>
+            <button
+              onClick={() => (window.location.href = "/gender")}
+              className="hover:bg-[#530e0c] bg-[#C40600] text-white py-3 px-6 rounded-lg font-medium transition duration-300"
+            >
+              Next
+            </button>
+          </div>
         </div>
       )}
     </div>

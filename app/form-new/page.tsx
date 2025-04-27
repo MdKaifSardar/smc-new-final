@@ -25,7 +25,7 @@ const SectionSelector = dynamic(
 
 const Page = () => {
   return (
-    <div className="w-full pt-8 font-play">
+    <div className="w-full font-play">
       <ToastContainer/>
       <Suspense fallback={<LoadingScreen />}>
         <SectionSelector />

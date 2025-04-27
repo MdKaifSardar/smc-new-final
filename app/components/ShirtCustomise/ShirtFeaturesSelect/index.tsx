@@ -486,8 +486,8 @@ const ShirtCustomizer = () => {
   };
 
   return (
-    <div className="mt-[4rem] flex-col md:flex-row justify-between items-start mb-10 flex w-full h-fit">
-      <div className="relative mt-[1.5rem] md:mt-[2rem] flex justify-center items-center w-full h-[87vh]">
+    <div className="flex-col md:flex-row justify-start md:justify-between items-start mb-10 flex w-full h-fit">
+      <div className="relative lg:pt-[5rem] xl:pt-[0rem] pt-[0rem] flex justify-center items-center w-full h-[87vh]">
         {Object.entries(selectedItems).map(([section, item], index) =>
           item.image?.url ? (
             <img
@@ -524,7 +524,7 @@ const ShirtCustomizer = () => {
         )}
       </div>
 
-      <div className="flex md:flex fixed top-[9rem] z-[100] left-0 bg-white p-2 shadow-lg rounded-lg items-center space-x-4">
+      <div className="flex md:flex fixed top-[11rem] z-[100] left-0 bg-white p-2 shadow-lg rounded-lg items-center space-x-4">
         <div className="text-xl font-bold">Total: ${totalPrice.toFixed(2)}</div>
         <button
           onClick={handleOpenModal}
@@ -622,7 +622,7 @@ const ShirtCustomizer = () => {
         </div>
       )}
 
-      <div className="p-4 mt-0 md:mt-[2rem] w-full md:w-[40%] xl:w-[30%] bg-white h-full flex flex-col justify-start items-center shadow-lg rounded-xl">
+      <div className="p-4 w-full md:w-[40%] xl:w-[30%] bg-white h-full flex flex-col justify-start items-center shadow-lg rounded-xl">
         <h2 className="text-2xl font-bold text-gray-800 mb-4">
           Shirt Customizer
         </h2>
