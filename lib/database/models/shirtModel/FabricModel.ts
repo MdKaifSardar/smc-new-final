@@ -6,6 +6,8 @@ export interface Fabric extends Document {
     url: string;
     public_id: string;
   };
+  price: number; // New field
+  discount: number; // New field
 }
 
 export const FabricSchema = new Schema<Fabric>({
@@ -14,6 +16,8 @@ export const FabricSchema = new Schema<Fabric>({
     url: { type: String, required: true },
     public_id: { type: String, required: true },
   },
+  price: { type: Number, required: true }, // New field
+  discount: { type: Number, default: 0 }, // New field
 });
 
 // Check if the model already exists in mongoose.models to prevent overwriting it

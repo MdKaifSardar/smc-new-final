@@ -5,6 +5,8 @@ import { getColorByFabric } from "@/lib/database/actions/admin/ShirtArea/Color/c
 import { FaSpinner } from "react-icons/fa";
 import Loader from "@/app/components/Loader";
 
+const ITEMS_PER_PAGE = 24; // 8 rows of 3 fabrics
+
 interface Color {
   _id: string;
   name: string;
@@ -31,14 +33,13 @@ const FabricsWithColors = () => {
   const [loading, setLoading] = useState(true);
   // New filter states as arrays
   const [selectedFabricTypes, setSelectedFabricTypes] = useState<string[]>([]);
-  const [selectedFabricColors, setSelectedFabricColors] = useState<string[]>(
-    []
-  );
+  const [selectedFabricColors, setSelectedFabricColors] = useState<string[]>([]);
   const [availableColors, setAvailableColors] = useState<Color[]>([]); // <-- New state for available colors
   const [selectedFabricName, setSelectedFabricName] = useState<string | null>(
     null
   );
   const [selectedColorName, setSelectedColorName] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     const fetchFabrics = async () => {
@@ -148,6 +149,27 @@ const FabricsWithColors = () => {
     }
   }, [fabrics, colors, selectedColorImages]);
 
+  // Calculate total pages
+  const totalPages = Math.ceil(filteredFabrics.length / ITEMS_PER_PAGE);
+
+  // Get fabrics for the current page
+  const paginatedFabrics = filteredFabrics.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) setCurrentPage(currentPage - 1);
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+  };
+
+  const handlePageClick = (page: number) => {
+    setCurrentPage(page);
+  };
+
   return (
     <div className="min-h-screen pt-[2rem] w-[90%] md:w-full font-play">
       {loading ? (
@@ -218,8 +240,8 @@ const FabricsWithColors = () => {
             </div>
             {/* Right panel: Fabrics display */}
             <div className="w-full md:w-[80%]">
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {filteredFabrics.map((fabric) => {
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6">
+                {paginatedFabrics.map((fabric) => {
                   // If no color filter is selected, show all colors; otherwise, show only filtered ones.
                   const displayedColors = (colors[fabric._id] || []).filter(
                     (color) =>
@@ -230,28 +252,9 @@ const FabricsWithColors = () => {
                   return (
                     <div
                       key={fabric._id}
-                      className={`w-full rounded-lg shadow-lg transition duration-300 ease-in-out transform overflow-hidden relative cursor-pointer ${
-                        selectedFabricTypes.length > 0 &&
-                        selectedFabricTypes.includes(fabric.fabricName)
-                          ? "border-[2px] border-blue-500"
-                          : ""
-                      }`}
-                      // onClick={() => {
-                      //   localStorage.setItem("fabricId", fabric._id);
-                      //   const currColor =
-                      //     colors[fabric._id]?.find((c) =>
-                      //       selectedFabricColors.includes(c._id)
-                      //     ) || colors[fabric._id]?.[0];
-                      //   if (currColor) {
-                      //     localStorage.setItem("colorId", currColor._id);
-                      //   }
-                      // }}
+                      className={`w-full rounded-lg shadow-lg transition duration-300 ease-in-out transform overflow-hidden relative cursor-pointer`}
                     >
                       {/* Fabric header */}
-                      {/* <div className="absolute top-0 left-0 w-full flex justify-between items-center bg-white p-2 font-semibold text-gray-800 z-10">
-                        <span>{fabric.fabricName}</span>
-                        <span>{fabric.price ? `$${fabric.price}` : ""}</span>
-                      </div> */}
                       <div className="p-4">
                         <div className="w-full mb-4 relative">
                           {selectedColorImages[fabric._id] ? (
@@ -331,28 +334,38 @@ const FabricsWithColors = () => {
               </div>
             </div>
           </div>
-          {/* ...existing Next button code... */}
-          <div className="fixed bottom-[1rem] right-[1rem] bg-white shadow-lg rounded-lg p-4 flex flex-col items-center space-y-2">
-            <div className="text-center">
-              <p className="text-sm font-bold text-gray-800">
-                Selected Fabric:{" "}
-                <span className="text-[#C40600]">
-                  {selectedFabricName || "None"}
-                </span>
-              </p>
-              <p className="text-sm font-bold text-gray-800">
-                Selected Color:{" "}
-                <span className="text-[#C40600]">
-                  {selectedColorName || "None"}
-                </span>
-              </p>
-            </div>
-            <button
-              onClick={() => (window.location.href = "/gender")}
-              className="hover:bg-[#530e0c] bg-[#C40600] text-white py-3 px-6 rounded-lg font-medium transition duration-300"
-            >
-              Next
-            </button>
+
+          {/* Pagination */}
+          <div className="mt-6 flex justify-center items-center space-x-2">
+            {currentPage > 1 && (
+              <button
+                onClick={handlePrevPage}
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
+              >
+                Prev
+              </button>
+            )}
+            {Array.from({ length: totalPages }, (_, index) => (
+              <button
+                key={index + 1}
+                onClick={() => handlePageClick(index + 1)}
+                className={`px-4 py-2 rounded-lg ${
+                  currentPage === index + 1
+                    ? "bg-[#C40600] text-white"
+                    : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                }`}
+              >
+                {index + 1}
+              </button>
+            ))}
+            {currentPage < totalPages && (
+              <button
+                onClick={handleNextPage}
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
+              >
+                Next
+              </button>
+            )}
           </div>
         </div>
       )}

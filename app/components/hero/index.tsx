@@ -27,8 +27,8 @@ export default function Hero() {
               src={image.src}
               alt={image.alt}
               className={`w-full h-full object-cover rounded-2xl ${gridClass}`}
-              width={1000}
-              height={1000}
+              width={500}
+              height={500}
             />
           );
         })}

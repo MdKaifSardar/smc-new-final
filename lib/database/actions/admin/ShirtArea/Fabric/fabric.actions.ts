@@ -21,14 +21,16 @@ const base64ToBuffer = (base: any) => {
 // Create new Fabric entry
 export const createFabric = async (
   fabricName: string,
-  image: string // Base64 string for image upload
+  image: string, // Base64 string for image upload
+  price: number, // New field
+  discount: number // New field
 ) => {
   try {
     await connectToDatabase();
 
-    if (!fabricName || !image) {
+    if (!fabricName || !image || price <= 0) {
       return {
-        message: "Fabric name and image are required.",
+        message: "Fabric name, image, and valid price are required.",
         success: false,
       };
     }
@@ -58,25 +60,15 @@ export const createFabric = async (
 
     const uploadedImage = await response.json();
 
-    // Log full response for debugging
-    // console.log("Cloudinary Response:", uploadedImage);
-
-    // Ensure Cloudinary response contains both URL and public_id
-    // if (!uploadedImage.secure_url || !uploadedImage.public_id) {
-    //   throw new Error(
-    //     `Image upload failed: Missing secure_url or public_id. Response: ${JSON.stringify(
-    //       uploadedImage
-    //     )}`
-    //   );
-    // }
-
     // Create a new fabric in the database
     const newFabric = new FabricModel({
       fabricName,
       image: {
-        url: uploadedImage.secure_url, // Store Cloudinary image URL
-        public_id: uploadedImage.public_id, // Store Cloudinary public_id
+        url: uploadedImage.secure_url,
+        public_id: uploadedImage.public_id,
       },
+      price, // Save price
+      discount, // Save discount
     });
 
     await newFabric.save();
@@ -129,11 +121,13 @@ export const deleteFabric = async (fabricId: string) => {
   }
 };
 
-// Update the fabric's name or image by its ID
+// Update the fabric's name, image, price, or discount by its ID
 export const updateFabric = async (
   fabricId: string,
   newFabricName: string,
-  newImage: string // Base64 string for image upload (if updated)
+  newImage: string, // Base64 string for image upload (if updated)
+  newPrice: number, // New field
+  newDiscount: number // New field
 ) => {
   try {
     await connectToDatabase();
@@ -151,6 +145,14 @@ export const updateFabric = async (
       fabric.fabricName = newFabricName;
     }
 
+    if (newPrice > 0) {
+      fabric.price = newPrice; // Update price
+    }
+
+    if (newDiscount >= 0 && newDiscount <= 100) {
+      fabric.discount = newDiscount; // Update discount
+    }
+
     if (newImage) {
       // Upload new image to Cloudinary
       const buffer = base64ToBuffer(newImage);
@@ -164,7 +166,6 @@ export const updateFabric = async (
       );
 
       const uploadedImage = await response.json();
-      // Check for valid Cloudinary response
       if (!uploadedImage.secure_url || !uploadedImage.public_id) {
         return {
           message: `Error uploading new image: ${JSON.stringify(uploadedImage)}`,
@@ -193,6 +194,7 @@ export const updateFabric = async (
   }
 };
 
+// Get all fabrics
 export const getAllFabrics = async () => {
   try {
     await connectToDatabase();
