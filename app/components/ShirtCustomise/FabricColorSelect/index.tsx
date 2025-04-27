@@ -3,7 +3,10 @@ import { useState, useEffect } from "react";
 import { getAllFabrics } from "@/lib/database/actions/admin/ShirtArea/Fabric/fabric.actions";
 import { getColorByFabric } from "@/lib/database/actions/admin/ShirtArea/Color/color.actions";
 import { FaSpinner } from "react-icons/fa";
+import { AiOutlineDown, AiOutlineUp } from "react-icons/ai";
 import Loader from "@/app/components/Loader";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const ITEMS_PER_PAGE = 24; // 8 rows of 3 fabrics
 
@@ -40,40 +43,51 @@ const FabricsWithColors = () => {
   );
   const [selectedColorName, setSelectedColorName] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isFabricTypeCollapsed, setIsFabricTypeCollapsed] = useState(false);
+  const [isFabricColorCollapsed, setIsFabricColorCollapsed] = useState(false);
 
   useEffect(() => {
     const fetchFabrics = async () => {
-      const fabricsData = await getAllFabrics();
-      setFabrics(fabricsData);
+      try {
+        const fabricsData = await getAllFabrics();
+        setFabrics(fabricsData);
 
-      const allColors: Color[] = [];
-      const colorPromises = fabricsData.map(async (fabric: Fabric) => {
-        const colorData = await getColorByFabric(fabric._id);
-        setColors((prev) => ({
-          ...prev,
-          [fabric._id]: colorData,
-        }));
-        allColors.push(...colorData);
-        if (colorData.length > 0) {
-          setSelectedColorImages((prev) => ({
-            ...prev,
-            [fabric._id]: colorData[0].image.url,
-          }));
-        }
-      });
+        const allColors: Color[] = [];
+        const colorPromises = fabricsData.map(async (fabric: Fabric) => {
+          try {
+            const colorData = await getColorByFabric(fabric._id);
+            setColors((prev) => ({
+              ...prev,
+              [fabric._id]: colorData,
+            }));
+            allColors.push(...colorData);
+            if (colorData.length > 0) {
+              setSelectedColorImages((prev) => ({
+                ...prev,
+                [fabric._id]: colorData[0].image.url,
+              }));
+            }
+          } catch (error) {
+            toast.error(`Failed to fetch colors for fabric: ${fabric.fabricName}`);
+          }
+        });
 
-      // Wait for all color data to be fetched
-      await Promise.all(colorPromises);
+        // Wait for all color data to be fetched
+        await Promise.all(colorPromises);
 
-      // Extract unique colors by name (case-insensitive) across all fabrics
-      const uniqueColors = Array.from(
-        new Map(
-          allColors.map((color) => [color.name.toLowerCase(), color]) // Use Map to ensure uniqueness by lowercase name
-        ).values()
-      );
-      setAvailableColors(uniqueColors);
+        // Extract unique colors by name (case-insensitive) across all fabrics
+        const uniqueColors = Array.from(
+          new Map(
+            allColors.map((color) => [color.name.toLowerCase(), color]) // Use Map to ensure uniqueness by lowercase name
+          ).values()
+        );
+        setAvailableColors(uniqueColors);
 
-      setLoading(false);
+        setLoading(false);
+      } catch (error) {
+        toast.error("Failed to fetch fabrics. Please try again later.");
+        setLoading(false);
+      }
     };
     fetchFabrics();
   }, []);
@@ -170,6 +184,14 @@ const FabricsWithColors = () => {
     setCurrentPage(page);
   };
 
+  const toggleFabricTypeCollapse = () => {
+    setIsFabricTypeCollapsed(!isFabricTypeCollapsed);
+  };
+
+  const toggleFabricColorCollapse = () => {
+    setIsFabricColorCollapsed(!isFabricColorCollapsed);
+  };
+
   return (
     <div className="min-h-screen pt-[2rem] w-[90%] md:w-full font-play">
       {loading ? (
@@ -191,49 +213,75 @@ const FabricsWithColors = () => {
                   Filters
                 </h3>
                 <div>
-                  <h3 className="font-bold text-xl text-[#505050] mb-2">
-                    Fabric Type
-                  </h3>
-                  {/* Render unique fabric types as checkboxes */}
-                  {Array.from(new Set(fabrics.map((f) => f.fabricName))).map(
-                    (type) => (
-                      <div key={type} className="flex items-center mb-1">
-                        <input
-                          type="checkbox"
-                          value={type}
-                          checked={selectedFabricTypes.includes(type)}
-                          onChange={handleFabricTypeChange}
-                          className="mr-2 form-checkbox h-5 w-5 text-[#C40600]"
-                        />
-                        <label>{type}</label>
-                      </div>
-                    )
+                  <div
+                    className="flex justify-between items-center cursor-pointer"
+                    onClick={toggleFabricTypeCollapse}
+                  >
+                    <h3 className="font-bold text-xl text-[#505050] mb-2">
+                      Fabric Type
+                    </h3>
+                    {isFabricTypeCollapsed ? (
+                      <AiOutlineUp className="text-[#505050]" />
+                    ) : (
+                      <AiOutlineDown className="text-[#505050]" />
+                    )}
+                  </div>
+                  {!isFabricTypeCollapsed && (
+                    <div>
+                      {Array.from(new Set(fabrics.map((f) => f.fabricName))).map(
+                        (type) => (
+                          <div key={type} className="flex items-center mb-1">
+                            <input
+                              type="checkbox"
+                              value={type}
+                              checked={selectedFabricTypes.includes(type)}
+                              onChange={handleFabricTypeChange}
+                              className="mr-2 form-checkbox h-5 w-5 text-[#C40600]"
+                            />
+                            <label>{type}</label>
+                          </div>
+                        )
+                      )}
+                    </div>
                   )}
                 </div>
                 <div>
-                  <h3 className="font-bold text-xl text-[#505050] mb-2">
-                    Fabric Color
-                  </h3>
-                  {/* Render available colors (from filtered types) as checkboxes */}
-                  {availableColors.length > 0 ? (
-                    availableColors.map((color: any) => (
-                      <div key={color._id} className="flex items-center mb-1">
-                        <input
-                          type="checkbox"
-                          value={color._id}
-                          checked={selectedFabricColors.includes(color._id)}
-                          onChange={handleFabricColorChange}
-                          className="mr-2 form-checkbox h-5 w-5 text-[#C40600]"
-                        />
-                        <div
-                          className="w-4 h-4 rounded-full mr-2"
-                          style={{ backgroundColor: color.hexCode }}
-                        ></div>
-                        <label>{color.name}</label>
-                      </div>
-                    ))
-                  ) : (
-                    <p>No colors available</p>
+                  <div
+                    className="flex justify-between items-center cursor-pointer"
+                    onClick={toggleFabricColorCollapse}
+                  >
+                    <h3 className="font-bold text-xl text-[#505050] mb-2">
+                      Fabric Color
+                    </h3>
+                    {isFabricColorCollapsed ? (
+                      <AiOutlineUp className="text-[#505050]" />
+                    ) : (
+                      <AiOutlineDown className="text-[#505050]" />
+                    )}
+                  </div>
+                  {!isFabricColorCollapsed && (
+                    <div>
+                      {availableColors.length > 0 ? (
+                        availableColors.map((color: any) => (
+                          <div key={color._id} className="flex items-center mb-1">
+                            <input
+                              type="checkbox"
+                              value={color._id}
+                              checked={selectedFabricColors.includes(color._id)}
+                              onChange={handleFabricColorChange}
+                              className="mr-2 form-checkbox h-5 w-5 text-[#C40600]"
+                            />
+                            <div
+                              className="w-4 h-4 rounded-full mr-2"
+                              style={{ backgroundColor: color.hexCode }}
+                            ></div>
+                            <label>{color.name}</label>
+                          </div>
+                        ))
+                      ) : (
+                        <p>No colors available</p>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>

@@ -26,15 +26,23 @@ const DiverseShirt = () => {
       src: "https://res.cloudinary.com/djndrffon/image/upload/v1742901631/fabric2_gipdw1.jpg",
       alt: "Fabric 6",
     },
+    {
+      src: "https://res.cloudinary.com/djndrffon/image/upload/v1745775433/bonnsbev04lix567txbw.jpg",
+      alt: "Fabric 7",
+    },
+    {
+      src: "https://res.cloudinary.com/djndrffon/image/upload/v1745775383/wieoh2uvt2riwxeryzj5.jpg",
+      alt: "Fabric 8",
+    },
   ];
 
   return (
     <div className="max-w-7xl mx-auto p-4">
-      <h1 className="text-5xl font-play text-[#646464] mb-10 text-center">
-        New Fabrics
+      <h1 className="text-4xl text-[#646464] font-bold font-play mb-10 text-center">
+        History Text
       </h1>
 
-      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-5 ">
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 ">
         {fabrics.map((fabric, index) => (
           <div
             key={index}

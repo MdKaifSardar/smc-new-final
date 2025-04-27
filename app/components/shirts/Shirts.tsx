@@ -34,23 +34,23 @@ const Shirts = () => {
       src: "https://res.cloudinary.com/djndrffon/image/upload/v1742900918/shirt2_z3jgq0.jpg",
       alt: "Fabric 4",
     },
-    {
-      src: "https://res.cloudinary.com/djndrffon/image/upload/v1742900918/shirt1_vd4in4.jpg",
-      alt: "Fabric 5",
-    },
-    {
-      src: "https://res.cloudinary.com/djndrffon/image/upload/v1742900899/shirt9_o1xdni.avif",
-      alt: "Fabric 6",
-    },
+    // {
+    //   src: "https://res.cloudinary.com/djndrffon/image/upload/v1742900918/shirt1_vd4in4.jpg",
+    //   alt: "Fabric 5",
+    // },
+    // {
+    //   src: "https://res.cloudinary.com/djndrffon/image/upload/v1742900899/shirt9_o1xdni.avif",
+    //   alt: "Fabric 6",
+    // },
   ];
 
   return (
     <div className="max-w-7xl mt-[2rem] mx-auto p-4 font-play" id="about">
       <h1 className="text-4xl text-[#646464] font-bold font-play mb-10 text-center">
-        Discover New Shirts
+        Promotional Text
       </h1>
 
-      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5 ">
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 ">
         {fabrics.map((fabric, index) => (
           <div
             key={index}
