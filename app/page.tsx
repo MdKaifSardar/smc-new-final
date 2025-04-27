@@ -10,6 +10,7 @@ import Preloader from "./components/Preloader";
 import DiscountPopup from "./components/newPopup/index";
 // import Topbar from "./components/topbar";
 import { ToastContainer } from "react-toastify";
+import ClientsListComponent from "./components/ClientsListComponent";
 
 const Page = () => {
   const [visited, setVisited] = useState<string>("");
@@ -29,6 +30,7 @@ const Page = () => {
       <Shirts />
       <DiverseShirt />
       {/* <Sponsers /> */}
+      <ClientsListComponent />
     </>
   );
 };
