@@ -16,9 +16,9 @@ export default function Hero() {
   ];
 
   return (
-    <div className="bg-[#f5f5f0] font-play">
+    <div className="p-[.5rem] md:p-[1rem] bg-[#f5f5f0] font-play">
       {/* Gallery images section as a grid */}
-      <div className="grid grid-cols-5 grid-rows-6 gap-[.4rem] lg:gap-[17px] w-full h-[20rem] md:h-[100vh] lg:h-[150vh]">
+      <div className="grid grid-cols-5 grid-rows-6 gap-[.3rem] md:gap-[.4rem] lg:gap-[17px] w-full h-[20rem] md:h-[100vh] lg:h-[150vh]">
         {gridClasses.map((gridClass, index) => {
           const image = galleryImages[index];
           return (
@@ -26,7 +26,7 @@ export default function Hero() {
               key={`grid-${index}`}
               src={image.src}
               alt={image.alt}
-              className={`w-full h-full object-cover rounded-2xl ${gridClass}`}
+              className={`w-full h-full object-cover rounded-[.5rem] md:rounded-[.6rem] lg:rounded-2xl ${gridClass}`}
               width={500}
               height={500}
             />

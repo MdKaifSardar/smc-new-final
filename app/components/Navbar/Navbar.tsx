@@ -461,7 +461,7 @@ export default function Navbar() {
         {/* Links in Mobile Menu */}
         <div className="flex flex-col text-[#4a2b2b] font-medium p-4 space-y-3">
           {/* Search Bar in Mobile Menu */}
-          <div className="p-4">
+          <div onClick={() => setIsSearchModalOpen(true)} className="p-4">
             <div className="flex items-center">
               <input
                 type="text"
