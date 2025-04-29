@@ -489,7 +489,7 @@ const ShirtCustomizer = () => {
             )}
           </div>
 
-          <div className="p-[1rem] bg-gray-200 w-full h-fit flex flow-row justify-between items-start">
+          <div className="shadow-md rounded-[1rem] p-[1rem] bg-white w-full h-fit flex flow-row justify-between items-start">
             <div className="w-full h-fit flex flex-col justify-start items-start">
               {/* Fabric Details Section */}
               {fabricName && (
@@ -613,10 +613,10 @@ const ShirtCustomizer = () => {
         )}
 
         <div className="w-full gap-[1rem] flex flex-col justify-center items-center md:w-[40%] xl:w-[40%] h-fit">
-          <div className="gap-[.3rem] flex flex-col justify-center items-center md:items-start w-full h-fit">
-            <button className="bg-[#C40600] text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-200 hover:text-black transition duration-300">
+          <div className="bg-white p-[1rem] rounded-[1rem] shadow-md gap-[.3rem] flex flex-col justify-center items-center md:items-start w-full h-fit">
+            <Link href="/cart" className="bg-[#C40600] text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-200 hover:text-black transition duration-300">
               Apply Style from History
-            </button>
+            </Link>
             {/* Gender Selection */}
             <div className="text-[1.5rem] font-semibold">Gender Selection</div>
             <div className="flex space-x-4">
