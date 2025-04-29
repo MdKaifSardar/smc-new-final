@@ -735,7 +735,7 @@ export default function CartPage() {
   }
 
   return (
-    <div className="min-h-screen pt-[7rem] px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    <div className="min-h-screen px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       <ToastContainer /> {/* Add ToastContainer here */}
       <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-8 text-center mt-10">
         Shopping Wish list
