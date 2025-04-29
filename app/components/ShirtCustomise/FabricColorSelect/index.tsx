@@ -433,7 +433,7 @@ const FabricsWithColors = () => {
               </p>
             </div>
             <button
-              onClick={() => (window.location.href = "/gender")}
+              onClick={() => (window.location.href = "/form-new")}
               className="hover:bg-[#530e0c] bg-[#C40600] text-white py-3 px-6 rounded-lg font-medium transition duration-300"
             >
               Next
