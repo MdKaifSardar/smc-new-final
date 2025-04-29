@@ -24,6 +24,7 @@ interface Fabric {
   _id: string;
   fabricName: string;
   price?: number; // <-- added optional price field
+  discount?: number; // <-- added optional discount field
 }
 
 const FabricsWithColors = () => {
@@ -36,12 +37,16 @@ const FabricsWithColors = () => {
   const [loading, setLoading] = useState(true);
   // New filter states as arrays
   const [selectedFabricTypes, setSelectedFabricTypes] = useState<string[]>([]);
-  const [selectedFabricColors, setSelectedFabricColors] = useState<string[]>([]);
+  const [selectedFabricColors, setSelectedFabricColors] = useState<string[]>(
+    []
+  );
   const [availableColors, setAvailableColors] = useState<Color[]>([]); // <-- New state for available colors
   const [selectedFabricName, setSelectedFabricName] = useState<string | null>(
     null
   );
-  const [selectedColorName, setSelectedColorName] = useState<string | null>(null);
+  const [selectedColorName, setSelectedColorName] = useState<string | null>(
+    null
+  );
   const [currentPage, setCurrentPage] = useState(1);
   const [isFabricTypeCollapsed, setIsFabricTypeCollapsed] = useState(false);
   const [isFabricColorCollapsed, setIsFabricColorCollapsed] = useState(false);
@@ -68,7 +73,9 @@ const FabricsWithColors = () => {
               }));
             }
           } catch (error) {
-            toast.error(`Failed to fetch colors for fabric: ${fabric.fabricName}`);
+            toast.error(
+              `Failed to fetch colors for fabric: ${fabric.fabricName}`
+            );
           }
         });
 
@@ -112,7 +119,9 @@ const FabricsWithColors = () => {
               (selectedColorId) =>
                 c._id === selectedColorId ||
                 c.name.toLowerCase() ===
-                  availableColors.find((ac) => ac._id === selectedColorId)?.name.toLowerCase()
+                  availableColors
+                    .find((ac) => ac._id === selectedColorId)
+                    ?.name.toLowerCase()
             )
           )
         : true;
@@ -228,20 +237,20 @@ const FabricsWithColors = () => {
                   </div>
                   {!isFabricTypeCollapsed && (
                     <div>
-                      {Array.from(new Set(fabrics.map((f) => f.fabricName))).map(
-                        (type) => (
-                          <div key={type} className="flex items-center mb-1">
-                            <input
-                              type="checkbox"
-                              value={type}
-                              checked={selectedFabricTypes.includes(type)}
-                              onChange={handleFabricTypeChange}
-                              className="mr-2 form-checkbox h-5 w-5 text-[#C40600]"
-                            />
-                            <label>{type}</label>
-                          </div>
-                        )
-                      )}
+                      {Array.from(
+                        new Set(fabrics.map((f) => f.fabricName))
+                      ).map((type) => (
+                        <div key={type} className="flex items-center mb-1">
+                          <input
+                            type="checkbox"
+                            value={type}
+                            checked={selectedFabricTypes.includes(type)}
+                            onChange={handleFabricTypeChange}
+                            className="mr-2 form-checkbox h-5 w-5 text-[#C40600]"
+                          />
+                          <label>{type}</label>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
@@ -263,7 +272,10 @@ const FabricsWithColors = () => {
                     <div>
                       {availableColors.length > 0 ? (
                         availableColors.map((color: any) => (
-                          <div key={color._id} className="flex items-center mb-1">
+                          <div
+                            key={color._id}
+                            className="flex items-center mb-1"
+                          >
                             <input
                               type="checkbox"
                               value={color._id}
@@ -304,7 +316,7 @@ const FabricsWithColors = () => {
                     >
                       {/* Fabric header */}
                       <div className="p-4">
-                        <div className="w-full mb-4 relative">
+                        <div className="w-full relative">
                           {selectedColorImages[fabric._id] ? (
                             <img
                               src={selectedColorImages[fabric._id]}
@@ -320,7 +332,10 @@ const FabricsWithColors = () => {
                             <Loader /> // Use Loader when fabric details are loading
                           )}
                         </div>
-                        <div className="mt-2">
+                      </div>
+                      <div className="px-4 pb-4 flex justify-between items-start">
+                        {/* Fabric Name and Colors */}
+                        <div>
                           <div className="flex items-center">
                             <span className="font-bold text-gray-800 mr-2">
                               Fabric Name:
@@ -329,51 +344,64 @@ const FabricsWithColors = () => {
                               {fabric.fabricName}
                             </span>
                           </div>
-                          {fabric.price && (
-                            <div className="flex items-center mt-1">
-                              <span className="font-bold text-gray-800 mr-2">
-                                Price:
-                              </span>
-                              <span className="text-base text-gray-800">
-                                ${fabric.price}
-                              </span>
+
+                          <div className="mt-2 flex items-center">
+                            <span className="text-sm font-bold text-gray-800 mr-2">
+                              Available Colors:
+                            </span>
+                            <div className="flex flex-wrap gap-2">
+                              {(colors[fabric._id] || [])
+                                .filter((color) =>
+                                  selectedFabricColors.length > 0
+                                    ? selectedFabricColors.some(
+                                        (selectedColorId) =>
+                                          color._id === selectedColorId ||
+                                          color.name.toLowerCase() ===
+                                            availableColors
+                                              .find(
+                                                (ac) =>
+                                                  ac._id === selectedColorId
+                                              )
+                                              ?.name.toLowerCase()
+                                      )
+                                    : true
+                                )
+                                .map((color) => (
+                                  <div
+                                    key={color._id}
+                                    className={`w-8 h-8 rounded-full cursor-pointer border-2 ${
+                                      selectedColorImages[fabric._id] ===
+                                      color.image.url
+                                        ? "border-blue-500"
+                                        : "border-transparent"
+                                    }`}
+                                    style={{ backgroundColor: color.hexCode }}
+                                    onClick={() =>
+                                      handleColorBlobClick(fabric._id, color)
+                                    }
+                                  ></div>
+                                ))}
                             </div>
-                          )}
-                        </div>
-                        <div className="mt-2 flex items-center">
-                          <span className="text-sm font-bold text-gray-800 mr-2">
-                            Available Colors:
-                          </span>
-                          <div className="flex flex-wrap gap-2">
-                            {(colors[fabric._id] || [])
-                              .filter((color) =>
-                                selectedFabricColors.length > 0
-                                  ? selectedFabricColors.some(
-                                      (selectedColorId) =>
-                                        color._id === selectedColorId ||
-                                        color.name.toLowerCase() ===
-                                          availableColors.find(
-                                            (ac) => ac._id === selectedColorId
-                                          )?.name.toLowerCase()
-                                    )
-                                  : true
-                              )
-                              .map((color) => (
-                                <div
-                                  key={color._id}
-                                  className={`w-8 h-8 rounded-full cursor-pointer border-2 ${
-                                    selectedColorImages[fabric._id] ===
-                                    color.image.url
-                                      ? "border-blue-500"
-                                      : "border-transparent"
-                                  }`}
-                                  style={{ backgroundColor: color.hexCode }}
-                                  onClick={() =>
-                                    handleColorBlobClick(fabric._id, color)
-                                  }
-                                ></div>
-                              ))}
                           </div>
+                        </div>
+
+                        {/* Price Section */}
+                        <div className="text-right">
+                          {fabric.price && (
+                            <>
+                              <div className="text-sm text-gray-500 line-through">
+                                ${fabric.price.toFixed(2)}
+                              </div>
+                              <div className="text-lg font-bold text-gray-800">
+                                ${(fabric.price * (1 - (fabric.discount || 0) / 100)).toFixed(2)}{" "}
+                                {(fabric.discount ?? 0) > 0 && (
+                                  <span className="text-sm text-red-500">
+                                    ({fabric.discount}% off)
+                                  </span>
+                                )}
+                              </div>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>
