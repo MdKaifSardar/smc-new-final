@@ -103,8 +103,8 @@ const DiscountPopup: React.FC = () => {
                 className="border p-2 border-black text-black w-[35%]"
               >
                 <option value="">Country</option>
-                {countries.map((country) => (
-                  <option key={country.code} value={country.code}>
+                {countries.map((country, index) => (
+                  <option key={`${country.name}-${index}`} value={country.code}>
                     {country.name} ({country.code})
                   </option>
                 ))}
