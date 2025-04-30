@@ -377,28 +377,35 @@ const CheckoutPage = () => {
   };
 
   const handleConfirmPayment = async () => {
+    if (!paymentMethod) {
+      toast.error("Please select a payment method.");
+      return;
+    }
+
     if (paymentMethod === "paypal") {
+      localStorage.setItem("deliveryAddress", JSON.stringify(deliveryAddress));
+      localStorage.setItem("checkoutCoupon", JSON.stringify({ couponCode, offerValue, discount }));
+      localStorage.setItem("checkoutSummary", JSON.stringify({ subtotal, total, discount }));
       router.push("/checkout/paypal");
     } else if (paymentMethod === "cash-on-delivery") {
-      // Create the order
       const orderResponse = await createOrder(
         cart?.products || [],
         deliveryAddress,
         "cash_on_delivery",
         total,
-        subtotal, // totalBeforeDiscount
+        subtotal,
         couponCode,
         user.id,
-        discount // totalSaved
+        discount
       );
 
       if (orderResponse.success) {
-        // Instead of clearing the entire cart, remove only temporary selections.
         localStorage.removeItem("selectedCartItems");
+        localStorage.removeItem("checkoutCoupon");
+        localStorage.removeItem("checkoutSummary");
         router.push(`/order/${orderResponse.orderId}`);
       } else {
-        console.error(orderResponse.message);
-        // Optionally, implement error UI here
+        toast.error(orderResponse.message || "Failed to place order.");
       }
     }
   };

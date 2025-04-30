@@ -8,21 +8,12 @@ import mongoose from "mongoose";
 import { unstable_cache } from "next/cache";
 import ShirtModel from "../models/shirtModel/ShirtModel";
 
+import { removeOrderedItemsFromCart } from "./cart.actions";
+
 const { ObjectId } = mongoose.Types;
 
 export async function createOrder(
-  products: {
-    product: string;
-    name: string;
-    image: string;
-    size: string;
-    qty: number;
-    color: { color: string; image: string };
-    price: number;
-    status: string;
-    productCompletedAt: Date | null;
-    _id: string;
-  }[],
+  products: any[],
   shippingAddress: {
     phoneNumber: string;
     address1: string;
@@ -31,14 +22,15 @@ export async function createOrder(
     state: string;
     zipCode: string;
     country: string;
-    name: string;
+    name?: string;
   },
   paymentMethod: "paypal" | "cash_on_delivery",
   total: number,
   totalBeforeDiscount: number,
-  couponApplied: string,
+  couponApplied: string = "",
   userId: string,
-  totalSaved: number
+  totalSaved: number = 0,
+  receiptNote: string = ""
 ) {
   try {
     await connectToDatabase();
@@ -59,29 +51,36 @@ export async function createOrder(
       };
     }
 
+    const rawSubtotal = Number(totalBeforeDiscount) > 0 ? Number(totalBeforeDiscount) : Number(total);
+    const finalTotal = Number(total) > 0 ? Number(total) : rawSubtotal;
+
+    const mappedProducts = products.map((product: any) => {
+      const prodId = typeof product.product === "object" && product.product !== null
+        ? product.product._id?.toString()
+        : product.product?.toString() || product._id?.toString();
+      return {
+        product: prodId,
+        qty: (product.qty || "1").toString(),
+        price: Number(product.price) || 0,
+      };
+    });
+
     const newOrder = await new OrderModel({
-      userid : user.clerkId,
-      products: products.map((product) => ({
-        product: product.product,
-        qty: product.qty.toString(),
-        price: product.price,
-      })),
+      userid: user.clerkId,
+      products: mappedProducts,
       orderAddress: {
         ...shippingAddress,
         active: true,
       },
       paymentMethod,
-      cartTotal: total,
-      totalAfterDiscount: totalBeforeDiscount,
-      // For cash on delivery orders, we confirm immediately and use pending status
-      orderConfirmation: false,
+      cartTotal: rawSubtotal,
+      totalAfterDiscount: finalTotal,
+      orderConfirmation: paymentMethod === "paypal",
       deliveryStatus: "pending",
-      price: total,
+      price: finalTotal,
       deliveryCost: 0,
-      // For cash on delivery, set paymentTime at order placement; others can update later
       paymentTime: new Date(),
-      // If cash_on_delivery, receipt shows a default note
-      receipt: paymentMethod === "cash_on_delivery" ? "Cash payment pending" : "",
+      receipt: receiptNote || (paymentMethod === "cash_on_delivery" ? "Cash payment pending" : "Paid via PayPal"),
     }).save();
 
     // Add the order to the user's orders array
@@ -89,12 +88,21 @@ export async function createOrder(
     user.orders.push(newOrder._id);
     await user.save();
 
+    // Remove purchased items from the database cart
+    const purchasedIds = mappedProducts.map((p) => p.product).filter(Boolean);
+    if (user.clerkId && purchasedIds.length > 0) {
+      try {
+        await removeOrderedItemsFromCart(user.clerkId, purchasedIds);
+      } catch (cartErr) {
+        console.error("Failed to clean up user cart after order:", cartErr);
+      }
+    }
+
     return {
       message: "Order created successfully",
       orderId: JSON.parse(JSON.stringify(newOrder._id)),
       success: true,
     };
-
   } catch (error: any) {
     console.error("Error creating order:", error);
     return {
