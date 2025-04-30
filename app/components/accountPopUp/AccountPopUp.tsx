@@ -85,9 +85,12 @@ const AccountPopUp = () => {
       });
     } catch (err: any) {
       console.error("Google OAuth error:", err);
-      toast.error(
-        err?.errors?.[0]?.longMessage || err?.message || "Failed to initiate Google sign in."
-      );
+      const rawMsg = err?.errors?.[0]?.longMessage || err?.errors?.[0]?.message || err?.message || "";
+      if (rawMsg.includes("oauth_google") || rawMsg.includes("allowed values for parameter strategy")) {
+        toast.error("Google login is not enabled in your Clerk Dashboard yet. Please enable 'Google' under Configure > Social Connections.");
+      } else {
+        toast.error(rawMsg || "Failed to initiate Google sign in.");
+      }
       setIsGoogleSubmitting(false);
     }
   };
