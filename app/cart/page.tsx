@@ -215,6 +215,7 @@ const ShirtCompositeImage = ({ details }: { details: ShirtDetails }) => {
 const CartItem = ({
   item,
   onDelete,
+  onUpdateQuantity,
   isUpdating,
   user,
   selectedItems,
@@ -222,6 +223,7 @@ const CartItem = ({
 }: {
   item: CartItem;
   onDelete: (id: string, event: React.MouseEvent) => Promise<void>;
+  onUpdateQuantity: (id: string, newQty: number) => Promise<void>;
   isUpdating: boolean;
   user: any;
   selectedItems: string[];
@@ -229,7 +231,7 @@ const CartItem = ({
 }) => {
   const [details, setDetails] = useState<ShirtDetails>(item.product);
   const [isLoading, setIsLoading] = useState(true);
-  const router = useRouter(); // updated hook
+  const router = useRouter();
 
   useEffect(() => {
     async function fetchDetails() {
@@ -247,53 +249,6 @@ const CartItem = ({
     fetchDetails();
   }, [item.product]);
 
-  const handleUpdateQuantity = async (
-    user: any,
-    productId: string,
-    newQuantity: number
-  ) => {
-    if (!user?.id) return;
-
-    setUpdatingItem(productId);
-    try {
-      const response = await updateCartItemQuantity(
-        user.id,
-        productId,
-        newQuantity
-      );
-      if (response.success) {
-        toast.success("Quantity updated");
-        setCart((prevCart) => {
-          if (!prevCart) return prevCart;
-          const updatedProducts: CartItem[] = prevCart.products.map(
-            (item: CartItem) =>
-              item.product._id === productId
-                ? { ...item, qty: newQuantity.toString() }
-                : item
-          );
-          // Update localStorage to reflect the new quantity
-          const updatedSelectedItems = updatedProducts.filter((item) =>
-            selectedItems.includes(item.product._id)
-          );
-          localStorage.setItem(
-            "selectedCartItems",
-            JSON.stringify(updatedSelectedItems)
-          );
-          return {
-            ...prevCart,
-            products: updatedProducts,
-            cartTotal: response.cart.cartTotal,
-          };
-        });
-      }
-    } catch (error) {
-      console.error("Error updating quantity:", error);
-      toast.error("Failed to update quantity");
-    } finally {
-      setUpdatingItem(null);
-    }
-  };
-
   const handleEdit = () => {
     const url = new URL("/form-new", window.location.origin);
     url.searchParams.append("fabricName", details.fabricName || "");
@@ -308,10 +263,6 @@ const CartItem = ({
         <AiOutlineLoading3Quarters className="h-6 w-6 animate-spin" />
       </Card>
     );
-  }
-
-  function handleDelete(_id: string, event: Event | undefined) {
-    throw new Error("Function not implemented.");
   }
 
   return (
@@ -502,29 +453,51 @@ const CartItem = ({
           </div>
         </div>
 
-        {/* Quantity Update */}
-        {/* <div className="flex items-center gap-2">
-          <button
-            onClick={() => {
-              const currentQty = parseInt(item.qty);
-              if (currentQty <= 1) {
-                handleDelete(item.product._id, event);
-              } else {
-                handleUpdateQuantity(user, item.product._id, currentQty - 1);
-              }
-            }}
-            className="p-1 hover:bg-gray-100 rounded"
-          >
-            <FaMinus className="w-4 h-4" />
-          </button>
-          <span className="w-8 text-center">{item.qty}</span>
-          <button
-            onClick={() => handleUpdateQuantity(user, item.product._id, parseInt(item.qty) + 1)}
-            className="p-1 hover:bg-gray-100 rounded"
-          >
-            <FaPlus className="w-4 h-4" />
-          </button>
-        </div> */}
+        {/* Quantity Controls */}
+        <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-gray-100">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium text-gray-700">Quantity:</span>
+            <div className="flex items-center border border-gray-300 rounded-md bg-white">
+              <button
+                type="button"
+                disabled={isUpdating || (parseInt(item.qty, 10) || 1) <= 1}
+                onClick={(e) => {
+                  e.preventDefault();
+                  const currentQty = parseInt(item.qty, 10) || 1;
+                  if (currentQty > 1) {
+                    onUpdateQuantity(item.product._id, currentQty - 1);
+                  }
+                }}
+                className="p-2 hover:bg-gray-100 disabled:opacity-40 transition-colors"
+                title="Decrease quantity"
+              >
+                <FaMinus className="w-3 h-3 text-gray-600" />
+              </button>
+              <span className="px-3 py-1 font-semibold text-sm min-w-[2.5rem] text-center">
+                {item.qty}
+              </span>
+              <button
+                type="button"
+                disabled={isUpdating}
+                onClick={(e) => {
+                  e.preventDefault();
+                  const currentQty = parseInt(item.qty, 10) || 1;
+                  onUpdateQuantity(item.product._id, currentQty + 1);
+                }}
+                className="p-2 hover:bg-gray-100 disabled:opacity-40 transition-colors"
+                title="Increase quantity"
+              >
+                <FaPlus className="w-3 h-3 text-gray-600" />
+              </button>
+            </div>
+          </div>
+          <div className="text-right">
+            <span className="text-sm text-gray-500">Item Total: </span>
+            <span className="text-base font-bold text-gray-800">
+              ${(item.price * (parseInt(item.qty, 10) || 1)).toFixed(2)}
+            </span>
+          </div>
+        </div>
 
         {/* Delete Button */}
         <div className="flex justify-end items-center gap-2 sm:gap-4 pt-2 sm:pt-0">
@@ -555,16 +528,13 @@ const CartItem = ({
 
 export default function CartPage() {
   const { user } = useUser();
+  const router = useRouter();
   const [cart, setCart] = useState<CartData["cart"]>(undefined);
   const [loading, setLoading] = useState(true);
   const [updatingItem, setUpdatingItem] = useState<string | null>(null);
-  const [selectedItems, setSelectedItems] = useState<string[]>([]); // new state
-  const [, setWishlistCount] = useAtom(wishlistCountState); // Use wishlist count state
-  const [, setCartItems] = useAtom(cartItemsState); // Use cart items state
-
-  useEffect(() => {
-    fetchCart();
-  }, [user]);
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [, setWishlistCount] = useAtom(wishlistCountState);
+  const [, setCartItems] = useAtom(cartItemsState);
 
   const fetchCart = async () => {
     if (!user) {
@@ -575,20 +545,19 @@ export default function CartPage() {
       const response = await getSavedCartForUser(user.id);
       if (response.success && response.cart) {
         setCart(response.cart);
-        setCartItems(response.cart.products); // Update cart items state
+        setCartItems(response.cart.products);
 
-        // Calculate total product count using quantity sums
+        // Select all items by default on initial load
+        const itemIds = response.cart.products.map((p: any) => p.product._id);
+        setSelectedItems(itemIds);
+
         const totalCount = response.cart.products.reduce(
-          (sum: number, item: { qty: any }) => sum + Number(item.qty),
+          (sum: number, item: { qty: any }) => sum + (parseInt(item.qty, 10) || 1),
           0
         );
         setWishlistCount(totalCount);
-
         localStorage.setItem("wishlistCount", totalCount.toString());
-        localStorage.setItem(
-          "cartItems",
-          JSON.stringify(response.cart.products)
-        );
+        localStorage.setItem("cartItems", JSON.stringify(response.cart.products));
       }
     } catch (error) {
       console.error("Error fetching cart:", error);
@@ -598,30 +567,9 @@ export default function CartPage() {
     }
   };
 
-  // Update counts on initial load
   useEffect(() => {
-    const storedWishlistCount = localStorage.getItem("wishlistCount");
-    const storedCartItems = localStorage.getItem("cartItems");
-
-    if (storedWishlistCount) {
-      setWishlistCount(parseInt(storedWishlistCount, 10));
-    }
-
-    if (storedCartItems) {
-      setCartItems(JSON.parse(storedCartItems));
-    }
-  }, [setWishlistCount, setCartItems]);
-
-  // Refresh wishlist count every 1 sec
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const storedWishlistCount = localStorage.getItem("wishlistCount");
-      if (storedWishlistCount) {
-        setWishlistCount(parseInt(storedWishlistCount, 10));
-      }
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [setWishlistCount]);
+    fetchCart();
+  }, [user]);
 
   const handleButtonClick =
     (callback: (event: React.MouseEvent) => void) =>
@@ -631,34 +579,68 @@ export default function CartPage() {
       callback(event);
     };
 
+  const handleUpdateQuantity = async (productId: string, newQuantity: number) => {
+    if (!user?.id) return;
+
+    setUpdatingItem(productId);
+    try {
+      const response = await updateCartItemQuantity(user.id, productId, newQuantity);
+      if (response.success && response.cart) {
+        setCart(response.cart);
+        setCartItems(response.cart.products);
+
+        const totalCount = response.cart.products.reduce(
+          (sum: number, item: any) => sum + (parseInt(item.qty, 10) || 1),
+          0
+        );
+        setWishlistCount(totalCount);
+        localStorage.setItem("wishlistCount", totalCount.toString());
+        localStorage.setItem("cartItems", JSON.stringify(response.cart.products));
+
+        const updatedSelected = response.cart.products.filter((item: any) =>
+          selectedItems.includes(item.product._id)
+        );
+        localStorage.setItem("selectedCartItems", JSON.stringify(updatedSelected));
+
+        toast.success("Quantity updated");
+      } else {
+        toast.error(response.message || "Failed to update quantity");
+      }
+    } catch (error) {
+      console.error("Error updating quantity:", error);
+      toast.error("Failed to update quantity");
+    } finally {
+      setUpdatingItem(null);
+    }
+  };
+
   const handleDelete = async (productId: string, event: React.MouseEvent) => {
     if (!user?.id) return;
 
     setUpdatingItem(productId);
     try {
       const response = await deleteShirtFromCart(user.id, productId);
-      if (response.success) {
+      if (response.success && response.cart) {
         toast.success("Item removed from cart");
-        setCart((prevCart) => {
-          if (!prevCart) return prevCart;
-          const updatedProducts = prevCart.products.filter(
-            (item) => item.product._id !== productId
-          );
-          const updatedCart = {
-            ...prevCart,
-            products: updatedProducts,
-            cartTotal: response.cart.cartTotal,
-          };
-          // Update localStorage to remove deleted items if they are selected
-          const updatedSelectedItems = updatedCart.products.filter((item) =>
-            selectedItems.includes(item.product._id)
-          );
-          localStorage.setItem(
-            "selectedCartItems",
-            JSON.stringify(updatedSelectedItems)
-          );
-          return updatedCart;
-        });
+        setCart(response.cart);
+        setCartItems(response.cart.products);
+
+        setSelectedItems((prev) => prev.filter((id) => id !== productId));
+
+        const totalCount = response.cart.products.reduce(
+          (sum: number, item: any) => sum + (parseInt(item.qty, 10) || 1),
+          0
+        );
+        setWishlistCount(totalCount);
+        localStorage.setItem("wishlistCount", totalCount.toString());
+        localStorage.setItem("cartItems", JSON.stringify(response.cart.products));
+
+        const updatedSelected = response.cart.products.filter((item: any) =>
+          selectedItems.includes(item.product._id) && item.product._id !== productId
+        );
+        localStorage.setItem("selectedCartItems", JSON.stringify(updatedSelected));
+      } else {
+        toast.error(response.message || "Failed to remove item");
       }
     } catch (error) {
       console.error("Error removing item:", error);
@@ -676,44 +658,31 @@ export default function CartPage() {
 
   const handleProceedToCheckout = () => {
     if (selectedItems.length === 0) {
-      toast.error("Please select at least one order to proceed."); // Use toast for the alert message
-      localStorage.removeItem("selectedCartItems"); // Clear selected items if none are selected
-    } else {
-      const filteredItems = cart?.products
-        ?.filter((item) => selectedItems.includes(item.product._id))
-        .map((item) => ({
-          ...item,
-          qty: "1", // Set quantity to 1 by default
-        }));
-
-      // Retrieve existing items from localStorage
-      const existingItems = JSON.parse(
-        localStorage.getItem("selectedCartItems") || "[]"
-      );
-
-      // Merge new selected items with existing items, incrementing quantity if product ID is the same
-      const updatedItems = [...existingItems];
-      filteredItems?.forEach((newItem) => {
-        const existingItemIndex = updatedItems.findIndex(
-          (item) => item.product._id === newItem.product._id
-        );
-        if (existingItemIndex !== -1) {
-          updatedItems[existingItemIndex].qty = (
-            parseInt(updatedItems[existingItemIndex].qty) + 1
-          ).toString();
-        } else {
-          updatedItems.push(newItem);
-        }
-      });
-
-      localStorage.setItem("selectedCartItems", JSON.stringify(updatedItems));
-      setWishlistCount(updatedItems.length); // Update wishlist count
-      openCartDrawer();
+      toast.error("Please select at least one item to proceed to checkout.");
+      return;
     }
+
+    const filteredItems = cart?.products?.filter((item) =>
+      selectedItems.includes(item.product._id)
+    );
+
+    if (!filteredItems || filteredItems.length === 0) {
+      toast.error("Selected items not found in cart.");
+      return;
+    }
+
+    localStorage.setItem("selectedCartItems", JSON.stringify(filteredItems));
+    router.push("/checkout");
   };
-  const subtotal = cart?.cartTotal || 0;
-  const tax = subtotal * 0.1; // Assuming a 10% tax rate
-  const totalWithTax = subtotal + tax;
+
+  // Calculate selected total dynamically
+  const selectedTotal =
+    cart?.products
+      ?.filter((item) => selectedItems.includes(item.product._id))
+      ?.reduce(
+        (sum, item) => sum + item.price * (parseInt(item.qty, 10) || 1),
+        0
+      ) || 0;
 
   if (loading) {
     return (
@@ -726,19 +695,21 @@ export default function CartPage() {
   if (!cart?.products?.length) {
     return (
       <div className="min-h-screen pt-16 flex flex-col items-center justify-center">
-        <p className="text-lg text-gray-600 mb-4">Your wish list is empty</p>
-        <Link href="/customize">
-          <Button>Start Shopping</Button>
+        <p className="text-xl text-gray-600 mb-4 font-play">Your shopping cart is empty</p>
+        <Link href="/form-new">
+          <Button className="bg-[#C40600] text-white hover:bg-[#a00500] font-play px-8 py-3">
+            Start Designing
+          </Button>
         </Link>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-      <ToastContainer /> {/* Add ToastContainer here */}
-      <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-8 text-center mt-10">
-        Shopping Wish list
+    <div className="min-h-screen px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto pt-8">
+      <ToastContainer />
+      <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-8 text-center mt-10 font-play">
+        Shopping Cart
       </h1>
       <div className="space-y-4 sm:space-y-6">
         {cart.products.map((item) => (
@@ -751,6 +722,7 @@ export default function CartPage() {
             <CartItem
               item={item}
               onDelete={handleDelete}
+              onUpdateQuantity={handleUpdateQuantity}
               isUpdating={updatingItem === item.product._id}
               user={user}
               selectedItems={selectedItems}
@@ -758,41 +730,27 @@ export default function CartPage() {
             />
           </Suspense>
         ))}
-        <div className="mt-6 sm:mt-8 border-t pt-4 sm:pt-6">
-          <div className="flex flex-col items-end gap-2">
-            <p className="text-xl sm:text-2xl font-bold">
-              Total: ${cart.cartTotal.toFixed(2)}
-            </p>
-            {/* {cart.totalAfterDiscount !== undefined && (
-              <p className="text-lg sm:text-xl text-green-600">
-                Discounted Total: ${cart.totalAfterDiscount.toFixed(2)}
+        <div className="mt-6 sm:mt-8 border-t pt-4 sm:pt-6 bg-white p-4 sm:p-6 rounded-lg shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <p className="text-sm text-gray-500">
+                {selectedItems.length} of {cart.products.length} item(s) selected for checkout
               </p>
-            )} */}
-            <Link
-              href="#"
-              onClick={(e) => {
-                e.preventDefault();
-                handleProceedToCheckout();
-              }}
-              className="w-full sm:w-auto"
+              <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-1">
+                Selected Total: ${selectedTotal.toFixed(2)}
+              </p>
+            </div>
+            <Button
+              size="lg"
+              disabled={selectedItems.length === 0}
+              onClick={handleProceedToCheckout}
+              className="w-full sm:w-auto font-play px-10 font-bold bg-[#C40600] text-white hover:bg-[#a00500] disabled:opacity-50 transition-colors"
             >
-              <Button
-                size="lg"
-                className="mt-4 w-full font-play px-10 font-bold bg-red-700  sm:w-auto"
-              >
-                Proceed to cartDrawer
-              </Button>
-            </Link>
+              Proceed to Checkout
+            </Button>
           </div>
         </div>
       </div>
     </div>
   );
-}
-
-function setUpdatingItem(arg0: string | null) {
-  throw new Error("Function not implemented.");
-}
-function setCart(arg0: (prevCart: any) => any) {
-  throw new Error("Function not implemented.");
 }

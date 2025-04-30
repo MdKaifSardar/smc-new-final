@@ -16,6 +16,7 @@ import { useAtom, useStore } from "jotai";
 import { cartMenuState } from "@/app/utils/data/store";
 import { useUser } from "@clerk/nextjs";
 import { getShirtByIdInDetails } from "@/lib/database/actions/admin/ShirtArea/Shirt/shirt.actions";
+import { deleteShirtFromCart } from "@/lib/database/actions/cart.actions";
 import Image from "next/image";
 
 interface CartItem {
@@ -164,63 +165,66 @@ const CartDrawer = () => {
   }, [cartItems, isShirtEnriched]);
 
   useEffect(() => {
-    if (cartMenuOpen) {
-      const stored = localStorage.getItem("selectedCartItems");
-      if (stored) {
-        const items = JSON.parse(stored);
-        const updatedItems = items.map((item: any) => {
-          if (item.shirt && item.shirt.frontImage) {
-            const img = new window.Image();
-            img.src = item.shirt.frontImage as string;
-          }
-          return item;
-        });
-        setCartItems(updatedItems);
-      } else {
-        setCartItems([]);
+    async function loadFreshCart() {
+      if (!isLoaded || !user) return;
+      try {
+        setLoading(true);
+        const res = await fetch(`/api/cart?clerkId=${user.id}`);
+        const data = await res.json();
+        if (data.success && data.cart?.products) {
+          const enriched = await Promise.all(
+            data.cart.products.map(async (item: any) => {
+              const productId = getProductId(item);
+              if (!productId) return item;
+              try {
+                const shirtRes = await getShirtByIdInDetails(productId);
+                return shirtRes?.success ? { ...item, shirt: shirtRes.shirt } : item;
+              } catch {
+                return item;
+              }
+            })
+          );
+          setCartItems(enriched);
+          setIsShirtEnriched(true);
+        } else {
+          setCartItems([]);
+        }
+      } catch (error) {
+        console.error("Error refreshing cart drawer:", error);
+      } finally {
+        setLoading(false);
       }
     }
-  }, [cartMenuOpen]);
 
-  useEffect(() => {
     if (cartMenuOpen) {
-      const timer = setTimeout(() => {
-        async function refreshCartDetails() {
-          const stored = localStorage.getItem("selectedCartItems");
-          if (stored) {
-            const items = JSON.parse(stored);
-            const updatedItems = await Promise.all(
-              items.map(async (item: any) => {
-                const productId = getProductId(item);
-                if (!productId) return item;
-                try {
-                  const data = await getShirtByIdInDetails(productId);
-                  return data && data.success ? { ...item, shirt: data.shirt } : item;
-                } catch (error) {
-                }
-              })
-            );
-            setCartItems(updatedItems);
-          }
-        }
-        refreshCartDetails();
-      }, 1000);
-      return () => clearTimeout(timer);
+      loadFreshCart();
     }
-  }, [cartMenuOpen]);
+  }, [cartMenuOpen, isLoaded, user]);
 
   const handleOnClickCartMenu = () => {
     if (user) setCartMenuOpen(true);
   };
 
-  const removeItem = (productId: string) => {
-    const updatedCartItems = cartItems.filter((item) => getProductId(item) !== productId);
-    setCartItems(updatedCartItems);
-    localStorage.setItem("selectedCartItems", JSON.stringify(updatedCartItems));
+  const removeItem = async (productId: string) => {
+    if (!user) return;
+    try {
+      const response = await deleteShirtFromCart(user.id, productId);
+      if (response.success) {
+        const updated = cartItems.filter((item) => getProductId(item) !== productId);
+        setCartItems(updated);
+        localStorage.setItem("selectedCartItems", JSON.stringify(updated));
+      }
+    } catch (error) {
+      console.error("Error deleting item from cart:", error);
+    }
   };
 
   const updateQuantity = async (productId: string, newQuantity: number) => {
     if (!user) return;
+    if (newQuantity <= 0) {
+      await removeItem(productId);
+      return;
+    }
     try {
       const res = await fetch("/api/cart", {
         method: "POST",
@@ -234,27 +238,33 @@ const CartDrawer = () => {
             getProductId(item) === productId ? { ...item, qty: newQuantity.toString() } : item
           )
         );
-        setIsShirtEnriched(false);
-        const updatedItems = JSON.parse(localStorage.getItem("selectedCartItems") || "[]").map((item: any) =>
+        const updatedSelected = JSON.parse(
+          localStorage.getItem("selectedCartItems") || "[]"
+        ).map((item: any) =>
           getProductId(item) === productId ? { ...item, qty: newQuantity.toString() } : item
         );
-        localStorage.setItem("selectedCartItems", JSON.stringify(updatedItems));
+        localStorage.setItem("selectedCartItems", JSON.stringify(updatedSelected));
       }
     } catch (error) {
       console.error("Error updating quantity", error);
     }
   };
 
-  const total = cartItems.reduce((sum, item) => sum + item.price * Number(item.qty), 0);
+  const total = cartItems.reduce(
+    (sum, item) => sum + (Number(item.price) || 0) * (parseInt(item.qty, 10) || 1),
+    0
+  );
 
   const handleCheckout = () => {
     if (isClosing) return;
     setIsClosing(true);
+    // Ensure all current cart items are stored for checkout
+    localStorage.setItem("selectedCartItems", JSON.stringify(cartItems));
     setTimeout(() => {
       setCartMenuOpen(false);
       setIsClosing(false);
       window.location.href = "/checkout";
-    }, 500);
+    }, 300);
   };
 
   const handleClose = () => {
@@ -291,7 +301,7 @@ const CartDrawer = () => {
         >
           <SheetHeader className="sticky top-0 bg-white z-50 w-full">
             <SheetTitle className="subHeading text-xl sm:text-2xl px-4 py-6 border-b">
-              WISH LIST
+              YOUR CART
             </SheetTitle>
             <button
               onClick={handleClose}
