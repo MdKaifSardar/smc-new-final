@@ -19,6 +19,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogTitle,
   DialogTrigger,
 } from "@/app/components/ui/dialog";
@@ -252,6 +253,9 @@ const AccountPopUp = () => {
           <DialogTitle className="text-xl font-bold">
             Profile Details
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            View your profile details and saved address
+          </DialogDescription>
           <div className="mt-4 space-y-4">
             <div className="flex items-center justify-center mb-6">
               <Image
@@ -332,6 +336,10 @@ const AccountPopUp = () => {
 
       <Dialog open={accountMenuOpen} onOpenChange={setAccountMenuOpen}>
         <DialogContent className="sm:max-w-[725px] flex">
+          <DialogTitle className="sr-only">Account Authentication</DialogTitle>
+          <DialogDescription className="sr-only">
+            Sign in or create an account to access customized shirt designs and discounts
+          </DialogDescription>
           <Card className="space-y-3">
             <Tabs defaultValue="signup">
               <TabsList className="grid w-full grid-cols-2">
@@ -551,6 +559,10 @@ const AccountPopUp = () => {
         onOpenChange={setShowVerificationDialog}
       >
         <DialogContent>
+          <DialogTitle className="sr-only">Email Verification</DialogTitle>
+          <DialogDescription className="sr-only">
+            Enter the verification code sent to your email
+          </DialogDescription>
           <Card>
             <CardHeader>
               <CardTitle>Email Verification</CardTitle>
@@ -591,6 +603,10 @@ const AccountPopUp = () => {
         onOpenChange={setShowResetPasswordDialog}
       >
         <DialogContent>
+          <DialogTitle className="sr-only">Reset Password</DialogTitle>
+          <DialogDescription className="sr-only">
+            Enter your new password to reset your credentials
+          </DialogDescription>
           <Card>
             <CardHeader>
               <CardTitle>Reset Password</CardTitle>
