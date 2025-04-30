@@ -79,5 +79,12 @@ body {
     /* Your custom global styles */
     html {
       font-family: 'Inter', sans-serif;
+      scrollbar-gutter: stable;
+    }
+
+    body[data-scroll-locked] {
+      margin-right: 0px !important;
+      padding-right: 0px !important;
+      overflow: hidden !important;
     }
   }
