@@ -16,6 +16,7 @@ import { createMeasurement } from "@/lib/database/actions/measurement.actions";
 import { updateShirtIds } from "@/lib/database/actions/admin/ShirtArea/Shirt/shirt.actions";
 import { addShirtToCart } from "@/lib/database/actions/cart.actions";
 import { savedShirtMeasurementsState, savedBodyMeasurementsState } from "@/app/utils/data/store";
+import { mutate } from "swr";
 
 const Page = () => {
   const router = useRouter();
@@ -81,6 +82,7 @@ const Page = () => {
       if (!cartResponse.success) {
         throw new Error(cartResponse.message);
       }
+      mutate(["cart", user.id]);
 
       // 5. Success - clean up and redirect
       toast.success("Measurements saved and shirt added to cart!");

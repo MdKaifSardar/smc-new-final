@@ -11,6 +11,7 @@ import { FaShoppingCart } from "react-icons/fa"; // Cart icon
 import { FaSearch } from "react-icons/fa";
 import { useAtom } from "jotai";
 import { wishlistCountState, cartItemsState } from "@/app/utils/data/store"; // Import wishlist count state and cart items state
+import { useCart } from "@/app/utils/hooks/useCart";
 import Loader from "../Loader";
 import { getAllFabrics } from "@/lib/database/actions/admin/ShirtArea/Fabric/fabric.actions";
 import { getColorByFabric } from "@/lib/database/actions/admin/ShirtArea/Color/color.actions";
@@ -37,6 +38,7 @@ export default function Navbar() {
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const [wishlistCount, setWishlistCount] = useAtom(wishlistCountState); // Wishlist count state
   const [cartItems, setCartItems] = useAtom(cartItemsState); // Cart items state
+  const { cartCount } = useCart();
   const [fabrics, setFabrics] = useState<Fabric[]>([]);
   const [colors, setColors] = useState<{ [fabricId: string]: Color[] }>({});
   const [selectedColorImages, setSelectedColorImages] = useState<{
@@ -295,9 +297,9 @@ export default function Navbar() {
               onClick={handleCartClick}
             >
               <FaShoppingCart className="text-[#4a2b2b] h-6 w-6 hover:text-[#C40600] transition-colors" />
-              {cartItems.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full">
-                  {cartItems.length}
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-[#A7120B] text-white text-[11px] font-bold font-mono min-w-5 h-5 px-1 flex items-center justify-center rounded-full shadow-xs">
+                  {cartCount}
                 </span>
               )}
             </div>

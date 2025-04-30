@@ -18,6 +18,7 @@ import { useUser } from "@clerk/nextjs";
 import { getShirtByIdInDetails } from "@/lib/database/actions/admin/ShirtArea/Shirt/shirt.actions";
 import { deleteShirtFromCart } from "@/lib/database/actions/cart.actions";
 import Image from "next/image";
+import { useCart } from "@/app/utils/hooks/useCart";
 
 interface CartItem {
   product: string | {
@@ -97,6 +98,7 @@ const CartDrawer = () => {
   const [cartMenuOpen, setCartMenuOpen] = useAtom(cartMenuState, { store: useStore() });
   setCartMenuOpenGlobal = setCartMenuOpen;
   const { user, isLoaded } = useUser();
+  const { mutateCart } = useCart();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [isShirtEnriched, setIsShirtEnriched] = useState(false);
@@ -197,6 +199,7 @@ const CartDrawer = () => {
     }
 
     if (cartMenuOpen) {
+      mutateCart();
       loadFreshCart();
     }
   }, [cartMenuOpen, isLoaded, user]);
@@ -213,6 +216,7 @@ const CartDrawer = () => {
         const updated = cartItems.filter((item) => getProductId(item) !== productId);
         setCartItems(updated);
         localStorage.setItem("selectedCartItems", JSON.stringify(updated));
+        await mutateCart();
       }
     } catch (error) {
       console.error("Error deleting item from cart:", error);
@@ -244,6 +248,7 @@ const CartDrawer = () => {
           getProductId(item) === productId ? { ...item, qty: newQuantity.toString() } : item
         );
         localStorage.setItem("selectedCartItems", JSON.stringify(updatedSelected));
+        await mutateCart();
       }
     } catch (error) {
       console.error("Error updating quantity", error);

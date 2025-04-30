@@ -21,6 +21,7 @@ import React, { Suspense } from "react"; // new import
 import { useAtom } from "jotai";
 import { wishlistCountState, cartItemsState } from "@/app/utils/data/store"; // Import wishlist count state and cart items state
 import { FaHeart } from "react-icons/fa";
+import { mutate } from "swr";
 
 interface ShirtDetails {
   _id: string;
@@ -601,6 +602,7 @@ export default function CartPage() {
           selectedItems.includes(item.product._id)
         );
         localStorage.setItem("selectedCartItems", JSON.stringify(updatedSelected));
+        mutate(["cart", user.id]);
 
         toast.success("Quantity updated");
       } else {
@@ -639,6 +641,7 @@ export default function CartPage() {
           selectedItems.includes(item.product._id) && item.product._id !== productId
         );
         localStorage.setItem("selectedCartItems", JSON.stringify(updatedSelected));
+        mutate(["cart", user.id]);
       } else {
         toast.error(response.message || "Failed to remove item");
       }

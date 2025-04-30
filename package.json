@@ -19,7 +19,8 @@
     "lib": "lib"
   },
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev",
+    "dev:turbo": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
@@ -75,7 +76,7 @@
     "sonner": "^1.7.4",
     "stripe": "^17.6.0",
     "svix": "^1.45.1",
-    "swr": "^2.3.2",
+    "swr": "^2.5.1",
     "tailwind-merge": "^3.0.1",
     "tailwindcss-animate": "^1.0.7"
   },
