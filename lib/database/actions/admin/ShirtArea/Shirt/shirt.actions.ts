@@ -164,7 +164,7 @@ export const updateShirtIds = async (
     return {
       message: "Shirt updated successfully.",
       success: true,
-      shirt: updatedShirt,
+      shirt: JSON.parse(JSON.stringify(updatedShirt)),
     };
   } catch (error: any) {
     console.error(error);
@@ -261,7 +261,7 @@ export const updateShirtPrice = async (shirtId: string, price: number) => {
     return {
       message: "Shirt price updated successfully.",
       success: true,
-      shirt: updatedShirt,
+      shirt: JSON.parse(JSON.stringify(updatedShirt)),
     };
   } catch (error: any) {
     console.error(error);

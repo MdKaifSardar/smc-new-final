@@ -84,7 +84,7 @@ export const getAllCustomerDetails = async () => {
     const customers = await CustomerDetail.find()
       .sort({ updatedAt: -1 })
       .lean();
-    return customers;
+    return JSON.parse(JSON.stringify(customers));
   } catch (error: any) {
     console.error(error);
     return [];

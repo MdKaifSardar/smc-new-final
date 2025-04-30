@@ -8,7 +8,11 @@ export const createTopbar = async (topbar: { text: string; type: "sticky" | "mar
     await connectToDatabase();
     const newTopbar = new TopbarModel(topbar);
     await newTopbar.save();
-    return { message: "Topbar created successfully", success: true, topbar: newTopbar };
+    return {
+      message: "Topbar created successfully",
+      success: true,
+      topbar: JSON.parse(JSON.stringify(newTopbar)),
+    };
   } catch (error: any) {
     console.log(error);
     return { message: "Error creating topbar", success: false };
@@ -38,7 +42,11 @@ export const updateTopbar = async (
     if (!updatedTopbar) {
       return { message: "Topbar not found", success: false };
     }
-    return { message: "Topbar updated successfully", success: true, topbar: updatedTopbar };
+    return {
+      message: "Topbar updated successfully",
+      success: true,
+      topbar: JSON.parse(JSON.stringify(updatedTopbar)),
+    };
   } catch (error: any) {
     console.log(error);
     return { message: "Error updating topbar", success: false };
@@ -50,7 +58,7 @@ export const getAllTopbars = async () => {
   try {
     await connectToDatabase();
     const topbars = await TopbarModel.find().sort({ updatedAt: -1 }).lean();
-    return { success: true, topbars };
+    return { success: true, topbars: JSON.parse(JSON.stringify(topbars)) };
   } catch (error: any) {
     console.log(error);
     return { message: "Error fetching topbars", success: false };
