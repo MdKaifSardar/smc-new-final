@@ -6,9 +6,9 @@ import User from "../models/user.model";
 import ShirtModel from "../models/shirtModel/ShirtModel";
 import mongoose from "mongoose";
 import { getShirtById } from "./admin/ShirtArea/Shirt/shirt.actions";
-import { getUserById } from "@/lib/database/actions/user.actions"; // Import the function to get user by ID
+import { getUserById } from "@/lib/database/actions/user.actions";
 
-export async function addShirtToCart(shirtId: string, clerkId: string, p0?: number) {
+export async function addShirtToCart(shirtId: string, clerkId: string, quantity: number = 1) {
   try {
     await connectToDatabase();
 
@@ -16,59 +16,58 @@ export async function addShirtToCart(shirtId: string, clerkId: string, p0?: numb
       throw new Error("ClerkId is required");
     }
 
-    // Find user with better error handling
-    const user = await getUserById(clerkId); // Fetch user by ID
-    if (!user.success) {
-      console.error(`No user found for clerkId: ${clerkId}`);
-      throw new Error("User not found. Please ensure you're logged in.");
+    // Find or create user record to guarantee user is registered in MongoDB
+    let userRecord = await User.findOne({ clerkId });
+    if (!userRecord) {
+      userRecord = await User.create({
+        clerkId,
+        firstName: "User",
+        lastName: "",
+        email: `${clerkId}@clouth.local`,
+      });
     }
 
-    //finding shirt
-    const shirt = await getShirtById(shirtId);
-    if (!shirt) {
+    // Verify shirt exists
+    const shirtResponse = await getShirtById(shirtId);
+    if (!shirtResponse || !shirtResponse.success || !shirtResponse.shirt) {
       throw new Error("Shirt not found");
     }
 
-    // Find shirt
-    // const shirt = await ShirtModel.findById(shirtId);
-    // if (!shirt) {
-    //   throw new Error("Shirt not found");
-    // }
+    const shirtPrice = Number(shirtResponse.shirt.price) || 0;
+    const qtyToAdd = Math.max(1, Number(quantity) || 1);
 
-    // Find or create cart with explicit error handling
-    // console.log("user", user);
-    // console.log("user.user._id", user.user._id);
-    let cart = await Cart.findOne({ user: user.user._id });
+    // Find or create cart for user
+    let cart = await Cart.findOne({ user: userRecord._id });
     if (!cart) {
       cart = new Cart({
-        user: user.user._id,
+        user: userRecord._id,
         products: [],
         cartTotal: 0,
       });
     }
 
-    // Add product with better validation
-    const existingProductIndex = cart.products.findIndex(
-      (item: any) => item.product.toString() === shirtId
-    );
+    // Check if product already in cart
+    const existingIndex = cart.products.findIndex((item: any) => {
+      const id = item.product?._id ? item.product._id.toString() : item.product?.toString();
+      return id === shirtId;
+    });
 
-    if (existingProductIndex > -1) {
-      // Update existing product quantity
-      cart.products[existingProductIndex].qty = (
-        parseInt(cart.products[existingProductIndex].qty) + 1
-      ).toString();
+    if (existingIndex > -1) {
+      const currentQty = parseInt(cart.products[existingIndex].qty || "1", 10) || 1;
+      cart.products[existingIndex].qty = (currentQty + qtyToAdd).toString();
+      cart.products[existingIndex].price = shirtPrice;
     } else {
-      // Add new product
       cart.products.push({
         product: shirtId,
-        qty: "1",
-        price: shirt.shirt?.price || 0,
+        qty: qtyToAdd.toString(),
+        price: shirtPrice,
       });
     }
 
     // Recalculate cart total
     cart.cartTotal = cart.products.reduce(
-      (total: number, item: any) => total + item.price * parseInt(item.qty),
+      (total: number, item: any) =>
+        total + (Number(item.price) || 0) * (parseInt(item.qty, 10) || 1),
       0
     );
 
@@ -77,7 +76,7 @@ export async function addShirtToCart(shirtId: string, clerkId: string, p0?: numb
     return {
       success: true,
       message: "Added to cart successfully",
-      cart: cart.toObject(),
+      cart: JSON.parse(JSON.stringify(cart)),
     };
   } catch (error: any) {
     console.error("Error in addShirtToCart:", error);
@@ -94,13 +93,13 @@ export async function getSavedCartForUser(clerkId: string) {
 
     const user = await User.findOne({ clerkId }).lean();
     if (!user) {
-      return { success: false, message: "User not found" };
+      return { success: true, cart: { products: [], cartTotal: 0 } };
     }
 
-    const cart = await Cart.findOne({ user: (user as any)._id })
+    const cart: any = await Cart.findOne({ user: (user as any)._id })
       .populate({
         path: "products.product",
-        model: "Shirt", // Updated model name to match Shirt registration
+        model: "Shirt",
         populate: [
           { path: "colorId" },
           { path: "fabricId" },
@@ -110,10 +109,26 @@ export async function getSavedCartForUser(clerkId: string) {
       })
       .lean();
 
-    // Convert cart to a plain object
-    const plainCart = cart ? JSON.parse(JSON.stringify(cart)) : null;
+    if (!cart) {
+      return { success: true, cart: { products: [], cartTotal: 0 } };
+    }
+
+    // Clean valid populated products
+    const validProducts = (cart.products || []).filter(
+      (item: any) => item && item.product != null
+    );
+
+    cart.products = validProducts;
+    cart.cartTotal = validProducts.reduce(
+      (total: number, item: any) =>
+        total + (Number(item.price) || 0) * (parseInt(item.qty, 10) || 1),
+      0
+    );
+
+    const plainCart = JSON.parse(JSON.stringify(cart));
     return { success: true, cart: plainCart };
   } catch (error: any) {
+    console.error("Error fetching cart:", error);
     return { success: false, message: error.message || "Error fetching cart" };
   }
 }
@@ -137,11 +152,12 @@ export async function updateCartItemQuantity(
     }
 
     const index = cart.products.findIndex((item: any) => {
-      const prodId = item.product._id
+      const prodId = item.product?._id
         ? item.product._id.toString()
-        : item.product.toString();
+        : item.product?.toString();
       return prodId === productId;
     });
+
     if (index === -1) {
       return { success: false, message: "Product not in cart" };
     }
@@ -149,22 +165,21 @@ export async function updateCartItemQuantity(
     if (newQty <= 0) {
       cart.products.splice(index, 1);
     } else {
-      cart.products[index].qty = newQty.toString();
+      cart.products[index].qty = Math.floor(newQty).toString();
     }
 
     cart.cartTotal = cart.products.reduce(
-      (total: number, item: any) => total + item.price * parseInt(item.qty),
+      (total: number, item: any) =>
+        total + (Number(item.price) || 0) * (parseInt(item.qty, 10) || 1),
       0
     );
 
     await cart.save();
-    return { success: true, cart: cart.toObject() };
+    return { success: true, cart: JSON.parse(JSON.stringify(cart)) };
   } catch (error: any) {
     return { success: false, message: error.message || "Error updating cart" };
   }
 }
-
-// ...existing code...
 
 export async function deleteShirtFromCart(clerkId: string, productId: string) {
   try {
@@ -180,22 +195,67 @@ export async function deleteShirtFromCart(clerkId: string, productId: string) {
       return { success: false, message: "Cart not found" };
     }
 
-    cart.products = cart.products.filter(
-      (item: any) => item.product.toString() !== productId
-    );
+    cart.products = cart.products.filter((item: any) => {
+      const prodId = item.product?._id
+        ? item.product._id.toString()
+        : item.product?.toString();
+      return prodId !== productId;
+    });
 
     cart.cartTotal = cart.products.reduce(
-      (total: any, item: any) => total + item.price * parseInt(item.qty),
+      (total: number, item: any) =>
+        total + (Number(item.price) || 0) * (parseInt(item.qty, 10) || 1),
       0
     );
 
     await cart.save();
-    return { success: true, cart: cart.toObject() };
+    return { success: true, cart: JSON.parse(JSON.stringify(cart)) };
   } catch (error: any) {
     return {
       success: false,
       message: error.message || "Error removing product from cart",
     };
+  }
+}
+
+export async function removeOrderedItemsFromCart(clerkId: string, productIds: string[]) {
+  try {
+    await connectToDatabase();
+
+    const user = await User.findOne({ clerkId });
+    if (!user) {
+      return { success: false, message: "User not found" };
+    }
+
+    const cart = await Cart.findOne({ user: user._id });
+    if (!cart) {
+      return { success: true, cart: null };
+    }
+
+    const idSet = new Set(productIds.map((id) => id.toString()));
+
+    cart.products = cart.products.filter((item: any) => {
+      const prodId = item.product?._id
+        ? item.product._id.toString()
+        : item.product?.toString();
+      return !idSet.has(prodId);
+    });
+
+    cart.cartTotal = cart.products.reduce(
+      (total: number, item: any) =>
+        total + (Number(item.price) || 0) * (parseInt(item.qty, 10) || 1),
+      0
+    );
+
+    if (cart.products.length === 0) {
+      cart.totalAfterDiscount = 0;
+    }
+
+    await cart.save();
+    return { success: true, cart: JSON.parse(JSON.stringify(cart)) };
+  } catch (error: any) {
+    console.error("Error removing ordered items from cart:", error);
+    return { success: false, message: error.message || "Error updating cart" };
   }
 }
 
@@ -213,7 +273,6 @@ export async function deleteAllCart(clerkId: string) {
       return { success: false, message: "Cart not found" };
     }
 
-    // Clear cart
     cart.products = [];
     cart.cartTotal = 0;
     cart.totalAfterDiscount = 0;
@@ -223,7 +282,7 @@ export async function deleteAllCart(clerkId: string) {
     return {
       success: true,
       message: "Cart cleared successfully",
-      cart,
+      cart: JSON.parse(JSON.stringify(cart)),
     };
   } catch (error: any) {
     return {
@@ -232,5 +291,3 @@ export async function deleteAllCart(clerkId: string) {
     };
   }
 }
-
-// ...existing code...

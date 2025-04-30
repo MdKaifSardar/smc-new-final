@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createShirt } from "@/lib/database/actions/admin/ShirtArea/Shirt/shirt.actions";
-import { useUser } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
 
 export async function POST(request: Request) {
   try {
@@ -25,9 +25,9 @@ export async function POST(request: Request) {
       fabricId,
     } = body;
 
-    const { user } = useUser();
+    const { userId } = await auth();
 
-    if (!user) {
+    if (!userId) {
       return NextResponse.json(
         { success: false, message: "User not authenticated" },
         { status: 401 }
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
       watchCompatible,
       colorId,
       fabricId,
-      user.id
+      userId
     );
 
     return NextResponse.json(result);

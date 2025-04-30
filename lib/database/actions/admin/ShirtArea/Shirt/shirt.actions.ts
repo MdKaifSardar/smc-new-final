@@ -112,11 +112,6 @@ export const createShirt = async (
 
     console.log("Shirt created successfully:", plainShirt);
 
-    const cartResult = await addShirtToCart(newShirt._id.toString(), clerkId);
-    if (!cartResult.success) {
-      console.error("Failed to add shirt to cart:", cartResult.message);
-    }
-
     return {
       message: "Shirt created successfully.",
       success: true,

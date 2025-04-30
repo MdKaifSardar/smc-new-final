@@ -77,22 +77,12 @@ const Page = () => {
       }
 
       // 4. Add shirt to cart with quantity 1
-      const cartResponse = await addShirtToCart(shirtId, user.id, -1);
+      const cartResponse = await addShirtToCart(shirtId, user.id, 1);
       if (!cartResponse.success) {
         throw new Error(cartResponse.message);
       }
 
-      // 5. Update cart items in localStorage
-      const cartItems = JSON.parse(localStorage.getItem("selectedCartItems") || "[]");
-      const updatedCartItems = cartItems.map((item: any) => {
-        if (item.product._id === shirtId) {
-          return { ...item, qty: "-1" };
-        }
-        return item;
-      });
-      localStorage.setItem("selectedCartItems", JSON.stringify(updatedCartItems));
-
-      // 6. Success - clean up and redirect
+      // 5. Success - clean up and redirect
       toast.success("Measurements saved and shirt added to cart!");
       localStorage.removeItem("shirtId");
       router.push("/cart");
